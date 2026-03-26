@@ -208,7 +208,14 @@ export default function App() {
         setIsAuthenticated(true); setCurrentUserRole(matchedUser.role); setCurrentUserName(matchedUser.name);
         setAuthPassword(''); setAuthError('');
       } else {
-        showToast('登入失敗！查無此門店或密碼錯誤。'); setAuthError('密碼錯誤，請重新輸入');
+        const isPending = pendingAccounts.some(pa => pa.store === store && pa.password === password);
+        if (isPending) {
+          showToast('登入失敗！此帳號尚未開通。');
+          setAuthError('此帳號尚未開通');
+        } else {
+          showToast('登入失敗！查無此門店或密碼錯誤。'); 
+          setAuthError('密碼錯誤，請重新輸入');
+        }
       }
     }
   };
@@ -335,7 +342,7 @@ export default function App() {
                 {authMode === 'login' ? '登入門店' : '申請門店'}
               </label>
               <div className="relative">
-                <select name="store" required defaultValue="" className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none">
+                <select name="store" required defaultValue="" className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-sm sm:text-base">
                   <option value="" disabled>請選擇門店...</option>
                   {stores.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
                 </select>
@@ -346,52 +353,52 @@ export default function App() {
             </div>
 
             {authMode === 'register' && (
-              <div className="space-y-4 animate-in slide-in-from-right-4 duration-300">
-                <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-3 sm:space-y-4 animate-in slide-in-from-right-4 duration-300">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">申請職位</label>
                     <div className="relative">
-                      <select name="jobRole" required defaultValue="" className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none">
+                      <select name="jobRole" required defaultValue="" className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-[11px] sm:text-sm">
                         <option value="" disabled>請選擇...</option>
                         {jobRoles.map(role => <option key={role} value={role}>{role}</option>)}
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
                       </div>
                     </div>
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">真實姓名</label>
-                    <input type="text" name="managerName" required className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500" placeholder="劉德華" />
+                    <input type="text" name="managerName" required className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 text-[11px] sm:text-sm" placeholder="劉德華" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="min-w-0">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">出生年月日</label>
-                    <input type="date" name="birthdate" required className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500" />
+                    <input type="date" name="birthdate" required className="w-full px-2 py-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 text-[11px] sm:text-sm" />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">到職日</label>
-                    <input type="date" name="hireDate" required className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500" />
+                    <input type="date" name="hireDate" required className="w-full px-2 py-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 text-[11px] sm:text-sm" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">聯絡電話</label>
-                    <input type="tel" name="phone" required className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500" placeholder="09XX" />
+                    <input type="tel" name="phone" required className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 text-[11px] sm:text-sm" placeholder="09XX" />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">人格特質</label>
                     <div className="relative">
-                      <select name="mbti" required defaultValue="" className="w-full p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none">
+                      <select name="mbti" required defaultValue="" className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-[11px] sm:text-sm">
                         <option value="" disabled>請選擇...</option>
                         <option value="E">E型 (外向)</option>
                         <option value="I">I型 (內向)</option>
                       </select>
-                      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
-                        <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
+                      <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                        <svg className="w-3 h-3 sm:w-4 sm:h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
                       </div>
                     </div>
                   </div>
@@ -417,7 +424,7 @@ export default function App() {
                 }}
                 inputMode="numeric"
                 pattern="[0-9]*"
-                className={`w-full p-3.5 border rounded-xl font-bold text-gray-700 outline-none tracking-widest transition-all duration-300 ${
+                className={`w-full p-3.5 border rounded-xl font-bold text-gray-700 outline-none tracking-widest transition-all duration-300 text-sm sm:text-base ${
                   authError ? 'bg-red-50/50 border-red-500 focus:border-red-500 ring-2 ring-red-100' : 'bg-gray-50 border-gray-200 focus:border-indigo-500'
                 }`} 
                 placeholder={authMode === 'login' ? "請輸入6碼數字密碼" : "請設定6碼數字密碼"} 
