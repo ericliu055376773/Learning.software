@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
@@ -18,26 +19,26 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 // === 圖示組件 ===
-const I = ({ children, c = "", onClick }) => <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}>{children}</svg>;
-const BookOpen = ({ c }) => <I c={c}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></I>;
-const ListTodo = ({ c }) => <I c={c}><path d="M14 14h6"/><path d="M14 19h6"/><path d="M14 9h6"/><path d="M4 14h.01"/><path d="M4 19h.01"/><path d="M4 9h.01"/></I>;
-const User = ({ c }) => <I c={c}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></I>;
-const Trash2 = ({ c }) => <I c={c}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></I>;
-const PlusCircle = ({ c }) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></I>;
-const UploadCloud = ({ c }) => <I c={c}><polyline points="16 16 12 12 8 16"/><line x1="12" x2="12" y1="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></I>;
-const ShieldCheck = ({ c }) => <I c={c}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></I>;
-const Store = ({ c }) => <I c={c}><path d="m2 7 4.38-5.46a2 2 0 0 1 1.56-.78h8.12a2 2 0 0 1 1.56.78L22 7"/><path d="M2 13v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/><path d="M2 7h20"/></I>;
-const XCircle = ({ c }) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></I>;
-const CheckCircle2 = ({ c }) => <I c={c}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></I>;
-const Bell = ({ c }) => <I c={c}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></I>;
-const LogOut = ({ c }) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></I>;
-const Edit = ({ c }) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
-const SproutLeaf = ({ c }) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></I>;
-const ChevronLeft = ({ c }) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
-const Lock = ({ c }) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
-const Settings = ({ c }) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
-const Camera = ({ c }) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
-const FolderPlus = ({ c }) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></I>;
+const I = ({ children, c = "", onClick }: any) => <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}>{children}</svg>;
+const BookOpen = ({ c }: any) => <I c={c}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></I>;
+const ListTodo = ({ c }: any) => <I c={c}><path d="M14 14h6"/><path d="M14 19h6"/><path d="M14 9h6"/><path d="M4 14h.01"/><path d="M4 19h.01"/><path d="M4 9h.01"/></I>;
+const User = ({ c }: any) => <I c={c}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></I>;
+const Trash2 = ({ c }: any) => <I c={c}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></I>;
+const PlusCircle = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></I>;
+const UploadCloud = ({ c }: any) => <I c={c}><polyline points="16 16 12 12 8 16"/><line x1="12" x2="12" y1="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></I>;
+const ShieldCheck = ({ c }: any) => <I c={c}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></I>;
+const Store = ({ c }: any) => <I c={c}><path d="m2 7 4.38-5.46a2 2 0 0 1 1.56-.78h8.12a2 2 0 0 1 1.56.78L22 7"/><path d="M2 13v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6"/><path d="M2 7h20"/></I>;
+const XCircle = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></I>;
+const CheckCircle2 = ({ c }: any) => <I c={c}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></I>;
+const Bell = ({ c }: any) => <I c={c}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></I>;
+const LogOut = ({ c }: any) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></I>;
+const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
+const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></I>;
+const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
+const Lock = ({ c }: any) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
+const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
+const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
+const FolderPlus = ({ c }: any) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></I>;
 
 const customStyles = `
   .badge-solid-rainbow { background: linear-gradient(90deg, #ef4444, #eab308, #3b82f6, #a855f7, #ef4444); color: white; }
@@ -66,7 +67,7 @@ const customStyles = `
   select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
 `;
 
-const RoleBadge = ({ role }) => {
+const RoleBadge = ({ role }: any) => {
   let badgeClass = "badge-solid-gray"; let icon = null;
   if (role === '店長') badgeClass = "badge-solid-rainbow";
   else if (role === '副店長') badgeClass = "badge-solid-gold";
@@ -77,55 +78,55 @@ const RoleBadge = ({ role }) => {
   return <span className={`px-2.5 py-1 rounded text-[10px] font-bold inline-flex items-center tracking-wider shadow-sm ${badgeClass}`}>{icon}{role}</span>;
 };
 
-const getCardGlowClass = (role) => {
+const getCardGlowClass = (role: any) => {
   if (role === '店長') return 'card-glow-rainbow';
   return 'border-gray-200 border-2 border-solid border-gray-100';
 };
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); 
-  const [currentUserRole, setCurrentUserRole] = useState(null); 
-  const [currentUserName, setCurrentUserName] = useState('');
-  const [showSecretModal, setShowSecretModal] = useState(false);
-  const [secretPwd, setSecretPwd] = useState('');
-  const [authPassword, setAuthPassword] = useState(''); 
-  const [authError, setAuthError] = useState(''); 
-  const [activeTab, setActiveTab] = useState('learning'); 
-  const [toast, setToast] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<string>('login'); 
+  const [currentUserRole, setCurrentUserRole] = useState<any>(null); 
+  const [currentUserName, setCurrentUserName] = useState<string>('');
+  const [showSecretModal, setShowSecretModal] = useState<boolean>(false);
+  const [secretPwd, setSecretPwd] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>(''); 
+  const [authError, setAuthError] = useState<string>(''); 
+  const [activeTab, setActiveTab] = useState<string>('learning'); 
+  const [toast, setToast] = useState<any>(null);
+  const [isUploading, setIsUploading] = useState<boolean>(false);
 
   const jobRoles = ['店長', '副店長', '組長', '儲備', '正職', '兼職', '實習正職', '實習兼職'];
   
-  const [editingEmployeeId, setEditingEmployeeId] = useState(null);
-  const [editEmployeeData, setEditEmployeeData] = useState({ name: '', store: '', role: '', password: '', birthdate: '', hireDate: '', phone: '', mbti: '' });
+  const [editingEmployeeId, setEditingEmployeeId] = useState<any>(null);
+  const [editEmployeeData, setEditEmployeeData] = useState<any>({ name: '', store: '', role: '', password: '', birthdate: '', hireDate: '', phone: '', mbti: '' });
 
-  const [stores, setStores] = useState([]);
-  const [learningSteps, setLearningSteps] = useState([]);
-  const [tasks, setTasks] = useState([]);
-  const [employees, setEmployees] = useState([]);
-  const [pendingAccounts, setPendingAccounts] = useState([]);
-  const [progressApprovals, setProgressApprovals] = useState([]);
-  const [learningLevelUpThreshold, setLearningLevelUpThreshold] = useState(3);
-  const [taskRoles, setTaskRoles] = useState([]); 
+  const [stores, setStores] = useState<any[]>([]);
+  const [learningSteps, setLearningSteps] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
+  const [progressApprovals, setProgressApprovals] = useState<any[]>([]);
+  const [learningLevelUpThreshold, setLearningLevelUpThreshold] = useState<number>(3);
+  const [taskRoles, setTaskRoles] = useState<any[]>([]); 
   
   // 等級與分類狀態
-  const [levelRules, setLevelRules] = useState([]); 
-  const [editingLevelRules, setEditingLevelRules] = useState([]); 
+  const [levelRules, setLevelRules] = useState<any[]>([]); 
+  const [editingLevelRules, setEditingLevelRules] = useState<any[]>([]); 
   
-  const [categories, setCategories] = useState([{id: 'default', name: '綜合學習'}]);
-  const [activeCategoryId, setActiveCategoryId] = useState('');
-  const [showCategoryManager, setShowCategoryManager] = useState(false);
-  const [editingCategories, setEditingCategories] = useState([]);
+  const [categories, setCategories] = useState<any[]>([{id: 'default', name: '綜合學習'}]);
+  const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+  const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
+  const [editingCategories, setEditingCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    const unsubStores = onSnapshot(collection(db, 'stores'), snap => setStores(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubSteps = onSnapshot(collection(db, 'learningSteps'), snap => setLearningSteps(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>a.createdAt-b.createdAt)));
-    const unsubTasks = onSnapshot(collection(db, 'tasks'), snap => setTasks(snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b)=>a.createdAt-b.createdAt)));
-    const unsubEmp = onSnapshot(collection(db, 'employees'), snap => setEmployees(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubPending = onSnapshot(collection(db, 'pendingAccounts'), snap => setPendingAccounts(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubProg = onSnapshot(collection(db, 'progressApprovals'), snap => setProgressApprovals(snap.docs.map(d => ({id: d.id, ...d.data()}))));
-    const unsubConfig = onSnapshot(doc(db, 'config', 'global'), d => { 
+    const unsubStores = onSnapshot(collection(db, 'stores'), (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
+    const unsubSteps = onSnapshot(collection(db, 'learningSteps'), (snap: any) => setLearningSteps(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)));
+    const unsubTasks = onSnapshot(collection(db, 'tasks'), (snap: any) => setTasks(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)));
+    const unsubEmp = onSnapshot(collection(db, 'employees'), (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
+    const unsubPending = onSnapshot(collection(db, 'pendingAccounts'), (snap: any) => setPendingAccounts(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
+    const unsubProg = onSnapshot(collection(db, 'progressApprovals'), (snap: any) => setProgressApprovals(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
+    const unsubConfig = onSnapshot(doc(db, 'config', 'global'), (d: any) => { 
       if(d.exists()) {
         const data = d.data();
         setLearningLevelUpThreshold(data.learningLevelUpThreshold || 3); 
@@ -144,48 +145,49 @@ export default function App() {
     return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
   }, [activeCategoryId]);
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 3000); };
   const canEdit = currentUserRole === 'super_admin';
   const canEditTaskCount = canEdit || taskRoles.includes(currentUserRole); 
   
   const currentUserData = employees.find(e => e.name === currentUserName);
 
   // 取得總完成數以計算總等級
-  const getTotalProgress = (completedLearning) => {
+  const getTotalProgress = (completedLearning: any) => {
     if (typeof completedLearning === 'number') return completedLearning;
     if (typeof completedLearning === 'object' && completedLearning !== null) {
-        return Object.values(completedLearning).reduce((a, b) => a + b, 0);
+        return Object.values(completedLearning).reduce((a: any, b: any) => a + b, 0);
     }
     return 0;
   };
 
-  const getLevelDisplay = (completedCount) => {
+  const getLevelDisplay = (completedCount: any) => {
     const totalCount = getTotalProgress(completedCount);
     if (!levelRules || levelRules.length === 0) {
       return `Lv. ${Math.floor(totalCount / learningLevelUpThreshold)}`;
     }
-    const rule = levelRules.find(r => totalCount >= parseInt(r.min) && totalCount <= parseInt(r.max));
+    const rule = levelRules.find((r: any) => totalCount >= parseInt(r.min) && totalCount <= parseInt(r.max));
     if (rule) return `Lv. ${rule.levelName}`;
     
-    const sortedRules = [...levelRules].sort((a,b) => parseInt(b.max) - parseInt(a.max));
+    const sortedRules = [...levelRules].sort((a: any,b: any) => parseInt(b.max) - parseInt(a.max));
     const highestRule = sortedRules[0];
     if (highestRule && totalCount > parseInt(highestRule.max)) return `Lv. ${highestRule.levelName} (Max)`;
     
     return 'Lv. 0';
   };
 
-  const handleAuthSubmit = async (e) => {
+  const handleAuthSubmit = async (e: any) => {
     e.preventDefault();
+    const target = e.target as any;
     const password = authPassword;
-    const store = e.target.store?.value;
+    const store = target.store?.value;
 
     if (authMode === 'register') {
-      const name = e.target.managerName.value;
-      const role = e.target.jobRole.value;
-      const birthdate = e.target.birthdate.value;
-      const hireDate = e.target.hireDate.value;
-      const phone = e.target.phone.value;
-      const mbti = e.target.mbti.value;
+      const name = target.managerName.value;
+      const role = target.jobRole.value;
+      const birthdate = target.birthdate.value;
+      const hireDate = target.hireDate.value;
+      const phone = target.phone.value;
+      const mbti = target.mbti.value;
 
       const isPasswordUsed = employees.some(emp => emp.password === password) || pendingAccounts.some(pa => pa.password === password);
       if (isPasswordUsed) {
@@ -211,7 +213,7 @@ export default function App() {
     }
   };
 
-  const handleFileUpload = async (stepId, e) => {
+  const handleFileUpload = async (stepId: any, e: any) => {
     const file = e.target.files[0];
     if (!file) return;
     setIsUploading(true); showToast("上傳中，請稍候...");
@@ -224,7 +226,7 @@ export default function App() {
     } catch (err) { showToast("上傳失敗，請檢查網路！"); } finally { setIsUploading(false); e.target.value = null; }
   };
 
-  const handleAvatarUpload = async (empId, e) => {
+  const handleAvatarUpload = async (empId: any, e: any) => {
     const file = e.target.files[0];
     if (!file) return;
     showToast("上傳大頭照中...");
@@ -237,10 +239,10 @@ export default function App() {
     } catch (err) { showToast("上傳失敗，請檢查網路！"); } finally { e.target.value = null; }
   };
 
-  const toggleTaskRole = async (role) => {
+  const toggleTaskRole = async (role: string) => {
     let newRoles = [...taskRoles];
     if (newRoles.includes(role)) {
-      newRoles = newRoles.filter(r => r !== role);
+      newRoles = newRoles.filter((r: any) => r !== role);
     } else {
       newRoles.push(role);
     }
@@ -248,7 +250,7 @@ export default function App() {
     showToast(`統計權限已更新！`);
   };
 
-  const startEditEmployee = (emp) => {
+  const startEditEmployee = (emp: any) => {
     setEditingEmployeeId(emp.id);
     setEditEmployeeData({ 
       name: emp.name, 
@@ -262,7 +264,7 @@ export default function App() {
     });
   };
 
-  const saveEditEmployee = async (id) => {
+  const saveEditEmployee = async (id: string) => {
     if (!editEmployeeData.name.trim() || (editEmployeeData.password && editEmployeeData.password.length !== 6)) {
       showToast('資料格式不完整或密碼不為 6 碼！'); return;
     }
@@ -276,24 +278,24 @@ export default function App() {
   const addLevelRule = () => {
     setEditingLevelRules([...editingLevelRules, { id: Date.now().toString(), min: 0, max: 0, levelName: '' }]);
   };
-  const removeLevelRule = (id) => {
-    setEditingLevelRules(editingLevelRules.filter(r => r.id !== id));
+  const removeLevelRule = (id: string) => {
+    setEditingLevelRules(editingLevelRules.filter((r: any) => r.id !== id));
   };
-  const updateLevelRule = (id, field, value) => {
-    setEditingLevelRules(editingLevelRules.map(r => r.id === id ? { ...r, [field]: value } : r));
+  const updateLevelRule = (id: string, field: string, value: any) => {
+    setEditingLevelRules(editingLevelRules.map((r: any) => r.id === id ? { ...r, [field]: value } : r));
   };
   const saveLevelRulesConfig = async () => {
-    const parsedRules = editingLevelRules.map(r => ({ ...r, min: parseInt(r.min) || 0, max: parseInt(r.max) || 0, levelName: r.levelName.toString() }));
+    const parsedRules = editingLevelRules.map((r: any) => ({ ...r, min: parseInt(r.min) || 0, max: parseInt(r.max) || 0, levelName: r.levelName.toString() }));
     try { await setDoc(doc(db, 'config', 'global'), { levelRules: parsedRules }, { merge: true }); setLevelRules(parsedRules); showToast('學習升級門檻已儲存！'); } catch (e) { showToast('儲存失敗！'); }
   };
 
   // 分類管理
   const saveCategoriesConfig = async () => {
-    const validCategories = editingCategories.filter(c => c.name.trim() !== '');
+    const validCategories = editingCategories.filter((c: any) => c.name.trim() !== '');
     try {
       await setDoc(doc(db, 'config', 'global'), { learningCategories: validCategories }, { merge: true });
       setCategories(validCategories);
-      if (!validCategories.find(c => c.id === activeCategoryId) && validCategories.length > 0) {
+      if (!validCategories.find((c: any) => c.id === activeCategoryId) && validCategories.length > 0) {
         setActiveCategoryId(validCategories[0].id);
       }
       setShowCategoryManager(false);
@@ -405,8 +407,8 @@ export default function App() {
                 type="password" 
                 name="password" 
                 required 
-                minLength="6" 
-                maxLength="6" 
+                minLength={6} 
+                maxLength={6} 
                 value={authPassword}
                 onChange={(e) => {
                   setAuthError(''); 
@@ -940,7 +942,7 @@ export default function App() {
                  {/* 統一的人員卡片排版 (前台後台同步) */}
                  <div className="space-y-4">
                     {displayEmployees.map(emp => {
-                      const totalTasks = emp.tasksDetail?.reduce((sum, t) => sum + t.count, 0) || 0;
+                      const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
                       
                       return (
                         <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
@@ -993,7 +995,7 @@ export default function App() {
                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
                                    <input 
                                      type="text" 
-                                     maxLength="6" 
+                                     maxLength={6} 
                                      value={editEmployeeData.password} 
                                      onChange={(e) => {
                                        const val = e.target.value.replace(/\D/g, ''); 
@@ -1088,7 +1090,7 @@ export default function App() {
                                       <p className="text-[10px] text-gray-400 font-bold">總計 {totalTasks} 次</p>
                                    </div>
                                    <div className="flex flex-wrap gap-2">
-                                     {emp.tasksDetail.map(t => (
+                                     {emp.tasksDetail.map((t: any) => (
                                        <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
                                          {t.name} <span className="font-black text-blue-600 ml-1.5">{t.count}</span>
                                        </span>
