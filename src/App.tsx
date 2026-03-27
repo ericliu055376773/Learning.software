@@ -48,6 +48,7 @@ const LogOut = ({ c }: any) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0
 const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
 const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></I>;
 const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
+const ClipboardCheck = ({ c }: any) => <I c={c}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="m9 14 2 2 4-4"/></I>;
 const Lock = ({ c }: any) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
 const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
 const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
@@ -144,6 +145,8 @@ export default function App() {
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [showSecretModal, setShowSecretModal] = useState<boolean>(false);
   const [showGpsModal, setShowGpsModal] = useState<boolean>(false); // GPS 權限模態框
+  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false); // 通知中心模態框
+  const [hasShownLoginNotice, setHasShownLoginNotice] = useState<boolean>(false); // 控制登入自動彈窗
   const [isCheckingGPS, setIsCheckingGPS] = useState<boolean>(false); // GPS 驗證中的狀態
   const [secretPwd, setSecretPwd] = useState<string>('');
   const [authPassword, setAuthPassword] = useState<string>(''); 
@@ -160,6 +163,7 @@ export default function App() {
   const [stores, setStores] = useState<any[]>([]);
   const [learningSteps, setLearningSteps] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
   const [progressApprovals, setProgressApprovals] = useState<any[]>([]);
@@ -211,6 +215,10 @@ export default function App() {
       },
       (err: any) => console.error("Tasks fetch error:", err)
     );
+    const unsubExams = onSnapshot(collection(db, 'exams'), 
+      (snap: any) => setExams(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)),
+      (err: any) => console.error("Exams fetch error:", err)
+    );
     const unsubEmp = onSnapshot(collection(db, 'employees'), 
       (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
       (err: any) => console.error("Employees fetch error:", err)
@@ -244,7 +252,7 @@ export default function App() {
       (err: any) => console.error("Config fetch error:", err)
     );
 
-    return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
+    return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubExams(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
   }, [activeCategoryId]);
 
   useEffect(() => {
@@ -252,6 +260,22 @@ export default function App() {
         setActiveTaskId(tasks[0].id);
     }
   }, [tasks, activeTaskId]);
+
+  const canEdit = currentUserRole === 'super_admin';
+  const canEditTaskCount = canEdit || taskRoles.includes(currentUserRole); 
+  const currentUserData = employees.find(e => e.name === currentUserName);
+  
+  // 計算總部的通知數量
+  const adminPendingApprovals = progressApprovals.filter(pa => pa.status === 'first_approved');
+  const totalAdminNotifications = pendingAccounts.length + adminPendingApprovals.length;
+
+  // 登入後自動彈出通知中心的邏輯
+  useEffect(() => {
+    if (isAuthenticated && canEdit && totalAdminNotifications > 0 && !hasShownLoginNotice) {
+      setShowNotificationModal(true);
+      setHasShownLoginNotice(true);
+    }
+  }, [isAuthenticated, canEdit, totalAdminNotifications, hasShownLoginNotice]);
 
   // 改用常規 function 宣告，避免 TDZ (暫時性死區) 問題
   function showToast(msg: string) { 
@@ -314,6 +338,7 @@ export default function App() {
         return; 
       }
 
+      // 新增員工時，確保加入 learningHistory: [] 以儲存歷史紀錄
       await addDoc(collection(db, 'pendingAccounts'), {
         name, store, requestedRole: role, password, birthdate, hireDate, phone, mbti,
         date: new Date().toISOString().split('T')[0], createdAt: Date.now()
@@ -568,9 +593,6 @@ export default function App() {
       await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
   }
 
-  const canEdit = currentUserRole === 'super_admin';
-  const canEditTaskCount = canEdit || taskRoles.includes(currentUserRole); 
-  const currentUserData = employees.find(e => e.name === currentUserName);
   const displayCategories = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習'}];
   const currentActiveCatId = activeCategoryId || displayCategories[0].id;
   const filteredSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id));
@@ -820,13 +842,18 @@ export default function App() {
                 <Settings c="w-5 h-5" />
               </button>
             )}
-            {pendingAccounts.length > 0 && canEdit && (
-              <button onClick={() => setActiveTab('pending')} className="relative bg-gray-100 p-1.5 rounded-lg hover:bg-blue-50 transition-colors group cursor-pointer" title="待審核通知">
-                <Bell c="w-5 h-5 text-gray-500 group-hover:text-blue-500 animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+            
+            {/* 新版：系統通知中心按鈕 */}
+            {canEdit && (
+              <button onClick={() => setShowNotificationModal(true)} className="relative bg-gray-100 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors group cursor-pointer" title="系統通知">
+                <Bell c={`w-5 h-5 text-gray-500 group-hover:text-indigo-600 ${totalAdminNotifications > 0 ? 'text-indigo-500' : ''}`} />
+                {totalAdminNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                )}
               </button>
             )}
-            <button onClick={() => { setIsAuthenticated(false); setAuthPassword(''); }} className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="登出"><LogOut c="w-4 h-4" /></button>
+            
+            <button onClick={() => { setIsAuthenticated(false); setAuthPassword(''); setHasShownLoginNotice(false); }} className="bg-gray-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 transition-colors" title="登出"><LogOut c="w-4 h-4" /></button>
           </div>
         </header>
 
@@ -860,7 +887,7 @@ export default function App() {
                       <div className="flex gap-3 pl-2">
                         <button onClick={async () => {
                           await deleteDoc(doc(db, 'pendingAccounts', pa.id));
-                          await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], createdAt: Date.now() });
+                          await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], learningHistory: [], examRecords: {}, createdAt: Date.now() });
                           showToast('已加入名單！');
                           if(pendingAccounts.length === 1) setActiveTab('profile'); 
                         }} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-blue-200 active:scale-95 transition-transform">核准開通</button>
@@ -914,9 +941,22 @@ export default function App() {
                                 const targetCatId = pa.categoryId || displayCategories[0]?.id || 'default';
                                 const newProgress = typeof emp.completedLearning === 'object' ? {...emp.completedLearning} : { [displayCategories[0]?.id || 'default']: emp.completedLearning || 0 };
                                 newProgress[targetCatId] = (newProgress[targetCatId] || 0) + 1;
-                                await updateDoc(doc(db, 'employees', emp.id), { completedLearning: newProgress });
+                                
+                                // 寫入學習歷史紀錄
+                                const newHistory = emp.learningHistory ? [...emp.learningHistory] : [];
+                                newHistory.push({
+                                  stepId: pa.stepId,
+                                  stepName: pa.stepName,
+                                  firstApprover: pa.firstApprover || '總部直接核准',
+                                  approvedAt: Date.now()
+                                });
+
+                                await updateDoc(doc(db, 'employees', emp.id), { 
+                                  completedLearning: newProgress,
+                                  learningHistory: newHistory
+                                });
                               }
-                              showToast('複審完成，已核發進度！');
+                              showToast('複審完成，已核發進度並記錄！');
                             }} className="bg-indigo-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors">最終核准</button>
                           ) : (
                             <span className="text-xs font-bold text-gray-400 px-2 py-1 bg-gray-100 rounded border border-gray-200 shadow-inner inline-block">待後台核准</span>
@@ -1214,6 +1254,86 @@ export default function App() {
                     </div>
                   )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 1.8: 考試 (新增介面) */}
+          {activeTab === 'exams' && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="flex justify-between items-center mb-2 px-1">
+                <div>
+                   <h2 className="font-bold text-gray-800 text-lg">考試項目</h2>
+                   {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 點擊下方按鈕記錄您的考核狀態</p>}
+                </div>
+              </div>
+
+              {canEdit && (
+                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
+                   <button onClick={async () => await addDoc(collection(db, 'exams'), { title: '新考試項目', subtitle: '', description: '', createdAt: Date.now() })} className="w-full py-2.5 border border-dashed border-indigo-300 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
+                      <PlusCircle c="w-4 h-4 mr-1.5"/> 新增考試
+                   </button>
+                 </div>
+              )}
+
+              <div className="space-y-4">
+                {exams.length === 0 ? (
+                   <div className="p-10 text-center text-gray-400 text-sm font-bold bg-white rounded-xl shadow-sm border border-gray-200">
+                      <ClipboardCheck c="w-10 h-10 mx-auto mb-3 text-gray-200" />
+                      目前尚無考試項目
+                   </div>
+                ) : (
+                   exams.map((exam, i) => {
+                      const empRecord = currentUserData?.examRecords?.[exam.id];
+                      return (
+                      <div key={exam.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
+                         {/* 狀態裝飾線 */}
+                         <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors ${empRecord === 'passed' ? 'bg-green-500' : empRecord === 'failed' ? 'bg-red-500' : 'bg-gray-200'}`}></div>
+                         
+                         {canEdit && (
+                            <button onClick={() => { if(window.confirm('確定要刪除這個考試項目嗎？')) deleteDoc(doc(db, 'exams', exam.id)) }} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 p-1 bg-white rounded transition-colors z-10"><Trash2 c="w-4 h-4" /></button>
+                         )}
+                         
+                         {canEdit ? (
+                            <div className="space-y-3 pr-6 pl-2">
+                               <input type="text" defaultValue={exam.title} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { title: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-black text-gray-800 bg-gray-50 text-base outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入大標題"/>
+                               <input type="text" defaultValue={exam.subtitle || ''} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { subtitle: e.target.value })} className="w-full p-2 border border-indigo-100 rounded-lg font-bold text-indigo-700 bg-indigo-50/30 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入標題"/>
+                               <textarea defaultValue={exam.description || ''} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { description: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[80px]" placeholder="請輸入內容..." />
+                            </div>
+                         ) : (
+                            <div className="space-y-3 pl-2">
+                               <h3 className="font-black text-gray-800 text-lg border-b border-gray-100 pb-2">{String(exam.title)}</h3>
+                               {exam.subtitle && <h4 className="font-bold text-indigo-600 text-sm">{String(exam.subtitle)}</h4>}
+                               {exam.description && <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(exam.description)}</p>}
+                            </div>
+                         )}
+
+                         {/* 通過與沒通過按鈕 */}
+                         <div className="flex gap-3 mt-5 pt-4 border-t border-gray-100 pl-2 relative z-10">
+                            <button onClick={() => {
+                               if(currentUserData) {
+                                  const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
+                                  newRecords[exam.id] = 'passed';
+                                  updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
+                                  showToast('已記錄：通過');
+                               }
+                            }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${empRecord === 'passed' ? 'bg-green-500 text-white shadow-green-200 ring-2 ring-green-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-gray-200'}`}>
+                               <CheckCircle2 c="w-4 h-4 mr-1.5" /> 通過
+                            </button>
+                            <button onClick={() => {
+                               if(currentUserData) {
+                                  const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
+                                  newRecords[exam.id] = 'failed';
+                                  updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
+                                  showToast('已記錄：沒通過');
+                               }
+                            }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${empRecord === 'failed' ? 'bg-red-500 text-white shadow-red-200 ring-2 ring-red-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200'}`}>
+                               <XCircle c="w-4 h-4 mr-1.5" /> 沒通過
+                            </button>
+                         </div>
+                      </div>
+                   )})
+                )}
               </div>
             </div>
           )}
@@ -1571,6 +1691,35 @@ export default function App() {
                                    </div>
                                 </div>
                               )}
+
+                              {/* --- 新增：學習審核通過紀錄卡片 --- */}
+                              <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-3">
+                                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
+                                    <p className="text-xs text-gray-700 font-bold flex items-center">
+                                      <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
+                                    </p>
+                                    <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">共 {emp.learningHistory?.length || 0} 項</p>
+                                 </div>
+                                 {emp.learningHistory && emp.learningHistory.length > 0 ? (
+                                   <div className="space-y-2 mt-2">
+                                     {emp.learningHistory.map((h: any, i: number) => (
+                                       <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                         <div className="flex flex-col">
+                                           <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
+                                           <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                         </div>
+                                         <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
+                                           審核: {String(h.firstApprover)}
+                                         </span>
+                                       </div>
+                                     ))}
+                                   </div>
+                                 ) : (
+                                   <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
+                                     尚未有通過的學習項目
+                                   </div>
+                                 )}
+                              </div>
                             </>
                           )}
                         </div>
@@ -1586,6 +1735,9 @@ export default function App() {
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習審核</span>
           </button>
+          <button onClick={() => setActiveTab('exams')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'exams' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <ClipboardCheck c={`w-5 h-5 ${activeTab === 'exams' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">考試</span>
+          </button>
           <button onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'tasks' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <ListTodo c={`w-5 h-5 ${activeTab === 'tasks' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">工作項目</span>
           </button>
@@ -1594,6 +1746,47 @@ export default function App() {
           </button>
         </nav>
       </div>
+
+      {/* 系統通知中心彈出視窗 */}
+      {showNotificationModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowNotificationModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+              <h3 className="font-black text-lg flex items-center"><Bell c="w-5 h-5 mr-2 animate-pulse" /> 系統通知中心</h3>
+              <button onClick={() => setShowNotificationModal(false)} className="text-indigo-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              {totalAdminNotifications === 0 ? (
+                <div className="text-center py-6 text-gray-400 font-bold flex flex-col items-center">
+                  <CheckCircle2 c="w-10 h-10 mb-2 text-green-400" />
+                  太棒了，目前沒有待處理的事項！
+                </div>
+              ) : (
+                <>
+                  {pendingAccounts.length > 0 && (
+                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex justify-between items-center shadow-sm">
+                      <div>
+                        <p className="text-[10px] font-bold text-blue-500 tracking-wider mb-1">帳號申請</p>
+                        <p className="text-sm font-bold text-blue-900">有 <span className="text-red-500 text-base mx-1">{pendingAccounts.length}</span> 位新進人員待核准</p>
+                      </div>
+                      <button onClick={() => { setShowNotificationModal(false); setActiveTab('pending'); }} className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm hover:bg-blue-700 active:scale-95 transition-all">前往審核</button>
+                    </div>
+                  )}
+                  {adminPendingApprovals.length > 0 && (
+                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center shadow-sm">
+                      <div>
+                        <p className="text-[10px] font-bold text-indigo-500 tracking-wider mb-1">學習進度</p>
+                        <p className="text-sm font-bold text-indigo-900">有 <span className="text-red-500 text-base mx-1">{adminPendingApprovals.length}</span> 項學習待最終核准</p>
+                      </div>
+                      <button onClick={() => { setShowNotificationModal(false); setActiveTab('learning'); }} className="bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 active:scale-95 transition-all">前往審核</button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 圖片滿版放大彈出視窗 */}
       {fullscreenImage && (
