@@ -180,6 +180,9 @@ export default function App() {
   const [showTaskManager, setShowTaskManager] = useState<boolean>(false);
   const [editingTasks, setEditingTasks] = useState<any[]>([]);
 
+  // 圖片點擊放大相關狀態
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
   // 解決手機版輸入框點擊後自動放大的問題
   useEffect(() => {
     let viewportMeta = document.querySelector('meta[name="viewport"]');
@@ -1028,7 +1031,9 @@ export default function App() {
                               <div className="pl-7 mt-2 relative inline-block">
                                 {(step.fileName && step.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || step.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
                                   <video src={step.mediaUrl} controls className="max-h-32 rounded border border-gray-200" />
-                                ) : ( <img src={step.mediaUrl} className="max-h-32 object-contain rounded border border-gray-200" alt="預覽" /> )}
+                                ) : ( 
+                                  <img src={step.mediaUrl} onClick={() => setFullscreenImage(step.mediaUrl)} className="max-h-32 object-contain rounded border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity" alt="預覽" title="點擊放大" /> 
+                                )}
                                 <button onClick={() => updateDoc(doc(db, 'learningSteps', step.id), { mediaUrl: '', fileName: '' })} className="absolute top-1 right-1 bg-red-500/90 text-white px-2 py-1 rounded text-[10px] font-bold backdrop-blur-sm shadow-sm">移除</button>
                               </div>
                             )}
@@ -1095,7 +1100,9 @@ export default function App() {
                                       <div className="mt-3 mb-4 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 flex justify-center">
                                         {(step.fileName && step.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || step.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
                                           <video src={step.mediaUrl} controls className="max-h-48 w-full object-contain" />
-                                        ) : ( <img src={step.mediaUrl} className="max-h-48 w-full object-contain" alt="教材" /> )}
+                                        ) : ( 
+                                          <img src={step.mediaUrl} onClick={() => setFullscreenImage(step.mediaUrl)} className="max-h-48 w-full object-contain cursor-pointer hover:opacity-80 transition-opacity" alt="教材" title="點擊放大" /> 
+                                        )}
                                       </div>
                                     )}
 
@@ -1514,6 +1521,16 @@ export default function App() {
           </button>
         </nav>
       </div>
+
+      {/* 圖片滿版放大彈出視窗 */}
+      {fullscreenImage && (
+        <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setFullscreenImage(null)}>
+          <button className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black/40 rounded-full p-1.5 transition-colors" onClick={() => setFullscreenImage(null)}>
+            <XCircle c="w-8 h-8" />
+          </button>
+          <img src={fullscreenImage} className="max-w-full max-h-[90vh] object-contain animate-in zoom-in-95 duration-300 shadow-2xl" alt="放大圖片" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
 
       {toast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg z-[100] text-xs font-bold shadow-xl animate-in fade-in slide-in-from-bottom-2">
