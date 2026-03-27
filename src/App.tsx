@@ -1,11 +1,12 @@
 // @ts-nocheck
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // === Firebase 連線設定 ===
-const firebaseConfig = {
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {
   apiKey: "AIzaSyD4fOYP3yVyZ4NxXZdSWYZr5Z6Oc_lX8fQ",
   authDomain: "dailytasks-4d281.firebaseapp.com",
   projectId: "dailytasks-4d281",
@@ -15,8 +16,14 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+// === 取得當前環境的 App ID，並建立安全路徑的 Helper 函數 ===
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+const getPubCollection = (colName: string) => collection(db, 'artifacts', appId, 'public', 'data', colName);
+const getPubDoc = (colName: string, docId: string) => doc(db, 'artifacts', appId, 'public', 'data', colName, docId);
 
 // === 計算兩個 GPS 座標距離 (公尺) - Haversine Formula ===
 function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2: number) {
@@ -137,6 +144,7 @@ const getRoleCardStyle = (role: any) => {
 };
 
 export default function App() {
+  const [firebaseUser, setFirebaseUser] = useState<any>(null); // Firebase 身分驗證狀態
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<string>('login'); 
   const [currentUserRole, setCurrentUserRole] = useState<any>(null); 
@@ -190,36 +198,77 @@ export default function App() {
     viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
   }, []);
 
+  // 進行 Firebase Auth 身分驗證
   useEffect(() => {
-    const unsubStores = onSnapshot(collection(db, 'stores'), (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
-    const unsubSteps = onSnapshot(collection(db, 'learningSteps'), (snap: any) => setLearningSteps(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)));
-    const unsubTasks = onSnapshot(collection(db, 'tasks'), (snap: any) => {
+    const initAuth = async () => {
+      try {
+        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+          await signInWithCustomToken(auth, __initial_auth_token);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Auth error:", err);
+      }
+    };
+    initAuth();
+    const unsubscribe = onAuthStateChanged(auth, setFirebaseUser);
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!firebaseUser) return; // 確保取得驗證後才開始存取 Firestore 資料
+
+    const unsubStores = onSnapshot(getPubCollection('stores'), 
+      (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (err: any) => console.error("Stores fetch error:", err)
+    );
+    const unsubSteps = onSnapshot(getPubCollection('learningSteps'), 
+      (snap: any) => setLearningSteps(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)),
+      (err: any) => console.error("Steps fetch error:", err)
+    );
+    const unsubTasks = onSnapshot(getPubCollection('tasks'), 
+      (snap: any) => {
         const fetchedTasks = snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt);
         setTasks(fetchedTasks);
-    });
-    const unsubEmp = onSnapshot(collection(db, 'employees'), (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
-    const unsubPending = onSnapshot(collection(db, 'pendingAccounts'), (snap: any) => setPendingAccounts(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
-    const unsubProg = onSnapshot(collection(db, 'progressApprovals'), (snap: any) => setProgressApprovals(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))));
-    const unsubConfig = onSnapshot(doc(db, 'config', 'global'), (d: any) => { 
-      if(d.exists()) {
-        const data = d.data();
-        setLearningLevelUpThreshold(data.learningLevelUpThreshold || 3); 
-        
-        setTaskRoles(data.taskRoles || []); 
-        setEditingTaskRoles(prev => prev.length === 0 && data.taskRoles?.length > 0 ? data.taskRoles : prev);
+      },
+      (err: any) => console.error("Tasks fetch error:", err)
+    );
+    const unsubEmp = onSnapshot(getPubCollection('employees'), 
+      (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (err: any) => console.error("Employees fetch error:", err)
+    );
+    const unsubPending = onSnapshot(getPubCollection('pendingAccounts'), 
+      (snap: any) => setPendingAccounts(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (err: any) => console.error("PendingAccounts fetch error:", err)
+    );
+    const unsubProg = onSnapshot(getPubCollection('progressApprovals'), 
+      (snap: any) => setProgressApprovals(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (err: any) => console.error("ProgressApprovals fetch error:", err)
+    );
+    const unsubConfig = onSnapshot(getPubDoc('config', 'global'), 
+      (d: any) => { 
+        if(d.exists()) {
+          const data = d.data();
+          setLearningLevelUpThreshold(data.learningLevelUpThreshold || 3); 
+          
+          setTaskRoles(data.taskRoles || []); 
+          setEditingTaskRoles(prev => prev.length === 0 && data.taskRoles?.length > 0 ? data.taskRoles : prev);
 
-        setLevelRules(data.levelRules || []);
-        setEditingLevelRules(prev => prev.length === 0 && data.levelRules?.length > 0 ? data.levelRules : prev);
-        
-        if (data.learningCategories && data.learningCategories.length > 0) {
-          setCategories(data.learningCategories);
-          if (!activeCategoryId) setActiveCategoryId(data.learningCategories[0].id);
+          setLevelRules(data.levelRules || []);
+          setEditingLevelRules(prev => prev.length === 0 && data.levelRules?.length > 0 ? data.levelRules : prev);
+          
+          if (data.learningCategories && data.learningCategories.length > 0) {
+            setCategories(data.learningCategories);
+            if (!activeCategoryId) setActiveCategoryId(data.learningCategories[0].id);
+          }
         }
-      }
-    });
+      },
+      (err: any) => console.error("Config fetch error:", err)
+    );
 
     return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
-  }, [activeCategoryId]);
+  }, [activeCategoryId, firebaseUser]);
 
   useEffect(() => {
     if (tasks.length > 0 && !activeTaskId) {
@@ -277,7 +326,7 @@ export default function App() {
         return; 
       }
 
-      await addDoc(collection(db, 'pendingAccounts'), {
+      await addDoc(getPubCollection('pendingAccounts'), {
         name, store, requestedRole: role, password, birthdate, hireDate, phone, mbti,
         date: new Date().toISOString().split('T')[0], createdAt: Date.now()
       });
@@ -354,12 +403,15 @@ export default function App() {
     if (!file) return;
     setIsUploading(true); showToast("上傳中，請稍候...");
     try {
-      const storageRef = ref(storage, `media/${stepId}_${Date.now()}`);
+      const storageRef = ref(storage, `${appId}/media/${stepId}_${Date.now()}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'learningSteps', stepId), { mediaUrl: url, fileName: file.name });
+      await updateDoc(getPubDoc('learningSteps', stepId), { mediaUrl: url, fileName: file.name });
       showToast("上傳成功！");
-    } catch (err) { showToast("上傳失敗，請檢查網路！"); } finally { setIsUploading(false); e.target.value = null; }
+    } catch (err: any) { 
+      console.error("Upload error:", err);
+      showToast("上傳失敗：" + (err.message || "請檢查權限設定！")); 
+    } finally { setIsUploading(false); e.target.value = null; }
   };
 
   const handleAvatarUpload = async (empId: any, e: any) => {
@@ -367,12 +419,15 @@ export default function App() {
     if (!file) return;
     showToast("上傳大頭照中...");
     try {
-      const storageRef = ref(storage, `avatars/${empId}_${Date.now()}`);
+      const storageRef = ref(storage, `${appId}/avatars/${empId}_${Date.now()}`);
       await uploadBytes(storageRef, file);
       const url = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'employees', empId), { avatarUrl: url });
+      await updateDoc(getPubDoc('employees', empId), { avatarUrl: url });
       showToast("大頭照更新成功！");
-    } catch (err) { showToast("上傳失敗，請檢查網路！"); } finally { e.target.value = null; }
+    } catch (err: any) { 
+      console.error("Upload error:", err);
+      showToast("上傳失敗：" + (err.message || "請檢查權限設定！")); 
+    } finally { e.target.value = null; }
   };
 
   const startEditEmployee = (emp: any) => {
@@ -394,7 +449,7 @@ export default function App() {
       showToast('資料格式不完整或密碼不為 6 碼！'); return;
     }
     try {
-      await updateDoc(doc(db, 'employees', id), editEmployeeData);
+      await updateDoc(getPubDoc('employees', id), editEmployeeData);
       setEditingEmployeeId(null); showToast('人員資料已成功更新！');
     } catch (error) { showToast('更新失敗，請檢查網路連線。'); }
   };
@@ -410,13 +465,13 @@ export default function App() {
   };
   const saveLevelRulesConfig = async () => {
     const parsedRules = editingLevelRules.map((r: any) => ({ ...r, min: parseInt(r.min) || 0, max: parseInt(r.max) || 0, levelName: r.levelName.toString() }));
-    try { await setDoc(doc(db, 'config', 'global'), { levelRules: parsedRules }, { merge: true }); setLevelRules(parsedRules); showToast('學習升級門檻已儲存！'); } catch (e) { showToast('儲存失敗！'); }
+    try { await setDoc(getPubDoc('config', 'global'), { levelRules: parsedRules }, { merge: true }); setLevelRules(parsedRules); showToast('學習升級門檻已儲存！'); } catch (e) { showToast('儲存失敗！'); }
   };
 
   const saveCategoriesConfig = async () => {
     const validCategories = editingCategories.filter((c: any) => c.name.trim() !== '');
     try {
-      await setDoc(doc(db, 'config', 'global'), { learningCategories: validCategories }, { merge: true });
+      await setDoc(getPubDoc('config', 'global'), { learningCategories: validCategories }, { merge: true });
       setCategories(validCategories);
       if (!validCategories.find((c: any) => c.id === activeCategoryId) && validCategories.length > 0) {
         setActiveCategoryId(validCategories[0].id);
@@ -435,7 +490,7 @@ export default function App() {
 
   const saveTaskRolesConfig = async () => {
     try {
-      await setDoc(doc(db, 'config', 'global'), { taskRoles: editingTaskRoles }, { merge: true });
+      await setDoc(getPubDoc('config', 'global'), { taskRoles: editingTaskRoles }, { merge: true });
       setTaskRoles(editingTaskRoles);
       showToast('工作項目統計權限已儲存！');
     } catch (e) {
@@ -450,13 +505,13 @@ export default function App() {
       const tasksToDelete = tasks.filter(t => !taskIdsToKeep.includes(t.id));
       
       for (const t of tasksToDelete) {
-         await deleteDoc(doc(db, 'tasks', t.id));
+         await deleteDoc(getPubDoc('tasks', t.id));
       }
       for (const t of validTasks) {
          if (t.id.startsWith('temp_')) {
-             await addDoc(collection(db, 'tasks'), { name: t.name, count: 0, createdAt: Date.now() });
+             await addDoc(getPubCollection('tasks'), { name: t.name, count: 0, createdAt: Date.now() });
          } else {
-             await updateDoc(doc(db, 'tasks', t.id), { name: t.name });
+             await updateDoc(getPubDoc('tasks', t.id), { name: t.name });
          }
       }
       setShowTaskManager(false);
@@ -480,7 +535,7 @@ export default function App() {
           newDetails.push({ id: taskId, name: taskName, count: 1 });
       }
 
-      await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
+      await updateDoc(getPubDoc('employees', empId), { tasksDetail: newDetails });
       showToast('已增加 1 次！');
   };
 
@@ -498,7 +553,7 @@ export default function App() {
           newDetails.push({ id: taskId, name: taskName, count: newCount });
       }
 
-      await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
+      await updateDoc(getPubDoc('employees', empId), { tasksDetail: newDetails });
   };
 
   if (!isAuthenticated) {
@@ -690,7 +745,7 @@ export default function App() {
                         showToast('定位中...');
                         navigator.geolocation.getCurrentPosition(
                           (pos) => {
-                            updateDoc(doc(db, 'stores', store.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                            updateDoc(getPubDoc('stores', store.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
                             showToast(`${store.name} 座標已更新！`);
                           },
                           (err) => showToast('無法取得定位，請確認權限是否開啟'),
@@ -705,11 +760,11 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="text-[10px] text-gray-500 font-bold block mb-1">緯度 (Latitude)</label>
-                      <input type="number" step="any" value={store.lat || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lat: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
+                      <input type="number" step="any" value={store.lat || ''} onChange={e => updateDoc(getPubDoc('stores', store.id), { lat: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
                     </div>
                     <div>
                       <label className="text-[10px] text-gray-500 font-bold block mb-1">經度 (Longitude)</label>
-                      <input type="number" step="any" value={store.lng || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lng: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
+                      <input type="number" step="any" value={store.lng || ''} onChange={e => updateDoc(getPubDoc('stores', store.id), { lng: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
                     </div>
                   </div>
                   {(store.lat && store.lng) && (
@@ -783,13 +838,13 @@ export default function App() {
                       </div>
                       <div className="flex gap-3 pl-2">
                         <button onClick={async () => {
-                          await deleteDoc(doc(db, 'pendingAccounts', pa.id));
-                          await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], createdAt: Date.now() });
+                          await deleteDoc(getPubDoc('pendingAccounts', pa.id));
+                          await addDoc(getPubCollection('employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], createdAt: Date.now() });
                           showToast('已加入名單！');
                           if(pendingAccounts.length === 1) setActiveTab('profile'); 
                         }} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-blue-200 active:scale-95 transition-transform">核准開通</button>
                         <button onClick={async () => {
-                          await deleteDoc(doc(db, 'pendingAccounts', pa.id));
+                          await deleteDoc(getPubDoc('pendingAccounts', pa.id));
                           if(pendingAccounts.length === 1) setActiveTab('profile');
                         }} className="bg-gray-50 text-gray-500 px-6 py-2.5 rounded-lg text-sm font-bold border border-gray-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-colors">拒絕</button>
                       </div>
@@ -826,19 +881,19 @@ export default function App() {
                               <span className="text-xs font-bold text-gray-400 px-2 py-1 bg-gray-100 rounded border border-gray-200 shadow-inner inline-block">待同事初審</span>
                             ) : (
                               <button onClick={async () => {
-                                await updateDoc(doc(db, 'progressApprovals', pa.id), { status: 'first_approved', firstApprover: currentUserName || '員工' });
+                                await updateDoc(getPubDoc('progressApprovals', pa.id), { status: 'first_approved', firstApprover: currentUserName || '員工' });
                                 showToast('已完成初審！');
                               }} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-blue-600 transition-colors">初審核准</button>
                             )
                           ) : canEdit ? (
                             <button onClick={async () => {
-                              await deleteDoc(doc(db, 'progressApprovals', pa.id));
+                              await deleteDoc(getPubDoc('progressApprovals', pa.id));
                               const emp = employees.find(e => e.name === pa.employeeName);
                               if(emp) {
                                 const targetCatId = pa.categoryId || displayCategories[0]?.id || 'default';
                                 const newProgress = typeof emp.completedLearning === 'object' ? {...emp.completedLearning} : { [displayCategories[0]?.id || 'default']: emp.completedLearning || 0 };
                                 newProgress[targetCatId] = (newProgress[targetCatId] || 0) + 1;
-                                await updateDoc(doc(db, 'employees', emp.id), { completedLearning: newProgress });
+                                await updateDoc(getPubDoc('employees', emp.id), { completedLearning: newProgress });
                               }
                               showToast('複審完成，已核發進度！');
                             }} className="bg-indigo-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors">最終核准</button>
@@ -955,7 +1010,7 @@ export default function App() {
                   {/* 後台專屬：新增當前分類的按鈕 */}
                   {canEdit && (
                     <div className="p-4 border-b border-gray-100 bg-gray-50/50 rounded-tr-xl">
-                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', description: '', categoryId: currentActiveCatId, status: 'locked', mediaUrl: '', fileName: '', createdAt: Date.now() })} className="w-full py-2 border border-dashed border-indigo-300 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
+                      <button onClick={async () => await addDoc(getPubCollection('learningSteps'), { title: '新學習項目', description: '', categoryId: currentActiveCatId, status: 'locked', mediaUrl: '', fileName: '', createdAt: Date.now() })} className="w-full py-2 border border-dashed border-indigo-300 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
                         <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{displayCategories.find(c=>c.id === currentActiveCatId)?.name}」新增內容
                       </button>
                     </div>
@@ -972,17 +1027,17 @@ export default function App() {
                         /* 後台編輯視角：顯示所有可編輯的卡片 */
                         filteredSteps.map((step, index) => (
                           <div key={step.id} className="flex flex-col gap-3 p-4 rounded-xl border border-gray-200 bg-white shadow-sm relative">
-                            <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-2 right-2 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
+                            <button onClick={async () => await deleteDoc(getPubDoc('learningSteps', step.id))} className="absolute top-2 right-2 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
                             
                             <div className="flex items-center space-x-2">
                               <div className="font-black text-gray-300 text-lg w-5">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
-                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入標題"/>
+                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(getPubDoc('learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入標題"/>
                               </div>
                             </div>
                             
                             <div className="pl-7">
-                              <textarea defaultValue={step.description} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { description: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg text-xs text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[80px]" placeholder="請輸入學習內容..." />
+                              <textarea defaultValue={step.description} onBlur={e => updateDoc(getPubDoc('learningSteps', step.id), { description: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg text-xs text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[80px]" placeholder="請輸入學習內容..." />
                             </div>
                             
                             <div className="pl-7 flex items-center space-x-3 mt-1">
@@ -998,7 +1053,7 @@ export default function App() {
                                 {step.mediaUrl.match(/\.(mp4|webm|ogg|MOV|m4v)/i) || (step.mediaUrl.includes('firebasestorage') && step.mediaUrl.includes('media%2F')) ? (
                                   <video src={step.mediaUrl} controls className="max-h-32 rounded border border-gray-200" />
                                 ) : ( <img src={step.mediaUrl} className="max-h-32 object-contain rounded border border-gray-200" alt="預覽" /> )}
-                                <button onClick={() => updateDoc(doc(db, 'learningSteps', step.id), { mediaUrl: '', fileName: '' })} className="absolute top-1 right-1 bg-red-500/90 text-white px-2 py-1 rounded text-[10px] font-bold backdrop-blur-sm shadow-sm">移除</button>
+                                <button onClick={() => updateDoc(getPubDoc('learningSteps', step.id), { mediaUrl: '', fileName: '' })} className="absolute top-1 right-1 bg-red-500/90 text-white px-2 py-1 rounded text-[10px] font-bold backdrop-blur-sm shadow-sm">移除</button>
                               </div>
                             )}
                           </div>
@@ -1078,7 +1133,7 @@ export default function App() {
                                         </div>
                                       ) : (
                                         <button onClick={async () => {
-                                            await addDoc(collection(db, 'progressApprovals'), {
+                                            await addDoc(getPubCollection('progressApprovals'), {
                                               employeeName: currentUserName || '員工',
                                               stepName: step.title,
                                               stepId: step.id,
@@ -1284,13 +1339,13 @@ export default function App() {
                     {stores.map(s => (
                       <span key={s.id} className="bg-gray-50 text-gray-700 px-3 py-1 rounded border border-gray-200 text-xs font-bold flex items-center gap-1.5 shadow-sm">
                         {s.name}
-                        <button onClick={()=>deleteDoc(doc(db,'stores',s.id))} className="text-gray-400 hover:text-red-500 transition-colors"><XCircle c="w-3.5 h-3.5" /></button>
+                        <button onClick={()=>deleteDoc(getPubDoc('stores',s.id))} className="text-gray-400 hover:text-red-500 transition-colors"><XCircle c="w-3.5 h-3.5" /></button>
                       </span>
                     ))}
                   </div>
                   <div className="flex gap-2">
                     <input type="text" id="ns" className="flex-1 p-2 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="新增門店..." />
-                    <button onClick={async () => { const i = document.getElementById('ns'); if(i.value) { await addDoc(collection(db, 'stores'), { name: i.value, createdAt: Date.now() }); i.value = ''; } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
+                    <button onClick={async () => { const i = document.getElementById('ns'); if(i.value) { await addDoc(getPubCollection('stores'), { name: i.value, createdAt: Date.now() }); i.value = ''; } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
                   </div>
                 </div>
               )}
@@ -1404,7 +1459,7 @@ export default function App() {
                                 {canEdit && (
                                   <div className="flex items-center space-x-1 mt-2">
                                     <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
-                                    <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                    <button onClick={async () => await deleteDoc(getPubDoc('employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
                                   </div>
                                 )}
                               </div>
