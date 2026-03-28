@@ -185,6 +185,10 @@ export default function App() {
   const [showTaskManager, setShowTaskManager] = useState<boolean>(false);
   const [editingTasks, setEditingTasks] = useState<any[]>([]);
 
+  // 考試狀態 (後台編輯保護)
+  const [editingExamId, setEditingExamId] = useState<string | null>(null);
+  const [editExamData, setEditExamData] = useState<any>({ title: '', subtitle: '', description: '' });
+
   // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeStoreFilter, setActiveStoreFilter] = useState<string>('all');
@@ -343,7 +347,7 @@ export default function App() {
         return; 
       }
 
-      // 新增員工時，確保加入 learningHistory: [] 以儲存歷史紀錄
+      // 新增員工時，確保加入 learningHistory 與 completedBlocks 以儲存歷史紀錄與打勾狀態
       await addDoc(collection(db, 'pendingAccounts'), {
         name, store, requestedRole: role, password, birthdate, hireDate, phone, mbti,
         date: new Date().toISOString().split('T')[0], createdAt: Date.now()
@@ -1216,7 +1220,29 @@ export default function App() {
                                     <div className="space-y-4 mb-4">
                                       {getStepBlocks(step).map((block: any, bIndex: number) => (
                                         <div key={block.id} className="bg-indigo-50/40 rounded-xl p-4 border border-indigo-100/50 shadow-inner inset-shadow">
-                                          {block.subtitle && <h4 className="font-bold text-indigo-800 text-base mb-2 border-b border-indigo-100/60 pb-2">{String(block.subtitle)}</h4>}
+                                          <div className="flex items-center justify-between mb-2 border-b border-indigo-100/60 pb-2">
+                                            {block.subtitle ? (
+                                              <h4 className="font-bold text-indigo-800 text-base">{String(block.subtitle)}</h4>
+                                            ) : (
+                                              <h4 className="font-bold text-indigo-800 text-base">內容區塊</h4>
+                                            )}
+                                            
+                                            {/* --- 前台專用：教學完畢打勾儲存 --- */}
+                                            <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-indigo-50 transition-colors">
+                                              <input 
+                                                type="checkbox" 
+                                                checked={currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] || false}
+                                                onChange={(e) => {
+                                                  const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                                  newCompletedBlocks[`${step.id}_${block.id}`] = e.target.checked;
+                                                  updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                                  showToast(e.target.checked ? '已標記為教學完畢！' : '已取消標記！');
+                                                }}
+                                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                              />
+                                              <span className="text-[10px] text-indigo-700 font-bold">教學完畢</span>
+                                            </label>
+                                          </div>
                                           <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
                                           
                                           {block.mediaUrl && (
@@ -1298,52 +1324,79 @@ export default function App() {
                 ) : (
                    exams.map((exam, i) => {
                       const empRecord = currentUserData?.examRecords?.[exam.id];
+                      const isPassing = empRecord?.status === 'passed' || empRecord === 'passed'; // 兼容舊版格式
+                      const isFailing = empRecord?.status === 'failed' || empRecord === 'failed';
+
                       return (
                       <div key={exam.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
                          {/* 狀態裝飾線 */}
-                         <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors ${empRecord === 'passed' ? 'bg-green-500' : empRecord === 'failed' ? 'bg-red-500' : 'bg-gray-200'}`}></div>
+                         <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors ${isPassing ? 'bg-green-500' : isFailing ? 'bg-red-500' : 'bg-gray-200'}`}></div>
                          
-                         {canEdit && (
-                            <button onClick={() => { if(window.confirm('確定要刪除這個考試項目嗎？')) deleteDoc(doc(db, 'exams', exam.id)) }} className="absolute top-3 right-3 text-gray-300 hover:text-red-500 p-1 bg-white rounded transition-colors z-10"><Trash2 c="w-4 h-4" /></button>
+                         {/* 右上角編輯與刪除按鈕 (非編輯模式才顯示) */}
+                         {canEdit && editingExamId !== exam.id && (
+                            <div className="absolute top-3 right-3 flex gap-1 z-20">
+                                <button onClick={() => {
+                                    setEditingExamId(exam.id);
+                                    setEditExamData({ title: exam.title || '', subtitle: exam.subtitle || '', description: exam.description || '' });
+                                }} className="text-gray-400 hover:text-indigo-600 p-1.5 bg-gray-50 hover:bg-indigo-50 rounded transition-colors" title="編輯"><Edit c="w-4 h-4" /></button>
+                                <button onClick={() => { if(window.confirm('確定要刪除這個考試項目嗎？')) deleteDoc(doc(db, 'exams', exam.id)) }} className="text-gray-400 hover:text-red-500 p-1.5 bg-gray-50 hover:bg-red-50 rounded transition-colors" title="刪除"><Trash2 c="w-4 h-4" /></button>
+                            </div>
                          )}
                          
-                         {canEdit ? (
-                            <div className="space-y-3 pr-6 pl-2">
-                               <input type="text" defaultValue={exam.title} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { title: e.target.value })} className="w-full p-2 border border-gray-200 rounded-lg font-black text-gray-800 bg-gray-50 text-base outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入大標題"/>
-                               <input type="text" defaultValue={exam.subtitle || ''} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { subtitle: e.target.value })} className="w-full p-2 border border-indigo-100 rounded-lg font-bold text-indigo-700 bg-indigo-50/30 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入標題"/>
-                               <textarea defaultValue={exam.description || ''} onBlur={e => updateDoc(doc(db, 'exams', exam.id), { description: e.target.value })} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[80px]" placeholder="請輸入內容..." />
+                         {/* 內容區塊 */}
+                         {canEdit && editingExamId === exam.id ? (
+                            <div className="space-y-3 pr-6 pl-2 relative z-10">
+                               <input type="text" value={editExamData.title} onChange={e => setEditExamData({...editExamData, title: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg font-black text-gray-800 bg-white text-base outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入大標題"/>
+                               <input type="text" value={editExamData.subtitle} onChange={e => setEditExamData({...editExamData, subtitle: e.target.value})} className="w-full p-2 border border-indigo-100 rounded-lg font-bold text-indigo-700 bg-indigo-50/30 text-xs outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入標題"/>
+                               <textarea value={editExamData.description} onChange={e => setEditExamData({...editExamData, description: e.target.value})} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]" placeholder="請輸入內容..." />
+                               
+                               <div className="flex justify-end pt-2 mt-2 gap-2 border-t border-gray-100">
+                                 <button onClick={() => setEditingExamId(null)} className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors">取消</button>
+                                 <button onClick={async () => {
+                                    await updateDoc(doc(db, 'exams', exam.id), editExamData);
+                                    setEditingExamId(null);
+                                    showToast('考試項目已儲存！');
+                                 }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
+                                    <CheckCircle2 c="w-3.5 h-3.5 mr-1" /> 儲存編輯
+                                 </button>
+                               </div>
                             </div>
                          ) : (
-                            <div className="space-y-3 pl-2">
+                            <div className="space-y-3 pl-2 pr-6 relative z-10">
                                <h3 className="font-black text-gray-800 text-lg border-b border-gray-100 pb-2">{String(exam.title)}</h3>
                                {exam.subtitle && <h4 className="font-bold text-indigo-600 text-sm">{String(exam.subtitle)}</h4>}
                                {exam.description && <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(exam.description)}</p>}
                             </div>
                          )}
 
-                         {/* 通過與沒通過按鈕 */}
-                         <div className="flex gap-3 mt-5 pt-4 border-t border-gray-100 pl-2 relative z-10">
-                            <button onClick={() => {
-                               if(currentUserData) {
-                                  const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
-                                  newRecords[exam.id] = 'passed';
-                                  updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
-                                  showToast('已記錄：通過');
-                               }
-                            }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${empRecord === 'passed' ? 'bg-green-500 text-white shadow-green-200 ring-2 ring-green-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-gray-200'}`}>
-                               <CheckCircle2 c="w-4 h-4 mr-1.5" /> 通過
-                            </button>
-                            <button onClick={() => {
-                               if(currentUserData) {
-                                  const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
-                                  newRecords[exam.id] = 'failed';
-                                  updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
-                                  showToast('已記錄：沒通過');
-                               }
-                            }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${empRecord === 'failed' ? 'bg-red-500 text-white shadow-red-200 ring-2 ring-red-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200'}`}>
-                               <XCircle c="w-4 h-4 mr-1.5" /> 沒通過
-                            </button>
-                         </div>
+                         {/* 通過與沒通過按鈕 (不在編輯模式才顯示) */}
+                         {(!canEdit || editingExamId !== exam.id) && (
+                           <div className="flex gap-3 mt-5 pt-4 border-t border-gray-100 pl-2 relative z-10">
+                              <button onClick={() => {
+                                 if(currentUserData) {
+                                    const approverName = window.prompt('請輸入審核人姓名（主管簽名）：', currentUserName);
+                                    if(approverName !== null) {
+                                       const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
+                                       newRecords[exam.id] = { status: 'passed', approver: approverName || '主管', timestamp: Date.now(), title: exam.title };
+                                       updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
+                                       showToast('已記錄：通過');
+                                    }
+                                 }
+                              }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${isPassing ? 'bg-green-500 text-white shadow-green-200 ring-2 ring-green-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-gray-200'}`}>
+                                 <CheckCircle2 c="w-4 h-4 mr-1.5" /> 通過
+                              </button>
+                              <button onClick={() => {
+                                 if(currentUserData) {
+                                    const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
+                                    newRecords[exam.id] = { status: 'failed', timestamp: Date.now() };
+                                    updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
+                                    showToast('已記錄：沒通過');
+                                 }
+                              }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${isFailing ? 'bg-red-500 text-white shadow-red-200 ring-2 ring-red-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200'}`}>
+                                 <XCircle c="w-4 h-4 mr-1.5" /> 沒通過
+                              </button>
+                           </div>
+                         )}
                       </div>
                    )})
                 )}
@@ -1594,20 +1647,6 @@ export default function App() {
                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">員工姓名</label>
                                     <input type="text" value={editEmployeeData.name} onChange={(e) => setEditEmployeeData({...editEmployeeData, name: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="修改姓名"/>
                                   </div>
-                                  <div>
-                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
-                                    <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="09XX"/>
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
-                                      <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                    </div>
-                                    <div>
-                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
-                                      <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                    </div>
-                                  </div>
                                   <div className="grid grid-cols-2 gap-2">
                                     <div>
                                       <label className="text-[10px] font-bold text-blue-600 mb-1 block">所屬門店</label>
@@ -1622,29 +1661,19 @@ export default function App() {
                                       </select>
                                     </div>
                                   </div>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
-                                      <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                        <option value="">未填寫</option>
-                                        <option value="E">E型 (外向)</option>
-                                        <option value="I">I型 (內向)</option>
-                                      </select>
-                                    </div>
-                                    <div>
-                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
-                                      <input 
-                                        type="text" 
-                                        maxLength={6} 
-                                        value={editEmployeeData.password} 
-                                        onChange={(e) => {
-                                          const val = e.target.value.replace(/\D/g, ''); 
-                                          if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
-                                        }} 
-                                        className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
-                                        placeholder="請輸入6碼數字新密碼"
-                                      />
-                                    </div>
+                                  <div>
+                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
+                                    <input 
+                                      type="text" 
+                                      maxLength={6} 
+                                      value={editEmployeeData.password} 
+                                      onChange={(e) => {
+                                        const val = e.target.value.replace(/\D/g, ''); 
+                                        if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
+                                      }} 
+                                      className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
+                                      placeholder="請輸入6碼數字新密碼"
+                                    />
                                   </div>
                                   <div className="flex space-x-3 mt-2 pt-2 border-t border-blue-200">
                                     <button onClick={() => setEditingEmployeeId(null)} className="flex-1 py-2.5 bg-white text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">取消</button>
@@ -1720,7 +1749,7 @@ export default function App() {
                                  )}
 
                                  {/* --- 學習審核通過紀錄卡片 --- */}
-                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2">
+                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                        <p className="text-xs text-gray-700 font-bold flex items-center">
                                          <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
@@ -1747,6 +1776,39 @@ export default function App() {
                                       </div>
                                     )}
                                  </div>
+
+                                 {/* --- 考試通過紀錄卡片 --- */}
+                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mb-2">
+                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
+                                       <p className="text-xs text-gray-700 font-bold flex items-center">
+                                         <ClipboardCheck c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />考試通過紀錄
+                                       </p>
+                                       <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">
+                                         共 {Object.values(emp.examRecords || {}).filter((r: any) => r === 'passed' || r?.status === 'passed').length} 項
+                                       </p>
+                                    </div>
+                                    {emp.examRecords && Object.values(emp.examRecords).filter((r: any) => r === 'passed' || r?.status === 'passed').length > 0 ? (
+                                      <div className="space-y-2 mt-2">
+                                        {Object.entries(emp.examRecords).filter(([_, r]: any) => r === 'passed' || r?.status === 'passed').map(([eId, r]: any) => {
+                                          const examInfo = exams.find(e => e.id === eId) || { title: r?.title || '已刪除的考試' };
+                                          return (
+                                          <div key={eId} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-bold text-gray-800">{String(examInfo.title)}</span>
+                                              <span className="text-[9px] text-gray-400 mt-1">{r?.timestamp ? new Date(r.timestamp).toLocaleDateString() : '早期完成紀錄'}</span>
+                                            </div>
+                                            <span className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100 font-bold whitespace-nowrap ml-2">
+                                              審核: {String(r?.approver || '系統')}
+                                            </span>
+                                          </div>
+                                        )})}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
+                                        尚未有通過的考試項目
+                                      </div>
+                                    )}
+                                 </div>
                                </>
                              )}
                            </div>
@@ -1756,8 +1818,8 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                   <h2 className="font-bold mb-4 flex items-center text-gray-800">
+                <div className="bg-transparent">
+                   <h2 className="font-bold mb-4 flex items-center text-gray-800 px-2">
                      <User c="w-4 h-4 mr-2 text-indigo-500" />
                      個人資料
                    </h2>
@@ -1774,20 +1836,6 @@ export default function App() {
                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">員工姓名</label>
                                    <input type="text" value={editEmployeeData.name} onChange={(e) => setEditEmployeeData({...editEmployeeData, name: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="修改姓名"/>
                                  </div>
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
-                                   <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="09XX"/>
-                                 </div>
-                                 <div className="grid grid-cols-2 gap-2">
-                                   <div>
-                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
-                                     <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                   </div>
-                                   <div>
-                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
-                                     <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                   </div>
-                                 </div>
                                  <div className="grid grid-cols-2 gap-2">
                                    <div>
                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">所屬門店</label>
@@ -1802,29 +1850,19 @@ export default function App() {
                                      </select>
                                    </div>
                                  </div>
-                                 <div className="grid grid-cols-2 gap-2">
-                                   <div>
-                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
-                                     <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                       <option value="">未填寫</option>
-                                       <option value="E">E型 (外向)</option>
-                                       <option value="I">I型 (內向)</option>
-                                     </select>
-                                   </div>
-                                   <div>
-                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
-                                     <input 
-                                       type="text" 
-                                       maxLength={6} 
-                                       value={editEmployeeData.password} 
-                                       onChange={(e) => {
-                                         const val = e.target.value.replace(/\D/g, ''); 
-                                         if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
-                                       }} 
-                                       className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
-                                       placeholder="請輸入6碼數字新密碼"
-                                     />
-                                   </div>
+                                 <div>
+                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
+                                   <input 
+                                     type="text" 
+                                     maxLength={6} 
+                                     value={editEmployeeData.password} 
+                                     onChange={(e) => {
+                                       const val = e.target.value.replace(/\D/g, ''); 
+                                       if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
+                                     }} 
+                                     className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
+                                     placeholder="請輸入6碼數字新密碼"
+                                   />
                                  </div>
                                  <div className="flex space-x-3 mt-2 pt-2 border-t border-blue-200">
                                    <button onClick={() => setEditingEmployeeId(null)} className="flex-1 py-2.5 bg-white text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">取消</button>
@@ -1900,7 +1938,7 @@ export default function App() {
                                 )}
 
                                 {/* --- 學習審核通過紀錄卡片 --- */}
-                                <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2">
+                                <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                       <p className="text-xs text-gray-700 font-bold flex items-center">
                                         <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
@@ -1924,6 +1962,39 @@ export default function App() {
                                    ) : (
                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
                                        尚未有通過的學習項目
+                                     </div>
+                                   )}
+                                </div>
+
+                                {/* --- 考試通過紀錄卡片 --- */}
+                                <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mb-2">
+                                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
+                                      <p className="text-xs text-gray-700 font-bold flex items-center">
+                                        <ClipboardCheck c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />考試通過紀錄
+                                      </p>
+                                      <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">
+                                        共 {Object.values(emp.examRecords || {}).filter((r: any) => r === 'passed' || r?.status === 'passed').length} 項
+                                      </p>
+                                   </div>
+                                   {emp.examRecords && Object.values(emp.examRecords).filter((r: any) => r === 'passed' || r?.status === 'passed').length > 0 ? (
+                                     <div className="space-y-2 mt-2">
+                                       {Object.entries(emp.examRecords).filter(([_, r]: any) => r === 'passed' || r?.status === 'passed').map(([eId, r]: any) => {
+                                         const examInfo = exams.find(e => e.id === eId) || { title: r?.title || '已刪除的考試' };
+                                         return (
+                                         <div key={eId} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                           <div className="flex flex-col">
+                                             <span className="text-xs font-bold text-gray-800">{String(examInfo.title)}</span>
+                                             <span className="text-[9px] text-gray-400 mt-1">{r?.timestamp ? new Date(r.timestamp).toLocaleDateString() : '早期完成紀錄'}</span>
+                                           </div>
+                                           <span className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100 font-bold whitespace-nowrap ml-2">
+                                             審核: {String(r?.approver || '系統')}
+                                           </span>
+                                         </div>
+                                       )})}
+                                     </div>
+                                   ) : (
+                                     <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
+                                       尚未有通過的考試項目
                                      </div>
                                    )}
                                 </div>
