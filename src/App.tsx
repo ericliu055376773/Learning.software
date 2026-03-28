@@ -54,6 +54,7 @@ const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d
 const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
 const FolderPlus = ({ c }: any) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></I>;
 const MapPin = ({ c }: any) => <I c={c}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></I>;
+const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></I>;
 
 const customStyles = `
   /* 小標籤顏色 */
@@ -183,6 +184,10 @@ export default function App() {
   const [activeTaskId, setActiveTaskId] = useState<string>('');
   const [showTaskManager, setShowTaskManager] = useState<boolean>(false);
   const [editingTasks, setEditingTasks] = useState<any[]>([]);
+
+  // 人員名單搜尋與篩選狀態
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [activeStoreFilter, setActiveStoreFilter] = useState<string>('all');
 
   // 圖片點擊放大相關狀態
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
@@ -593,6 +598,17 @@ export default function App() {
       await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
   }
 
+  const isProfileTabAdmin = canEdit;
+  const baseEmployees = isProfileTabAdmin ? employees : employees.filter(e => e.name === currentUserName);
+  
+  // 後台人員名單搜尋與篩選邏輯
+  const filteredDisplayEmployees = baseEmployees.filter(emp => {
+      if (!isProfileTabAdmin) return true;
+      const matchStore = activeStoreFilter === 'all' || emp.store === activeStoreFilter;
+      const matchSearch = emp.name?.toLowerCase().includes(searchQuery.toLowerCase()) || emp.store?.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchStore && matchSearch;
+  });
+
   const displayCategories = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習'}];
   const currentActiveCatId = activeCategoryId || displayCategories[0].id;
   const filteredSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id));
@@ -757,9 +773,6 @@ export default function App() {
       </div>
     );
   }
-
-  const isProfileTabAdmin = canEdit;
-  const displayEmployees = isProfileTabAdmin ? employees : employees.filter(e => e.name === currentUserName);
 
   return (
     <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-hidden">
@@ -1526,207 +1539,402 @@ export default function App() {
                 </div>
               )}
 
-              <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                 <h2 className="font-bold mb-4 flex items-center text-gray-800">
-                   <User c="w-4 h-4 mr-2 text-indigo-500" />
-                   {isProfileTabAdmin ? `人員名單 (${displayEmployees.length})` : '個人資料'}
-                 </h2>
-                 
-                 {/* 統一的人員卡片排版 (前台後台同步) */}
-                 <div className="space-y-4">
-                    {displayEmployees.map(emp => {
-                      const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
-                      
+              {isProfileTabAdmin ? (
+                <div className="bg-transparent">
+                  {/* 後台專用：搜尋欄與門店風琴夾分類 */}
+                  <div className="mb-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center">
+                    <Search c="w-5 h-5 text-gray-400 mr-2" />
+                    <input 
+                      type="text" 
+                      value={searchQuery} 
+                      onChange={e => setSearchQuery(e.target.value)} 
+                      placeholder="搜尋姓名或門店..." 
+                      className="flex-1 bg-transparent outline-none text-sm font-bold text-gray-700" 
+                    />
+                  </div>
+                  
+                  <div className="flex overflow-x-auto pl-2 pt-2 -mb-[1px] hide-scrollbar z-10 relative">
+                    {['all', ...stores.map(s => s.name)].map((storeName, i) => {
+                      const isActive = activeStoreFilter === storeName;
+                      const displayStoreName = storeName === 'all' ? '全部門店' : storeName;
                       return (
-                        <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
-                          
-                          {/* 編輯模式表單 */}
-                          {editingEmployeeId === emp.id ? (
-                            <div className="flex flex-col space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
-                               <div>
-                                 <label className="text-[10px] font-bold text-blue-600 mb-1 block">員工姓名</label>
-                                 <input type="text" value={editEmployeeData.name} onChange={(e) => setEditEmployeeData({...editEmployeeData, name: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="修改姓名"/>
-                               </div>
-                               <div>
-                                 <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
-                                 <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="09XX"/>
-                               </div>
-                               <div className="grid grid-cols-2 gap-2">
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
-                                   <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                 </div>
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
-                                   <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
-                                 </div>
-                               </div>
-                               <div className="grid grid-cols-2 gap-2">
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">所屬門店</label>
-                                   <select value={editEmployeeData.store} onChange={(e) => setEditEmployeeData({...editEmployeeData, store: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                     {stores.map(store => <option key={store.id} value={store.name}>{String(store.name)}</option>)}
-                                   </select>
-                                 </div>
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">職位權限</label>
-                                   <select value={editEmployeeData.role} onChange={(e) => setEditEmployeeData({...editEmployeeData, role: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                     {jobRoles.map(role => <option key={role} value={role}>{String(role)}</option>)}
-                                   </select>
-                                 </div>
-                               </div>
-                               <div className="grid grid-cols-2 gap-2">
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
-                                   <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                                     <option value="">未填寫</option>
-                                     <option value="E">E型 (外向)</option>
-                                     <option value="I">I型 (內向)</option>
-                                   </select>
-                                 </div>
-                                 <div>
-                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
-                                   <input 
-                                     type="text" 
-                                     maxLength={6} 
-                                     value={editEmployeeData.password} 
-                                     onChange={(e) => {
-                                       const val = e.target.value.replace(/\D/g, ''); 
-                                       if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
-                                     }} 
-                                     className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
-                                     placeholder="請輸入6碼數字新密碼"
-                                   />
-                                 </div>
-                               </div>
-                               <div className="flex space-x-3 mt-2 pt-2 border-t border-blue-200">
-                                 <button onClick={() => setEditingEmployeeId(null)} className="flex-1 py-2.5 bg-white text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">取消</button>
-                                 <button onClick={() => saveEditEmployee(emp.id)} className="flex-1 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors">儲存</button>
-                               </div>
-                            </div>
-                          ) : (
-                            /* 一般顯示模式 (前後台佈局統一) */
-                            <>
-                              <div className="flex justify-between items-start mb-5">
-                                <div className="flex items-center space-x-4">
-                                  <div className="relative">
-                                    <label className={`block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center group ${canEdit || currentUserName === emp.name ? 'cursor-pointer' : ''}`}>
-                                      {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
-                                      
-                                      {/* 只有自己或後台可以上傳大頭照 */}
-                                      {(canEdit || currentUserName === emp.name) && (
-                                        <>
-                                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                             <Camera c="w-6 h-6 text-white" />
-                                          </div>
-                                          <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(emp.id, e)} />
-                                        </>
-                                      )}
-                                    </label>
+                        <div
+                          key={storeName}
+                          onClick={() => setActiveStoreFilter(storeName)}
+                          className={`relative cursor-pointer px-4 sm:px-6 py-2.5 min-w-[80px] max-w-[120px] text-center rounded-t-xl -ml-2 border border-gray-200 transition-all select-none flex-shrink-0 ${
+                            isActive
+                              ? 'bg-white text-indigo-600 font-black border-b-white z-20 pt-3.5 -mt-1.5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]'
+                              : 'bg-indigo-50/90 text-gray-500 font-bold hover:bg-indigo-100/90 shadow-inner inset-shadow'
+                          }`}
+                          style={{ zIndex: isActive ? 20 : stores.length + 1 - i }}
+                        >
+                          <span className="truncate block text-[13px]">{String(displayStoreName)}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-xl rounded-tl-none shadow-sm relative z-10 p-5">
+                    <h2 className="font-bold mb-4 flex items-center text-gray-800">
+                      <User c="w-4 h-4 mr-2 text-indigo-500" />
+                      人員名單 ({filteredDisplayEmployees.length})
+                    </h2>
+                    
+                    <div className="space-y-4">
+                       {filteredDisplayEmployees.map(emp => {
+                         const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
+                         
+                         return (
+                           <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
+                             
+                             {/* 編輯模式表單 */}
+                             {editingEmployeeId === emp.id ? (
+                               <div className="flex flex-col space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                                  <div>
+                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">員工姓名</label>
+                                    <input type="text" value={editEmployeeData.name} onChange={(e) => setEditEmployeeData({...editEmployeeData, name: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="修改姓名"/>
                                   </div>
                                   <div>
-                                    <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
-                                    <RoleBadge role={emp.role} />
-                                    <span className="text-xs text-gray-500 font-bold ml-2">{String(emp.store)}</span>
+                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
+                                    <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="09XX"/>
                                   </div>
-                                </div>
-                                
-                                {/* 後台專屬：保留編輯及刪除按鈕 */}
-                                {canEdit && (
-                                  <div className="flex items-center space-x-1 mt-2">
-                                    <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
-                                    <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
+                                      <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
+                                      <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                    </div>
                                   </div>
-                                )}
-                              </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">所屬門店</label>
+                                      <select value={editEmployeeData.store} onChange={(e) => setEditEmployeeData({...editEmployeeData, store: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                        {stores.map(store => <option key={store.id} value={store.name}>{String(store.name)}</option>)}
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">職位權限</label>
+                                      <select value={editEmployeeData.role} onChange={(e) => setEditEmployeeData({...editEmployeeData, role: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                        {jobRoles.map(role => <option key={role} value={role}>{String(role)}</option>)}
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
+                                      <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                        <option value="">未填寫</option>
+                                        <option value="E">E型 (外向)</option>
+                                        <option value="I">I型 (內向)</option>
+                                      </select>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
+                                      <input 
+                                        type="text" 
+                                        maxLength={6} 
+                                        value={editEmployeeData.password} 
+                                        onChange={(e) => {
+                                          const val = e.target.value.replace(/\D/g, ''); 
+                                          if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
+                                        }} 
+                                        className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
+                                        placeholder="請輸入6碼數字新密碼"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="flex space-x-3 mt-2 pt-2 border-t border-blue-200">
+                                    <button onClick={() => setEditingEmployeeId(null)} className="flex-1 py-2.5 bg-white text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">取消</button>
+                                    <button onClick={() => saveEditEmployee(emp.id)} className="flex-1 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors">儲存</button>
+                                  </div>
+                               </div>
+                             ) : (
+                               /* 一般顯示模式 (前後台佈局統一) */
+                               <>
+                                 <div className="flex justify-between items-start mb-5">
+                                   <div className="flex items-center space-x-4">
+                                     <div className="relative">
+                                       <label className={`block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center group ${canEdit || currentUserName === emp.name ? 'cursor-pointer' : ''}`}>
+                                         {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                         
+                                         {/* 只有自己或後台可以上傳大頭照 */}
+                                         {(canEdit || currentUserName === emp.name) && (
+                                           <>
+                                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <Camera c="w-6 h-6 text-white" />
+                                             </div>
+                                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(emp.id, e)} />
+                                           </>
+                                         )}
+                                       </label>
+                                     </div>
+                                     <div>
+                                       <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
+                                       <RoleBadge role={emp.role} />
+                                       <span className="text-xs text-gray-500 font-bold ml-2">{String(emp.store)}</span>
+                                     </div>
+                                   </div>
+                                   
+                                   {/* 後台專屬：保留編輯及刪除按鈕 */}
+                                   {canEdit && (
+                                     <div className="flex items-center space-x-1 mt-2">
+                                       <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
+                                       <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                     </div>
+                                   )}
+                                 </div>
 
-                              {/* 發光實色等級卡片 */}
-                              <div className={getRoleCardStyle(emp.role)}>
-                                <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
-                                <div className="flex justify-between items-end relative z-10">
-                                   <div>
-                                     <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">目前等級</p>
-                                     <p className="text-3xl font-black drop-shadow-md">{getLevelDisplay(emp.completedLearning || 0)}</p>
+                                 {/* 發光實色等級卡片 */}
+                                 <div className={getRoleCardStyle(emp.role)}>
+                                   <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
+                                   <div className="flex justify-between items-end relative z-10">
+                                      <div>
+                                        <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">目前等級</p>
+                                        <p className="text-3xl font-black drop-shadow-md">{getLevelDisplay(emp.completedLearning || 0)}</p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">所屬職位</p>
+                                        <p className="text-xl font-bold drop-shadow-md">{String(emp.role)}</p>
+                                      </div>
                                    </div>
-                                   <div className="text-right">
-                                     <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">所屬職位</p>
-                                     <p className="text-xl font-bold drop-shadow-md">{String(emp.role)}</p>
-                                   </div>
-                                </div>
-                              </div>
+                                 </div>
 
-                              {/* 個人詳細資料列表 */}
-                              <div className="bg-gray-50 rounded-xl border border-gray-100 p-1 mb-4">
-                                 <div className="flex justify-between items-center p-3 border-b border-gray-200/60">
-                                   <span className="text-xs text-gray-500 font-bold">出生年月日</span>
-                                   <span className="text-sm font-bold text-gray-800">{String(emp.birthdate || '未填寫')}</span>
-                                 </div>
-                                 <div className="flex justify-between items-center p-3 border-b border-gray-200/60">
-                                   <span className="text-xs text-gray-500 font-bold">到職日</span>
-                                   <span className="text-sm font-bold text-gray-800">{String(emp.hireDate || '未填寫')}</span>
-                                 </div>
-                                 <div className="flex justify-between items-center p-3 border-b border-gray-200/60">
-                                   <span className="text-xs text-gray-500 font-bold">聯絡電話</span>
-                                   <span className="text-sm font-bold text-gray-800">{String(emp.phone || '未填寫')}</span>
-                                 </div>
-                                 <div className="flex justify-between items-center p-3">
-                                   <span className="text-xs text-gray-500 font-bold">人格特質</span>
-                                   <span className="text-sm font-black text-indigo-600">{emp.mbti ? `${emp.mbti}型人` : '未填寫'}</span>
-                                 </div>
-                              </div>
-
-                              {/* 詳細工作統計 (若有統計數據則顯示在最下方) */}
-                              {emp.tasksDetail && emp.tasksDetail.length > 0 && (
-                                <div className="bg-white rounded-lg border border-gray-100 p-3 z-10 shadow-sm mt-1">
-                                   <div className="flex justify-between items-center mb-2">
-                                      <p className="text-[10px] text-gray-400 font-bold">詳細工作統計：</p>
-                                      <p className="text-[10px] text-gray-400 font-bold">總計 {Number(totalTasks)} 次</p>
-                                   </div>
-                                   <div className="flex flex-wrap gap-2">
-                                     {emp.tasksDetail.map((t: any) => (
-                                       <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
-                                         {String(t.name)} <span className="font-black text-blue-600 ml-1.5">{Number(t.count)}</span>
-                                       </span>
-                                     ))}
-                                   </div>
-                                </div>
-                              )}
-
-                              {/* --- 新增：學習審核通過紀錄卡片 --- */}
-                              <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-3">
-                                 <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
-                                    <p className="text-xs text-gray-700 font-bold flex items-center">
-                                      <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
-                                    </p>
-                                    <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">共 {emp.learningHistory?.length || 0} 項</p>
-                                 </div>
-                                 {emp.learningHistory && emp.learningHistory.length > 0 ? (
-                                   <div className="space-y-2 mt-2">
-                                     {emp.learningHistory.map((h: any, i: number) => (
-                                       <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
-                                         <div className="flex flex-col">
-                                           <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
-                                           <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
-                                         </div>
-                                         <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
-                                           審核: {String(h.firstApprover)}
-                                         </span>
-                                       </div>
-                                     ))}
-                                   </div>
-                                 ) : (
-                                   <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
-                                     尚未有通過的學習項目
+                                 {/* 詳細工作統計 (若有統計數據則顯示在最下方) */}
+                                 {emp.tasksDetail && emp.tasksDetail.length > 0 && (
+                                   <div className="bg-white rounded-lg border border-gray-100 p-3 z-10 shadow-sm mt-1 mb-2">
+                                      <div className="flex justify-between items-center mb-2">
+                                         <p className="text-[10px] text-gray-400 font-bold">詳細工作統計：</p>
+                                         <p className="text-[10px] text-gray-400 font-bold">總計 {Number(totalTasks)} 次</p>
+                                      </div>
+                                      <div className="flex flex-wrap gap-2">
+                                        {emp.tasksDetail.map((t: any) => (
+                                          <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
+                                            {String(t.name)} <span className="font-black text-blue-600 ml-1.5">{Number(t.count)}</span>
+                                          </span>
+                                        ))}
+                                      </div>
                                    </div>
                                  )}
+
+                                 {/* --- 學習審核通過紀錄卡片 --- */}
+                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2">
+                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
+                                       <p className="text-xs text-gray-700 font-bold flex items-center">
+                                         <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
+                                       </p>
+                                       <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">共 {emp.learningHistory?.length || 0} 項</p>
+                                    </div>
+                                    {emp.learningHistory && emp.learningHistory.length > 0 ? (
+                                      <div className="space-y-2 mt-2">
+                                        {emp.learningHistory.map((h: any, i: number) => (
+                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                            <div className="flex flex-col">
+                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
+                                              <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                            </div>
+                                            <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
+                                              審核: {String(h.firstApprover)}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
+                                        尚未有通過的學習項目
+                                      </div>
+                                    )}
+                                 </div>
+                               </>
+                             )}
+                           </div>
+                         );
+                       })}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
+                   <h2 className="font-bold mb-4 flex items-center text-gray-800">
+                     <User c="w-4 h-4 mr-2 text-indigo-500" />
+                     個人資料
+                   </h2>
+                   <div className="space-y-4">
+                      {filteredDisplayEmployees.map(emp => {
+                        const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
+                        
+                        return (
+                          <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
+                            {/* 編輯模式表單 */}
+                            {editingEmployeeId === emp.id ? (
+                              <div className="flex flex-col space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
+                                 <div>
+                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">員工姓名</label>
+                                   <input type="text" value={editEmployeeData.name} onChange={(e) => setEditEmployeeData({...editEmployeeData, name: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="修改姓名"/>
+                                 </div>
+                                 <div>
+                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
+                                   <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800" placeholder="09XX"/>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2">
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
+                                     <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                   </div>
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
+                                     <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                   </div>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2">
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">所屬門店</label>
+                                     <select value={editEmployeeData.store} onChange={(e) => setEditEmployeeData({...editEmployeeData, store: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                       {stores.map(store => <option key={store.id} value={store.name}>{String(store.name)}</option>)}
+                                     </select>
+                                   </div>
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">職位權限</label>
+                                     <select value={editEmployeeData.role} onChange={(e) => setEditEmployeeData({...editEmployeeData, role: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                       {jobRoles.map(role => <option key={role} value={role}>{String(role)}</option>)}
+                                     </select>
+                                   </div>
+                                 </div>
+                                 <div className="grid grid-cols-2 gap-2">
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
+                                     <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                       <option value="">未填寫</option>
+                                       <option value="E">E型 (外向)</option>
+                                       <option value="I">I型 (內向)</option>
+                                     </select>
+                                   </div>
+                                   <div>
+                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
+                                     <input 
+                                       type="text" 
+                                       maxLength={6} 
+                                       value={editEmployeeData.password} 
+                                       onChange={(e) => {
+                                         const val = e.target.value.replace(/\D/g, ''); 
+                                         if(val.length <= 6) setEditEmployeeData({...editEmployeeData, password: val});
+                                       }} 
+                                       className="w-full p-2.5 border border-blue-200 rounded-lg font-medium text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-800 tracking-widest" 
+                                       placeholder="請輸入6碼數字新密碼"
+                                     />
+                                   </div>
+                                 </div>
+                                 <div className="flex space-x-3 mt-2 pt-2 border-t border-blue-200">
+                                   <button onClick={() => setEditingEmployeeId(null)} className="flex-1 py-2.5 bg-white text-gray-500 text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors border border-gray-200">取消</button>
+                                   <button onClick={() => saveEditEmployee(emp.id)} className="flex-1 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-md shadow-blue-200 hover:bg-blue-700 transition-colors">儲存</button>
+                                 </div>
                               </div>
-                            </>
-                          )}
-                        </div>
-                      );
-                    })}
-                 </div>
-              </div>
+                            ) : (
+                              /* 一般顯示模式 (前後台佈局統一) */
+                              <>
+                                <div className="flex justify-between items-start mb-5">
+                                  <div className="flex items-center space-x-4">
+                                    <div className="relative">
+                                      <label className={`block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center group ${canEdit || currentUserName === emp.name ? 'cursor-pointer' : ''}`}>
+                                        {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                        
+                                        {/* 只有自己或後台可以上傳大頭照 */}
+                                        {(canEdit || currentUserName === emp.name) && (
+                                          <>
+                                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                               <Camera c="w-6 h-6 text-white" />
+                                            </div>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(emp.id, e)} />
+                                          </>
+                                        )}
+                                      </label>
+                                    </div>
+                                    <div>
+                                      <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
+                                      <RoleBadge role={emp.role} />
+                                      <span className="text-xs text-gray-500 font-bold ml-2">{String(emp.store)}</span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* 後台專屬：保留編輯及刪除按鈕 */}
+                                  {canEdit && (
+                                    <div className="flex items-center space-x-1 mt-2">
+                                      <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
+                                      <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* 發光實色等級卡片 */}
+                                <div className={getRoleCardStyle(emp.role)}>
+                                  <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
+                                  <div className="flex justify-between items-end relative z-10">
+                                     <div>
+                                       <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">目前等級</p>
+                                       <p className="text-3xl font-black drop-shadow-md">{getLevelDisplay(emp.completedLearning || 0)}</p>
+                                     </div>
+                                     <div className="text-right">
+                                       <p className="text-[11px] font-bold text-white/80 mb-1 tracking-widest">所屬職位</p>
+                                       <p className="text-xl font-bold drop-shadow-md">{String(emp.role)}</p>
+                                     </div>
+                                  </div>
+                                </div>
+
+                                {/* 詳細工作統計 (若有統計數據則顯示在最下方) */}
+                                {emp.tasksDetail && emp.tasksDetail.length > 0 && (
+                                  <div className="bg-white rounded-lg border border-gray-100 p-3 z-10 shadow-sm mt-1 mb-2">
+                                     <div className="flex justify-between items-center mb-2">
+                                        <p className="text-[10px] text-gray-400 font-bold">詳細工作統計：</p>
+                                        <p className="text-[10px] text-gray-400 font-bold">總計 {Number(totalTasks)} 次</p>
+                                     </div>
+                                     <div className="flex flex-wrap gap-2">
+                                       {emp.tasksDetail.map((t: any) => (
+                                         <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
+                                           {String(t.name)} <span className="font-black text-blue-600 ml-1.5">{Number(t.count)}</span>
+                                         </span>
+                                       ))}
+                                     </div>
+                                  </div>
+                                )}
+
+                                {/* --- 學習審核通過紀錄卡片 --- */}
+                                <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2">
+                                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
+                                      <p className="text-xs text-gray-700 font-bold flex items-center">
+                                        <BookOpen c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />學習通過紀錄
+                                      </p>
+                                      <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">共 {emp.learningHistory?.length || 0} 項</p>
+                                   </div>
+                                   {emp.learningHistory && emp.learningHistory.length > 0 ? (
+                                     <div className="space-y-2 mt-2">
+                                       {emp.learningHistory.map((h: any, i: number) => (
+                                         <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                           <div className="flex flex-col">
+                                             <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
+                                             <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                            </div>
+                                           <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
+                                             審核: {String(h.firstApprover)}
+                                           </span>
+                                         </div>
+                                       ))}
+                                     </div>
+                                   ) : (
+                                     <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
+                                       尚未有通過的學習項目
+                                     </div>
+                                   )}
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                   </div>
+                </div>
+              )}
             </div>
           )}
         </main>
