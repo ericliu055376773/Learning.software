@@ -48,13 +48,15 @@ const LogOut = ({ c }: any) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0
 const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
 const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></I>;
 const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
+const ChevronRight = ({ c }: any) => <I c={c}><polyline points="9 18 15 12 9 6"/></I>;
 const ClipboardCheck = ({ c }: any) => <I c={c}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="m9 14 2 2 4-4"/></I>;
 const Lock = ({ c }: any) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
-const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
+const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
 const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
 const FolderPlus = ({ c }: any) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></I>;
 const MapPin = ({ c }: any) => <I c={c}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></I>;
 const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></I>;
+const GripVertical = ({ c }: any) => <I c={c}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></I>;
 
 const customStyles = `
   /* 小標籤顏色 */
@@ -164,7 +166,6 @@ export default function App() {
   const [stores, setStores] = useState<any[]>([]);
   const [learningSteps, setLearningSteps] = useState<any[]>([]);
   const [tasks, setTasks] = useState<any[]>([]);
-  const [exams, setExams] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
   const [progressApprovals, setProgressApprovals] = useState<any[]>([]);
@@ -185,16 +186,16 @@ export default function App() {
   const [showTaskManager, setShowTaskManager] = useState<boolean>(false);
   const [editingTasks, setEditingTasks] = useState<any[]>([]);
 
-  // 考試狀態 (後台編輯保護)
-  const [editingExamId, setEditingExamId] = useState<string | null>(null);
-  const [editExamData, setEditExamData] = useState<any>({ title: '', subtitle: '', description: '' });
-
   // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeStoreFilter, setActiveStoreFilter] = useState<string>('all');
 
   // 圖片點擊放大相關狀態
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
+
+  // 拖曳狀態
+  const [draggedStoreIndex, setDraggedStoreIndex] = useState<number | null>(null);
+  const [dragOverStoreIndex, setDragOverStoreIndex] = useState<number | null>(null);
 
   // 解決手機版輸入框點擊後自動放大的問題
   useEffect(() => {
@@ -210,7 +211,7 @@ export default function App() {
   // 取消原本的 Authentication 攔截，直接存取資料
   useEffect(() => {
     const unsubStores = onSnapshot(collection(db, 'stores'), 
-      (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any, b: any) => (a.order ?? a.createdAt ?? 0) - (b.order ?? b.createdAt ?? 0))),
       (err: any) => console.error("Stores fetch error:", err)
     );
     const unsubSteps = onSnapshot(collection(db, 'learningSteps'), 
@@ -223,10 +224,6 @@ export default function App() {
         setTasks(fetchedTasks);
       },
       (err: any) => console.error("Tasks fetch error:", err)
-    );
-    const unsubExams = onSnapshot(collection(db, 'exams'), 
-      (snap: any) => setExams(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)),
-      (err: any) => console.error("Exams fetch error:", err)
     );
     const unsubEmp = onSnapshot(collection(db, 'employees'), 
       (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
@@ -261,7 +258,7 @@ export default function App() {
       (err: any) => console.error("Config fetch error:", err)
     );
 
-    return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubExams(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
+    return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
   }, [activeCategoryId]);
 
   useEffect(() => {
@@ -600,6 +597,56 @@ export default function App() {
       }
 
       await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
+  }
+
+  // 新增：刪除學習紀錄與重置進度
+  async function handleDeleteLearningRecord(emp: any, historyIndex: number) {
+      if (!window.confirm('確定要刪除這筆學習紀錄嗎？該人員將需要重新學習此項目。')) return;
+
+      const recordToDelete = emp.learningHistory[historyIndex];
+      if (!recordToDelete) return;
+
+      const newHistory = [...emp.learningHistory];
+      newHistory.splice(historyIndex, 1);
+
+      let newCompletedLearning = emp.completedLearning;
+      const step = learningSteps.find(s => s.id === recordToDelete.stepId);
+      
+      // 扣除該分類的學習進度
+      if (typeof newCompletedLearning === 'object' && newCompletedLearning !== null) {
+          newCompletedLearning = { ...newCompletedLearning };
+          let catId = 'default';
+          if (step && step.categoryId) {
+              catId = step.categoryId;
+          } else {
+              const availableCats = Object.keys(newCompletedLearning).filter(k => newCompletedLearning[k] > 0);
+              if (availableCats.length > 0) catId = availableCats[0];
+          }
+          if (newCompletedLearning[catId] > 0) {
+              newCompletedLearning[catId] -= 1;
+          }
+      } else if (typeof newCompletedLearning === 'number' && newCompletedLearning > 0) {
+          newCompletedLearning -= 1;
+      }
+
+      // 清除該課程對應的「教學完畢」打勾紀錄
+      const newCompletedBlocks = { ...(emp.completedBlocks || {}) };
+      Object.keys(newCompletedBlocks).forEach(key => {
+          if (key.startsWith(recordToDelete.stepId + '_')) {
+              delete newCompletedBlocks[key];
+          }
+      });
+
+      try {
+          await updateDoc(doc(db, 'employees', emp.id), {
+              learningHistory: newHistory,
+              completedLearning: newCompletedLearning,
+              completedBlocks: newCompletedBlocks
+          });
+          showToast('學習紀錄已刪除！該員需重新學習。');
+      } catch (error) {
+          showToast('刪除失敗！請檢查網路連線。');
+      }
   }
 
   const isProfileTabAdmin = canEdit;
@@ -1047,7 +1094,7 @@ export default function App() {
                               <input type="number" value={rule.min} onChange={e => updateLevelRule(rule.id, 'min', e.target.value)} className="w-12 sm:w-14 text-center border border-gray-200 rounded p-1 text-sm font-bold outline-none focus:border-indigo-500" />
                               <span className="text-xs font-bold text-gray-400">至</span>
                               <input type="number" value={rule.max} onChange={e => updateLevelRule(rule.id, 'max', e.target.value)} className="w-12 sm:w-14 text-center border border-gray-200 rounded p-1 text-sm font-bold outline-none focus:border-indigo-500" />
-                              <span className="text-xs font-bold text-gray-500">項 ➔ 升級</span>
+                              <span className="text-xs font-bold text-gray-500">項  升級</span>
                               <input type="text" value={rule.levelName} onChange={e => updateLevelRule(rule.id, 'levelName', e.target.value)} className="flex-1 min-w-[60px] border border-gray-200 rounded p-1 text-sm font-bold outline-none text-indigo-600 focus:border-indigo-500" placeholder="Lv 1" />
                               <button onClick={() => removeLevelRule(rule.id)} className="p-1.5 bg-red-50 text-red-500 rounded hover:bg-red-100 transition-colors"><Trash2 c="w-4 h-4"/></button>
                             </div>
@@ -1297,113 +1344,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 1.8: 考試 (新增介面) */}
-          {activeTab === 'exams' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              <div className="flex justify-between items-center mb-2 px-1">
-                <div>
-                   <h2 className="font-bold text-gray-800 text-lg">考試項目</h2>
-                   {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 點擊下方按鈕記錄您的考核狀態</p>}
-                </div>
-              </div>
-
-              {canEdit && (
-                 <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm mb-4">
-                   <button onClick={async () => await addDoc(collection(db, 'exams'), { title: '新考試項目', subtitle: '', description: '', createdAt: Date.now() })} className="w-full py-2.5 border border-dashed border-indigo-300 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
-                      <PlusCircle c="w-4 h-4 mr-1.5"/> 新增考試
-                   </button>
-                 </div>
-              )}
-
-              <div className="space-y-4">
-                {exams.length === 0 ? (
-                   <div className="p-10 text-center text-gray-400 text-sm font-bold bg-white rounded-xl shadow-sm border border-gray-200">
-                      <ClipboardCheck c="w-10 h-10 mx-auto mb-3 text-gray-200" />
-                      目前尚無考試項目
-                   </div>
-                ) : (
-                   exams.map((exam, i) => {
-                      const empRecord = currentUserData?.examRecords?.[exam.id];
-                      const isPassing = empRecord?.status === 'passed' || empRecord === 'passed'; // 兼容舊版格式
-                      const isFailing = empRecord?.status === 'failed' || empRecord === 'failed';
-
-                      return (
-                      <div key={exam.id} className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm relative overflow-hidden">
-                         {/* 狀態裝飾線 */}
-                         <div className={`absolute top-0 left-0 w-1.5 h-full transition-colors ${isPassing ? 'bg-green-500' : isFailing ? 'bg-red-500' : 'bg-gray-200'}`}></div>
-                         
-                         {/* 右上角編輯與刪除按鈕 (非編輯模式才顯示) */}
-                         {canEdit && editingExamId !== exam.id && (
-                            <div className="absolute top-3 right-3 flex gap-1 z-20">
-                                <button onClick={() => {
-                                    setEditingExamId(exam.id);
-                                    setEditExamData({ title: exam.title || '', subtitle: exam.subtitle || '', description: exam.description || '' });
-                                }} className="text-gray-400 hover:text-indigo-600 p-1.5 bg-gray-50 hover:bg-indigo-50 rounded transition-colors" title="編輯"><Edit c="w-4 h-4" /></button>
-                                <button onClick={() => { if(window.confirm('確定要刪除這個考試項目嗎？')) deleteDoc(doc(db, 'exams', exam.id)) }} className="text-gray-400 hover:text-red-500 p-1.5 bg-gray-50 hover:bg-red-50 rounded transition-colors" title="刪除"><Trash2 c="w-4 h-4" /></button>
-                            </div>
-                         )}
-                         
-                         {/* 內容區塊 */}
-                         {canEdit && editingExamId === exam.id ? (
-                            <div className="space-y-3 pr-6 pl-2 relative z-10">
-                               <input type="text" value={editExamData.title} onChange={e => setEditExamData({...editExamData, title: e.target.value})} className="w-full p-2 border border-gray-200 rounded-lg font-black text-gray-800 bg-white text-base outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入大標題"/>
-                               <input type="text" value={editExamData.subtitle} onChange={e => setEditExamData({...editExamData, subtitle: e.target.value})} className="w-full p-2 border border-indigo-100 rounded-lg font-bold text-indigo-700 bg-indigo-50/30 text-xs outline-none focus:ring-2 focus:ring-indigo-500" placeholder="請輸入標題"/>
-                               <textarea value={editExamData.description} onChange={e => setEditExamData({...editExamData, description: e.target.value})} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-white outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]" placeholder="請輸入內容..." />
-                               
-                               <div className="flex justify-end pt-2 mt-2 gap-2 border-t border-gray-100">
-                                 <button onClick={() => setEditingExamId(null)} className="px-4 py-2 bg-gray-100 text-gray-500 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors">取消</button>
-                                 <button onClick={async () => {
-                                    await updateDoc(doc(db, 'exams', exam.id), editExamData);
-                                    setEditingExamId(null);
-                                    showToast('考試項目已儲存！');
-                                 }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
-                                    <CheckCircle2 c="w-3.5 h-3.5 mr-1" /> 儲存編輯
-                                 </button>
-                               </div>
-                            </div>
-                         ) : (
-                            <div className="space-y-3 pl-2 pr-6 relative z-10">
-                               <h3 className="font-black text-gray-800 text-lg border-b border-gray-100 pb-2">{String(exam.title)}</h3>
-                               {exam.subtitle && <h4 className="font-bold text-indigo-600 text-sm">{String(exam.subtitle)}</h4>}
-                               {exam.description && <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(exam.description)}</p>}
-                            </div>
-                         )}
-
-                         {/* 通過與沒通過按鈕 (不在編輯模式才顯示) */}
-                         {(!canEdit || editingExamId !== exam.id) && (
-                           <div className="flex gap-3 mt-5 pt-4 border-t border-gray-100 pl-2 relative z-10">
-                              <button onClick={() => {
-                                 if(currentUserData) {
-                                    const approverName = window.prompt('請輸入審核人姓名（主管簽名）：', currentUserName);
-                                    if(approverName !== null) {
-                                       const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
-                                       newRecords[exam.id] = { status: 'passed', approver: approverName || '主管', timestamp: Date.now(), title: exam.title };
-                                       updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
-                                       showToast('已記錄：通過');
-                                    }
-                                 }
-                              }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${isPassing ? 'bg-green-500 text-white shadow-green-200 ring-2 ring-green-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-green-50 hover:text-green-600 border border-gray-200'}`}>
-                                 <CheckCircle2 c="w-4 h-4 mr-1.5" /> 通過
-                              </button>
-                              <button onClick={() => {
-                                 if(currentUserData) {
-                                    const newRecords = currentUserData.examRecords ? {...currentUserData.examRecords} : {};
-                                    newRecords[exam.id] = { status: 'failed', timestamp: Date.now() };
-                                    updateDoc(doc(db, 'employees', currentUserData.id), { examRecords: newRecords });
-                                    showToast('已記錄：沒通過');
-                                 }
-                              }} className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all shadow-sm flex justify-center items-center ${isFailing ? 'bg-red-500 text-white shadow-red-200 ring-2 ring-red-200 ring-offset-1' : 'bg-gray-50 text-gray-500 hover:bg-red-50 hover:text-red-600 border border-gray-200'}`}>
-                                 <XCircle c="w-4 h-4 mr-1.5" /> 沒通過
-                              </button>
-                           </div>
-                         )}
-                      </div>
-                   )})
-                )}
-              </div>
-            </div>
-          )}
-
           {/* TAB 2: 工作項目管理 */}
           {activeTab === 'tasks' && (
             <div className="space-y-6 animate-in fade-in duration-300">
@@ -1578,16 +1518,58 @@ export default function App() {
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                   <h2 className="font-bold mb-4 flex items-center text-gray-800"><Store c="w-4 h-4 mr-2 text-indigo-500" />門店類別設定</h2>
                   <div className="flex flex-wrap gap-2 mb-4">
-                    {stores.map(s => (
-                      <span key={s.id} className="bg-gray-50 text-gray-700 px-3 py-1 rounded border border-gray-200 text-xs font-bold flex items-center gap-1.5 shadow-sm">
-                        {String(s.name)}
-                        <button onClick={()=>deleteDoc(doc(db,'stores',s.id))} className="text-gray-400 hover:text-red-500 transition-colors"><XCircle c="w-3.5 h-3.5" /></button>
-                      </span>
+                    {stores.map((s, index) => (
+                      <div 
+                        key={s.id} 
+                        draggable
+                        onDragStart={(e) => {
+                          setDraggedStoreIndex(index);
+                          e.dataTransfer.effectAllowed = "move";
+                          e.dataTransfer.setData("text/html", s.id);
+                        }}
+                        onDragEnter={() => setDragOverStoreIndex(index)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDragEnd={() => {
+                          setDraggedStoreIndex(null);
+                          setDragOverStoreIndex(null);
+                        }}
+                        onDrop={async (e) => {
+                          e.preventDefault();
+                          if (draggedStoreIndex === null || draggedStoreIndex === index) return;
+                          
+                          const newStores = [...stores];
+                          const draggedItem = newStores[draggedStoreIndex];
+                          newStores.splice(draggedStoreIndex, 1);
+                          newStores.splice(index, 0, draggedItem);
+                          
+                          setDraggedStoreIndex(null);
+                          setDragOverStoreIndex(null);
+                          
+                          try {
+                              for (let i = 0; i < newStores.length; i++) {
+                                  if (stores[i].id !== newStores[i].id) {
+                                      await updateDoc(doc(db, 'stores', newStores[i].id), { order: i });
+                                  }
+                              }
+                          } catch (err) {
+                              showToast('排序更新失敗');
+                          }
+                        }}
+                        className={`bg-gray-50 text-gray-700 pl-2 pr-2 py-1.5 rounded-lg border text-xs font-bold flex items-center gap-1 shadow-sm group cursor-grab active:cursor-grabbing transition-all select-none touch-none ${
+                          draggedStoreIndex === index ? 'opacity-40 scale-95 border-indigo-400' : ''
+                        } ${
+                          dragOverStoreIndex === index && draggedStoreIndex !== index ? 'border-indigo-500 ring-2 ring-indigo-200 -translate-y-1' : 'border-gray-200'
+                        }`}
+                      >
+                        <GripVertical c="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                        <span className="mr-1">{String(s.name)}</span>
+                        <button type="button" onClick={()=> { if(window.confirm('確定要刪除此門店嗎？')) deleteDoc(doc(db,'stores',s.id)) }} className="text-gray-400 hover:text-red-500 transition-colors ml-1" title="刪除"><XCircle c="w-3.5 h-3.5" /></button>
+                      </div>
                     ))}
                   </div>
                   <div className="flex gap-2">
                     <input type="text" id="ns" className="flex-1 p-2 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="新增門店..." />
-                    <button onClick={async () => { const i = document.getElementById('ns'); if(i.value) { await addDoc(collection(db, 'stores'), { name: i.value, createdAt: Date.now() }); i.value = ''; } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
+                    <button type="button" onClick={async () => { const i = document.getElementById('ns'); if(i.value) { await addDoc(collection(db, 'stores'), { name: i.value, order: stores.length, createdAt: Date.now() }); i.value = ''; } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
                   </div>
                 </div>
               )}
@@ -1759,53 +1741,27 @@ export default function App() {
                                     {emp.learningHistory && emp.learningHistory.length > 0 ? (
                                       <div className="space-y-2 mt-2">
                                         {emp.learningHistory.map((h: any, i: number) => (
-                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                             <div className="flex flex-col">
                                               <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
                                               <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
                                             </div>
-                                            <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
-                                              審核: {String(h.firstApprover)}
-                                            </span>
+                                            <div className="flex items-center">
+                                              <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
+                                                審核: {String(h.firstApprover)}
+                                              </span>
+                                              {canEdit && (
+                                                <button onClick={() => handleDeleteLearningRecord(emp, i)} className="ml-2 text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
+                                                  <Trash2 c="w-3.5 h-3.5" />
+                                                </button>
+                                              )}
+                                            </div>
                                           </div>
                                         ))}
                                       </div>
                                     ) : (
                                       <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
                                         尚未有通過的學習項目
-                                      </div>
-                                    )}
-                                 </div>
-
-                                 {/* --- 考試通過紀錄卡片 --- */}
-                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mb-2">
-                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
-                                       <p className="text-xs text-gray-700 font-bold flex items-center">
-                                         <ClipboardCheck c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />考試通過紀錄
-                                       </p>
-                                       <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">
-                                         共 {Object.values(emp.examRecords || {}).filter((r: any) => r === 'passed' || r?.status === 'passed').length} 項
-                                       </p>
-                                    </div>
-                                    {emp.examRecords && Object.values(emp.examRecords).filter((r: any) => r === 'passed' || r?.status === 'passed').length > 0 ? (
-                                      <div className="space-y-2 mt-2">
-                                        {Object.entries(emp.examRecords).filter(([_, r]: any) => r === 'passed' || r?.status === 'passed').map(([eId, r]: any) => {
-                                          const examInfo = exams.find(e => e.id === eId) || { title: r?.title || '已刪除的考試' };
-                                          return (
-                                          <div key={eId} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
-                                            <div className="flex flex-col">
-                                              <span className="text-xs font-bold text-gray-800">{String(examInfo.title)}</span>
-                                              <span className="text-[9px] text-gray-400 mt-1">{r?.timestamp ? new Date(r.timestamp).toLocaleDateString() : '早期完成紀錄'}</span>
-                                            </div>
-                                            <span className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100 font-bold whitespace-nowrap ml-2">
-                                              審核: {String(r?.approver || '系統')}
-                                            </span>
-                                          </div>
-                                        )})}
-                                      </div>
-                                    ) : (
-                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
-                                        尚未有通過的考試項目
                                       </div>
                                     )}
                                  </div>
@@ -1948,53 +1904,27 @@ export default function App() {
                                    {emp.learningHistory && emp.learningHistory.length > 0 ? (
                                      <div className="space-y-2 mt-2">
                                        {emp.learningHistory.map((h: any, i: number) => (
-                                         <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
+                                         <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                            <div className="flex flex-col">
                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
                                              <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
                                             </div>
-                                           <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
-                                             審核: {String(h.firstApprover)}
-                                           </span>
+                                           <div className="flex items-center">
+                                             <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
+                                               審核: {String(h.firstApprover)}
+                                             </span>
+                                             {canEdit && (
+                                               <button onClick={() => handleDeleteLearningRecord(emp, i)} className="ml-2 text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
+                                                 <Trash2 c="w-3.5 h-3.5" />
+                                               </button>
+                                             )}
+                                           </div>
                                          </div>
                                        ))}
                                      </div>
                                    ) : (
                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
                                        尚未有通過的學習項目
-                                     </div>
-                                   )}
-                                </div>
-
-                                {/* --- 考試通過紀錄卡片 --- */}
-                                <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mb-2">
-                                   <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
-                                      <p className="text-xs text-gray-700 font-bold flex items-center">
-                                        <ClipboardCheck c="w-3.5 h-3.5 mr-1.5 text-indigo-500" />考試通過紀錄
-                                      </p>
-                                      <p className="text-[10px] text-gray-400 font-bold bg-gray-50 px-2 py-0.5 rounded">
-                                        共 {Object.values(emp.examRecords || {}).filter((r: any) => r === 'passed' || r?.status === 'passed').length} 項
-                                      </p>
-                                   </div>
-                                   {emp.examRecords && Object.values(emp.examRecords).filter((r: any) => r === 'passed' || r?.status === 'passed').length > 0 ? (
-                                     <div className="space-y-2 mt-2">
-                                       {Object.entries(emp.examRecords).filter(([_, r]: any) => r === 'passed' || r?.status === 'passed').map(([eId, r]: any) => {
-                                         const examInfo = exams.find(e => e.id === eId) || { title: r?.title || '已刪除的考試' };
-                                         return (
-                                         <div key={eId} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center">
-                                           <div className="flex flex-col">
-                                             <span className="text-xs font-bold text-gray-800">{String(examInfo.title)}</span>
-                                             <span className="text-[9px] text-gray-400 mt-1">{r?.timestamp ? new Date(r.timestamp).toLocaleDateString() : '早期完成紀錄'}</span>
-                                           </div>
-                                           <span className="text-[10px] bg-green-50 text-green-600 px-2 py-1 rounded border border-green-100 font-bold whitespace-nowrap ml-2">
-                                             審核: {String(r?.approver || '系統')}
-                                           </span>
-                                         </div>
-                                       )})}
-                                     </div>
-                                   ) : (
-                                     <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
-                                       尚未有通過的考試項目
                                      </div>
                                    )}
                                 </div>
@@ -2013,9 +1943,6 @@ export default function App() {
         <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0">
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習審核</span>
-          </button>
-          <button onClick={() => setActiveTab('exams')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'exams' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <ClipboardCheck c={`w-5 h-5 ${activeTab === 'exams' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">考試</span>
           </button>
           <button onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'tasks' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <ListTodo c={`w-5 h-5 ${activeTab === 'tasks' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">工作項目</span>
