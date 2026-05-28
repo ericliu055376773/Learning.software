@@ -46,7 +46,7 @@ const CheckCircle2 = ({ c }: any) => <I c={c}><path d="M22 11.08V12a10 10 0 1 1-
 const Bell = ({ c }: any) => <I c={c}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></I>;
 const LogOut = ({ c }: any) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></I>;
 const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
-const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></I>;
+const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 12"/></I>;
 const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
 const ChevronRight = ({ c }: any) => <I c={c}><polyline points="9 18 15 12 9 6"/></I>;
 const ClipboardCheck = ({ c }: any) => <I c={c}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="m9 14 2 2 4-4"/></I>;
@@ -196,6 +196,12 @@ export default function App() {
   // 拖曳狀態
   const [draggedStoreIndex, setDraggedStoreIndex] = useState<number | null>(null);
   const [dragOverStoreIndex, setDragOverStoreIndex] = useState<number | null>(null);
+
+  // === 新增：選擇教學人員的 Modal 相關狀態 ===
+  const [showTrainerModal, setShowTrainerModal] = useState<boolean>(false);
+  const [trainerModalStep, setTrainerModalStep] = useState<any>(null); // 正在提交的關卡
+  const [selectedTrainerStore, setSelectedTrainerStore] = useState<string>('');
+  const [selectedTrainerName, setSelectedTrainerName] = useState<string>('');
 
   // 解決手機版輸入框點擊後自動放大的問題
   useEffect(() => {
@@ -597,6 +603,27 @@ export default function App() {
       }
 
       await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
+  }
+
+  // === 提交學習核准 (附帶教學人員) ===
+  async function submitLearningRequest() {
+    if (!selectedTrainerName) {
+      showToast('請選擇教學人員！');
+      return;
+    }
+    
+    await addDoc(collection(db, 'progressApprovals'), {
+      employeeName: currentUserName || '員工',
+      stepName: trainerModalStep.title,
+      stepId: trainerModalStep.id,
+      categoryId: activeCategoryId || (categories[0]?.id || 'default'),
+      status: 'pending',
+      trainerName: selectedTrainerName, // 寫入教學人員紀錄
+      createdAt: Date.now()
+    });
+    
+    setShowTrainerModal(false);
+    showToast('已提交核准！請通知同事進行初審。');
   }
 
   // 新增：刪除學習紀錄與重置進度
@@ -1006,12 +1033,13 @@ export default function App() {
                                 const newProgress = typeof emp.completedLearning === 'object' ? {...emp.completedLearning} : { [displayCategories[0]?.id || 'default']: emp.completedLearning || 0 };
                                 newProgress[targetCatId] = (newProgress[targetCatId] || 0) + 1;
                                 
-                                // 寫入學習歷史紀錄
+                                // 寫入學習歷程紀錄
                                 const newHistory = emp.learningHistory ? [...emp.learningHistory] : [];
                                 newHistory.push({
                                   stepId: pa.stepId,
                                   stepName: pa.stepName,
                                   firstApprover: pa.firstApprover || '總部直接核准',
+                                  trainerName: pa.trainerName || '無', // 儲存教學人員
                                   approvedAt: Date.now()
                                 });
 
@@ -1310,20 +1338,16 @@ export default function App() {
                                         <div className={`py-4 rounded-xl text-sm font-bold flex justify-center items-center border ${pendingApproval.status === 'first_approved' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
                                           <span className="animate-pulse flex items-center">
                                             <Bell c="w-5 h-5 mr-2"/>
-                                            {pendingApproval.status === 'first_approved' ? `初審已過 (${String(pendingApproval.firstApprover)})，待後台複審...` : '審核中，請通知同事初審...'}
+                                            {pendingApproval.status === 'first_approved' ? `初審已過 (${String(pendingApproval.firstApprover)})，等待複審...` : '審核中，請通知同事初審...'}
                                           </span>
                                         </div>
                                       ) : (
-                                        <button onClick={async () => {
-                                            await addDoc(collection(db, 'progressApprovals'), {
-                                              employeeName: currentUserName || '員工',
-                                              stepName: step.title,
-                                              stepId: step.id,
-                                              categoryId: currentActiveCatId,
-                                              status: 'pending',
-                                              createdAt: Date.now()
-                                            });
-                                            showToast('已提交審核！請通知同事進行初審。');
+                                        <button onClick={() => {
+                                            // 開啟選擇教學人員 Modal
+                                            setTrainerModalStep(step);
+                                            setSelectedTrainerStore(currentUserData?.store || '');
+                                            setSelectedTrainerName('');
+                                            setShowTrainerModal(true);
                                           }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
                                           <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，提交核准
                                         </button>
@@ -1730,7 +1754,7 @@ export default function App() {
                                    </div>
                                  )}
 
-                                 {/* --- 學習審核通過紀錄卡片 --- */}
+                                 {/* --- 學習通過紀錄卡片 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                        <p className="text-xs text-gray-700 font-bold flex items-center">
@@ -1744,8 +1768,15 @@ export default function App() {
                                           <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                             <div className="flex flex-col">
                                               <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
-                                              <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
-                                            </div>
+                                              <div className="flex items-center mt-1 gap-2">
+                                                <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                                {h.trainerName && h.trainerName !== '無' && (
+                                                  <span className="text-[9px] text-indigo-500 font-bold flex items-center">
+                                                    <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                  </span>
+                                                )}
+                                              </div>
+                                             </div>
                                             <div className="flex items-center">
                                               <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
                                                 審核: {String(h.firstApprover)}
@@ -1893,7 +1924,7 @@ export default function App() {
                                   </div>
                                 )}
 
-                                {/* --- 學習審核通過紀錄卡片 --- */}
+                                {/* --- 學習通過紀錄卡片 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                       <p className="text-xs text-gray-700 font-bold flex items-center">
@@ -1907,7 +1938,14 @@ export default function App() {
                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                            <div className="flex flex-col">
                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
-                                             <span className="text-[9px] text-gray-400 mt-1">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                             <div className="flex items-center mt-1 gap-2">
+                                               <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                               {h.trainerName && h.trainerName !== '無' && (
+                                                 <span className="text-[9px] text-indigo-500 font-bold flex items-center">
+                                                   <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                 </span>
+                                               )}
+                                             </div>
                                             </div>
                                            <div className="flex items-center">
                                              <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
@@ -1994,13 +2032,83 @@ export default function App() {
         </div>
       )}
 
-      {/* 圖片滿版放大彈出視窗 */}
+      {/* 圖片放大預覽 */}
       {fullscreenImage && (
         <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setFullscreenImage(null)}>
           <button className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black/40 rounded-full p-1.5 transition-colors" onClick={() => setFullscreenImage(null)}>
             <XCircle c="w-8 h-8" />
           </button>
           <img src={fullscreenImage} className="max-w-full max-h-[90vh] object-contain animate-in zoom-in-95 duration-300 shadow-2xl" alt="放大圖片" onClick={(e) => e.stopPropagation()} />
+        </div>
+      )}
+
+      {/* 新增：選擇教學人員 Modal */}
+      {showTrainerModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowTrainerModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+              <h3 className="font-black text-lg flex items-center"><User c="w-5 h-5 mr-2" /> 選擇教學人員</h3>
+              <button onClick={() => setShowTrainerModal(false)} className="text-indigo-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
+            </div>
+            
+            <div className="p-5 space-y-4">
+              <div className="text-center mb-2">
+                <p className="text-sm font-bold text-gray-800">完成項目：<span className="text-indigo-600">{trainerModalStep?.title}</span></p>
+                <p className="text-xs text-gray-500 mt-1">請選擇負責帶領您的教學人員</p>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase ml-1 mb-1">所屬門店</label>
+                <div className="relative">
+                  <select 
+                    value={selectedTrainerStore} 
+                    onChange={e => {
+                      setSelectedTrainerStore(e.target.value);
+                      setSelectedTrainerName(''); // 更換門店時清空人員
+                    }} 
+                    className="w-full p-3 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-sm"
+                  >
+                    <option value="" disabled>請選擇門店...</option>
+                    {stores.map(s => <option key={s.id} value={s.name}>{String(s.name)}</option>)}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                    <ChevronLeft c="w-4 h-4 -rotate-90" />
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[11px] font-bold text-gray-500 uppercase ml-1 mb-1">教學人員</label>
+                <div className="relative">
+                  <select 
+                    value={selectedTrainerName} 
+                    onChange={e => setSelectedTrainerName(e.target.value)} 
+                    disabled={!selectedTrainerStore}
+                    className={`w-full p-3 border rounded-xl font-bold outline-none appearance-none text-sm transition-colors ${!selectedTrainerStore ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed' : 'bg-gray-50 border-gray-200 text-gray-700 focus:border-indigo-500'}`}
+                  >
+                    <option value="" disabled>請選擇人員...</option>
+                    {employees.filter(emp => emp.store === selectedTrainerStore).map(emp => (
+                      <option key={emp.id} value={emp.name}>{String(emp.name)} - {String(emp.role)}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-400">
+                    <ChevronLeft c="w-4 h-4 -rotate-90" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-2">
+                <button onClick={() => setShowTrainerModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">取消</button>
+                <button 
+                  onClick={submitLearningRequest} 
+                  disabled={!selectedTrainerName}
+                  className={`flex-1 py-3 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center ${!selectedTrainerName ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 active:scale-95'}`}
+                >
+                  <CheckCircle2 c="w-4 h-4 mr-1.5" />送出審核
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
