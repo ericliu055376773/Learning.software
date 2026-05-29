@@ -1524,41 +1524,44 @@ export default function App() {
                                         </span>
                                      </div>
                                      
-                                     {/* 選擇分類 */}
+                                     {/* 選擇分類 - 更新為膠囊按鈕風格 */}
                                      <div className="flex overflow-x-auto gap-2 pb-2 mb-2 hide-scrollbar">
                                        {displayCategories.map(cat => (
                                          <button 
                                            key={cat.id} 
                                            onClick={() => setActiveCategoryId(cat.id)}
-                                           className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}
+                                           className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                                          >
                                            {String(cat.name)}
                                          </button>
                                        ))}
                                      </div>
 
-                                     {/* 動態進度條橫向顯示 */}
-                                     <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-2 px-1 relative">
+                                     {/* 動態進度條橫向顯示 - 更新連線與鎖頭風格 */}
+                                     <div className="flex items-start overflow-x-auto hide-scrollbar py-4 px-2 relative min-h-[90px]">
                                          {currentCatTotalSteps === 0 ? (
                                              <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
                                          ) : (
                                              Array.from({ length: currentCatTotalSteps }).map((_, index) => {
                                                  const step = filteredSteps[index];
                                                  const isUnlocked = index < displayCompleted;
+                                                 const isNextUnlocked = index + 1 < displayCompleted;
                                                  return (
-                                                     <div key={index} className="flex flex-col items-center shrink-0 w-[4.5rem] relative">
-                                                         {/* 連接線 */}
-                                                         {index > 0 && (
-                                                             <div className={`absolute top-[18px] -left-[calc(50%+10px)] w-full h-[2px] -z-10 ${isUnlocked ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
-                                                         )}
-                                                         {/* 圖示 */}
-                                                         <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all bg-white z-10 ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-200 text-gray-300'}`}>
-                                                             {isUnlocked ? <CheckCircle2 c="w-5 h-5" /> : <Lock c="w-4 h-4" />}
+                                                     <React.Fragment key={index}>
+                                                         {/* 圓點與文字 */}
+                                                         <div className="flex flex-col items-center shrink-0 relative w-[4.5rem]">
+                                                             <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center border-[3px] bg-white z-10 transition-colors ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-100 text-gray-300'}`}>
+                                                                 {isUnlocked ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
+                                                             </div>
+                                                             <span className={`text-[10px] mt-2 font-bold text-center line-clamp-2 leading-tight w-[5rem] px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                                 {step ? String(step.title) : `項目 ${index + 1}`}
+                                                             </span>
                                                          </div>
-                                                         <span className={`text-[9px] mt-2 font-bold text-center truncate w-full px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
-                                                             {step ? String(step.title) : index + 1}
-                                                         </span>
-                                                     </div>
+                                                         {/* 連接線 (最後一項不顯示) */}
+                                                         {index < currentCatTotalSteps - 1 && (
+                                                             <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                         )}
+                                                     </React.Fragment>
                                                  );
                                              })
                                          )}
