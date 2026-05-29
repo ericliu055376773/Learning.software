@@ -34,7 +34,7 @@ function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2
 // === 圖示組件 ===
 const I = ({ children, c = "", onClick }: any) => <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}>{children}</svg>;
 const BookOpen = ({ c }: any) => <I c={c}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></I>;
-const User = ({ c }: any) => <I c={c}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></I>;
+const UserIcon = ({ c }: any) => <I c={c}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></I>;
 const Trash2 = ({ c }: any) => <I c={c}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></I>;
 const PlusCircle = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></I>;
 const UploadCloud = ({ c }: any) => <I c={c}><polyline points="16 16 12 12 8 16"/><line x1="12" x2="12" y1="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></I>;
@@ -45,9 +45,7 @@ const CheckCircle2 = ({ c }: any) => <I c={c}><path d="M22 11.08V12a10 10 0 1 1-
 const Bell = ({ c }: any) => <I c={c}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></I>;
 const LogOut = ({ c }: any) => <I c={c}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></I>;
 const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></I>;
-const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 12"/></I>;
 const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
-const ChevronRight = ({ c }: any) => <I c={c}><polyline points="9 18 15 12 9 6"/></I>;
 const Lock = ({ c }: any) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
 const Settings = ({ c }: any) => <I c={c}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></I>;
 const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
@@ -55,6 +53,7 @@ const FolderPlus = ({ c }: any) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 
 const MapPin = ({ c }: any) => <I c={c}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></I>;
 const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></I>;
 const GripVertical = ({ c }: any) => <I c={c}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></I>;
+const Award = ({ c }: any) => <I c={c}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></I>;
 
 // 擴充至 24 種中性文青主題色
 const extendedThemeColors = [
@@ -88,15 +87,6 @@ const extendedThemeColors = [
 const defaultAvatars = ['🧑🏻‍💻', '👩🏻‍💻', '👨🏽‍🏫', '👩🏼‍🏫', '👨🏻‍🍳', '👩🏻‍🍳', '🧑🏼‍🔧', '👩🏽‍🔧'];
 
 const customStyles = `
-  /* 小標籤顏色 */
-  .badge-solid-rainbow { background: linear-gradient(90deg, #ef4444, #eab308, #3b82f6, #a855f7, #ef4444); color: white; }
-  .badge-solid-gold { background-color: #eab308; color: white; }
-  .badge-solid-silver { background-color: #94a3b8; color: white; }
-  .badge-solid-bronze { background-color: #b45309; color: white; }
-  .badge-solid-black { background-color: #1f2937; color: white; }
-  .badge-solid-green { background-color: #22c55e; color: white; }
-  .badge-solid-gray { background-color: #f3f4f6; color: #4b5563; }
-  
   /* 等級大卡片顏色 - 移除動畫與光暈 */
   .bg-role-manager { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e); }
   .bg-role-deputy { background: linear-gradient(135deg, #fbbf24, #f59e0b, #b45309); }
@@ -106,27 +96,6 @@ const customStyles = `
   .bg-role-intern { background: linear-gradient(135deg, #4ade80, #22c55e, #15803d); }
   .bg-role-default { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); }
 
-  /* 表面閃閃發光特效 (保留質感) */
-  @keyframes shine {
-    0% { left: -100%; opacity: 0; }
-    10% { opacity: 1; }
-    20% { left: 200%; opacity: 0; }
-    100% { left: 200%; opacity: 0; }
-  }
-  .animate-shine::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
-    transform: skewX(-20deg);
-    animation: shine 6s infinite;
-    z-index: 1;
-    pointer-events: none;
-  }
-
   /* 風琴夾樣式與滾動條隱藏 */
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -134,20 +103,9 @@ const customStyles = `
   select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
 `;
 
-const RoleBadge = ({ role }: any) => {
-  let badgeClass = "badge-solid-gray"; let icon = null;
-  if (role === '店長') badgeClass = "badge-solid-rainbow";
-  else if (role === '副店長') badgeClass = "badge-solid-gold";
-  else if (role === '組長') badgeClass = "badge-solid-silver";
-  else if (role === '儲備') badgeClass = "badge-solid-bronze";
-  else if (role === '正職' || role === '兼職') badgeClass = "badge-solid-black";
-  else if (role?.includes('實習')) { badgeClass = "badge-solid-green"; icon = <SproutLeaf c="w-3.5 h-3.5 mr-1 fill-current" />; }
-  return <span className={`px-2.5 py-1 rounded text-[10px] font-bold inline-flex items-center tracking-wider shadow-sm ${badgeClass}`}>{icon}{role ? String(role) : ''}</span>;
-};
-
-// 依據職位決定等級大卡片的顏色與特效
+// 依據職位決定等級大卡片的顏色
 const getRoleCardStyle = (role: any) => {
-  let baseStyle = "animate-shine relative overflow-hidden rounded-xl p-5 text-white mb-5 shadow-sm ";
+  let baseStyle = "relative overflow-hidden rounded-xl p-5 text-white mb-5 shadow-sm ";
   if (role === '店長') return baseStyle + "bg-role-manager";
   if (role === '副店長') return baseStyle + "bg-role-deputy";
   if (role === '組長') return baseStyle + "bg-role-leader";
@@ -185,14 +143,12 @@ export default function App() {
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
   
   // 學習設定相關狀態
-  const [learningLevelUpThreshold, setLearningLevelUpThreshold] = useState<number>(3);
-  const [levelRules, setLevelRules] = useState<any[]>([]); 
-  const [editingLevelRules, setEditingLevelRules] = useState<any[]>([]); 
   const [categories, setCategories] = useState<any[]>([{id: 'default', name: '綜合學習'}]);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
+  const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
 
   // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -244,10 +200,8 @@ export default function App() {
       (d: any) => { 
         if(d.exists()) {
           const data = d.data();
-          setLearningLevelUpThreshold(data.learningLevelUpThreshold || 3); 
-          setLevelRules(data.levelRules || []);
-          setEditingLevelRules(prev => prev.length === 0 && data.levelRules?.length > 0 ? data.levelRules : prev);
           setGlobalTheme(data.theme || 'indigo');
+          setSystemLogoUrl(data.logoUrl || '');
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -291,17 +245,7 @@ export default function App() {
 
   function getLevelDisplay(completedCount: any) {
     const totalCount = getTotalProgress(completedCount);
-    if (!levelRules || levelRules.length === 0) {
-      return `Lv. ${Math.floor(totalCount / learningLevelUpThreshold)}`;
-    }
-    const rule = levelRules.find((r: any) => totalCount >= parseInt(r.min) && totalCount <= parseInt(r.max));
-    if (rule) return `Lv. ${rule.levelName}`;
-    
-    const sortedRules = [...levelRules].sort((a: any,b: any) => parseInt(b.max) - parseInt(a.max));
-    const highestRule = sortedRules[0];
-    if (highestRule && totalCount > parseInt(highestRule.max)) return `Lv. ${highestRule.levelName} (Max)`;
-    
-    return 'Lv. 0';
+    return `Lv. ${totalCount}`;
   }
 
   function getStepBlocks(step: any) {
@@ -425,6 +369,23 @@ export default function App() {
     } finally { setIsUploading(false); e.target.value = null; }
   }
 
+  async function handleLogoUpload(e: any) {
+    const file = e.target.files[0];
+    if (!file) return;
+    showToast("Logo 上傳中...");
+    try {
+      const storageRef = ref(storage, `system_logo_${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      await setDoc(doc(db, 'config', 'global'), { logoUrl: url }, { merge: true });
+      setSystemLogoUrl(url);
+      showToast("Logo 更新成功！");
+    } catch (err: any) { 
+      console.error("Upload error:", err);
+      showToast("上傳失敗：" + (err.message || "請檢查權限設定！")); 
+    } finally { e.target.value = null; }
+  }
+
   async function addBlock(step: any) {
      const blocks = getStepBlocks(step);
      const newBlocks = [...blocks, { id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }];
@@ -477,24 +438,7 @@ export default function App() {
       setEditingEmployeeId(null); showToast('人員資料已成功更新！');
     } catch (error) { showToast('更新失敗，請檢查網路連線。'); }
   }
-
-  function addLevelRule() {
-    setEditingLevelRules([...editingLevelRules, { id: Date.now().toString(), min: 0, max: 0, levelName: '' }]);
-  }
   
-  function removeLevelRule(id: string) {
-    setEditingLevelRules(editingLevelRules.filter((r: any) => r.id !== id));
-  }
-  
-  function updateLevelRule(id: string, field: string, value: any) {
-    setEditingLevelRules(editingLevelRules.map((r: any) => r.id === id ? { ...r, [field]: value } : r));
-  }
-  
-  async function saveLevelRulesConfig() {
-    const parsedRules = editingLevelRules.map((r: any) => ({ ...r, min: parseInt(r.min) || 0, max: parseInt(r.max) || 0, levelName: r.levelName.toString() }));
-    try { await setDoc(doc(db, 'config', 'global'), { levelRules: parsedRules }, { merge: true }); setLevelRules(parsedRules); showToast('學習升級門檻已儲存！'); } catch (e) { showToast('儲存失敗！'); }
-  }
-
   async function saveCategoriesConfig() {
     const validCategories = editingCategories.filter((c: any) => c.name.trim() !== '');
     try {
@@ -527,7 +471,8 @@ export default function App() {
         stepName: trainerModalStep.title,
         firstApprover: '直接通關紀錄', // 保留欄位相容性
         trainerName: selectedTrainerName, // 寫入教學人員紀錄
-        approvedAt: Date.now()
+        approvedAt: Date.now(),
+        categoryId: targetCatId
       });
 
       await updateDoc(doc(db, 'employees', emp.id), { 
@@ -868,6 +813,23 @@ export default function App() {
                 </div>
               </div>
 
+              {/* 上傳 Logo 設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Camera c="w-4 h-4 mr-1.5 text-indigo-500"/>系統 Logo 設定</h4>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 bg-white border border-gray-200 rounded-xl flex items-center justify-center overflow-hidden">
+                    {systemLogoUrl ? <img src={systemLogoUrl} className="max-w-full max-h-full object-contain" /> : <Store c="w-6 h-6 text-gray-300" />}
+                  </div>
+                  <label className="flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg cursor-pointer transition-colors text-xs font-bold shadow-sm">
+                    <UploadCloud c="w-4 h-4 mr-1.5 text-indigo-500" />上傳 Logo
+                    <input type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+                  </label>
+                  {systemLogoUrl && (
+                     <button onClick={() => { updateDoc(doc(db, 'config', 'global'), { logoUrl: '' }); setSystemLogoUrl(''); }} className="text-xs text-red-500 font-bold hover:underline">移除</button>
+                  )}
+                </div>
+              </div>
+
               {/* 各店 GPS 定位設定 */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />各店 GPS 定位設定</h4>
@@ -933,8 +895,12 @@ export default function App() {
         
         <header className="bg-white p-4 border-b border-gray-200 flex justify-between items-center z-20 shrink-0">
           <div className="flex items-center gap-2">
-            <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><Store c="w-4 h-4" /></div>
-            <h1 className="font-black text-gray-800 tracking-wide text-lg">{canEdit ? '總部學習系統' : '門店學習系統'}</h1>
+            {systemLogoUrl ? (
+              <img src={systemLogoUrl} className="h-8 max-w-[120px] object-contain" alt="Logo" />
+            ) : (
+              <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><Store c="w-4 h-4" /></div>
+            )}
+            {!systemLogoUrl && <h1 className="font-black text-gray-800 tracking-wide text-lg">{canEdit ? '總部學習系統' : '門店學習系統'}</h1>}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {canEdit && (
@@ -1041,47 +1007,6 @@ export default function App() {
                      </div>
                   </div>
                 )}
-                
-                {/* 總部專屬：進階多行門檻設定 */}
-                {canEdit && !showCategoryManager && (
-                  <div className="mb-6 space-y-4">
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center justify-between mb-4 border-b border-indigo-100 pb-3">
-                        <div className="flex items-center space-x-2">
-                          <BookOpen c="w-5 h-5 text-indigo-600" />
-                          <div>
-                            <h3 className="text-sm font-bold text-indigo-900">學習升級門檻設定</h3>
-                            <p className="text-[10px] text-indigo-500">依據總完成數量區間，自動轉換等級名稱</p>
-                          </div>
-                        </div>
-                        <button onClick={saveLevelRulesConfig} className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition-colors active:scale-95">
-                          儲存門檻
-                        </button>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        {editingLevelRules.length === 0 ? (
-                          <p className="text-xs text-gray-400 text-center py-2">尚未設定門檻區間，目前將使用預設倍數計算</p>
-                        ) : (
-                          editingLevelRules.map((rule) => (
-                            <div key={rule.id} className="flex flex-wrap items-center gap-2 bg-white p-3 rounded-lg border border-indigo-100 shadow-sm">
-                              <span className="text-xs font-bold text-gray-500">條件：</span>
-                              <input type="number" value={rule.min} onChange={e => updateLevelRule(rule.id, 'min', e.target.value)} className="w-12 sm:w-14 text-center border border-gray-200 rounded p-1 text-sm font-bold outline-none focus:border-indigo-500" />
-                              <span className="text-xs font-bold text-gray-400">至</span>
-                              <input type="number" value={rule.max} onChange={e => updateLevelRule(rule.id, 'max', e.target.value)} className="w-12 sm:w-14 text-center border border-gray-200 rounded p-1 text-sm font-bold outline-none focus:border-indigo-500" />
-                              <span className="text-xs font-bold text-gray-500">項  升級</span>
-                              <input type="text" value={rule.levelName} onChange={e => updateLevelRule(rule.id, 'levelName', e.target.value)} className="flex-1 min-w-[60px] border border-gray-200 rounded p-1 text-sm font-bold outline-none text-indigo-600 focus:border-indigo-500" placeholder="Lv 1" />
-                              <button onClick={() => removeLevelRule(rule.id)} className="p-1.5 bg-red-50 text-red-500 rounded hover:bg-red-100 transition-colors"><Trash2 c="w-4 h-4"/></button>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                      <button onClick={addLevelRule} className="mt-4 w-full py-2 bg-white border border-indigo-200 border-dashed rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
-                        <PlusCircle c="w-4 h-4 mr-1.5"/> 新增區間行數
-                      </button>
-                    </div>
-                  </div>
-                )}
 
                 {/* 風琴夾頁籤 UI (Folder Tabs) */}
                 <div className="flex overflow-x-auto pl-2 pt-2 -mb-[1px] hide-scrollbar z-10 relative">
@@ -1132,7 +1057,7 @@ export default function App() {
                             <div className="flex items-center space-x-2">
                               <div className="font-black text-gray-300 text-lg w-5">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
-                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white" placeholder="請輸入大標題"/>
+                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border-b border-gray-300 rounded-none font-bold text-gray-800 bg-transparent text-lg outline-none focus:border-indigo-500" placeholder="請輸入大標題"/>
                               </div>
                             </div>
                             
@@ -1196,7 +1121,7 @@ export default function App() {
                                   <div className="absolute -left-[39px] top-2 w-7 h-7 bg-gray-100 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
                                     <Lock c="w-3 h-3 text-gray-400" />
                                   </div>
-                                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center space-x-3 opacity-60">
+                                  <div className="bg-white border border-gray-100 rounded-xl p-4 flex items-center space-x-3">
                                     <div className="bg-gray-200 text-gray-500 font-black text-xs px-2 py-1 rounded">Lv.{index + 1}</div>
                                     <div className="text-gray-400 font-bold text-sm tracking-widest">尚未解鎖</div>
                                   </div>
@@ -1212,8 +1137,13 @@ export default function App() {
                                   <div className="absolute -left-[39px] top-2 w-7 h-7 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
                                     <CheckCircle2 c="w-4 h-4 text-white" />
                                   </div>
-                                  <div className="bg-white border border-green-200 rounded-xl p-4 shadow-sm opacity-70 hover:opacity-100 transition-opacity">
+                                  <div className="bg-white border border-green-200 rounded-xl p-4 shadow-sm transition-opacity">
                                     <div className="flex flex-col gap-1.5">
+                                      {trainerName && trainerName !== '無' && (
+                                        <div className="text-[11px] font-bold text-red-500 flex items-center mb-1">
+                                          <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
+                                        </div>
+                                      )}
                                       <div className="flex flex-wrap items-center gap-2">
                                         <span className="bg-green-100 text-green-700 font-black text-[10px] px-2 py-1 rounded">Lv.{index + 1}</span>
                                         <h3 className="font-bold text-gray-700 text-sm line-clamp-1">{String(step.title)}</h3>
@@ -1221,11 +1151,6 @@ export default function App() {
                                           <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
                                         </span>
                                       </div>
-                                      {trainerName && trainerName !== '無' && (
-                                        <div className="text-[11px] font-bold text-red-500 flex items-center bg-red-50 px-2 py-1 rounded w-fit">
-                                          <User c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
-                                        </div>
-                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -1322,7 +1247,7 @@ export default function App() {
                 <div onClick={() => setActiveTab('pending')} className="bg-blue-50 hover:bg-blue-100 p-4 rounded-xl border border-blue-200 shadow-sm flex justify-between items-center cursor-pointer transition-all active:scale-95">
                   <div className="flex items-center gap-3">
                     <div className="bg-blue-500 p-2.5 rounded-lg text-white shadow-inner">
-                      <User c="w-5 h-5" />
+                      <UserIcon c="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-bold text-blue-900 text-sm">待審核新進人員</h3>
@@ -1430,7 +1355,7 @@ export default function App() {
 
                   <div className="bg-white border border-gray-200 rounded-xl rounded-tl-none shadow-sm relative z-10 p-5">
                     <h2 className="font-bold mb-4 flex items-center text-gray-800">
-                      <User c="w-4 h-4 mr-2 text-indigo-500" />
+                      <UserIcon c="w-4 h-4 mr-2 text-indigo-500" />
                       人員名單 ({filteredDisplayEmployees.length})
                     </h2>
                     
@@ -1462,7 +1387,7 @@ export default function App() {
                                     </div>
                                   </div>
                                   
-                                  {/* 大頭貼選擇 (表情符號) */}
+                                  {/* 大頭貼選擇 (Emoji 代替圖片上傳) */}
                                   <div>
                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
                                     <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
@@ -1503,14 +1428,13 @@ export default function App() {
                                  <div className="flex justify-between items-start mb-5">
                                    <div className="flex items-center space-x-4">
                                      <div className="relative">
-                                       <div className="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                         {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
+                                         {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                        </div>
                                      </div>
                                      <div>
                                        <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
-                                       <RoleBadge role={emp.role} />
-                                       <span className="text-xs text-gray-500 font-bold ml-2">{String(emp.store)}</span>
+                                       <span className="text-xs text-gray-500 font-bold">{String(emp.store)}</span>
                                      </div>
                                    </div>
                                    
@@ -1559,7 +1483,7 @@ export default function App() {
                                                   {/* 後台可編輯教學人員，前台僅顯示 */}
                                                   {canEdit ? (
                                                     <div className="flex items-center text-[10px] text-red-500 font-bold">
-                                                      <User c="w-3 h-3 mr-0.5" />教學:
+                                                      <UserIcon c="w-3 h-3 mr-0.5" />教學:
                                                       <select 
                                                         value={h.trainerName || ''} 
                                                         onChange={(e) => updateLearningRecordTrainer(emp, i, e.target.value)}
@@ -1572,7 +1496,7 @@ export default function App() {
                                                   ) : (
                                                     h.trainerName && h.trainerName !== '無' && (
                                                       <span className="text-[10px] text-red-500 font-bold flex items-center">
-                                                        <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                        <UserIcon c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
                                                       </span>
                                                     )
                                                   )}
@@ -1605,12 +1529,19 @@ export default function App() {
               ) : (
                 <div className="bg-transparent">
                    <h2 className="font-bold mb-4 flex items-center text-gray-800 px-2">
-                     <User c="w-4 h-4 mr-2 text-indigo-500" />
+                     <UserIcon c="w-4 h-4 mr-2 text-indigo-500" />
                      個人資料
                    </h2>
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
-                        
+                        // 針對當前分類，計算總項目與已完成項目
+                        const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id)).length;
+                        const currentCatCompletedSteps = typeof emp.completedLearning === 'object' 
+                           ? (emp.completedLearning[currentActiveCatId] || 0) 
+                           : (currentActiveCatId === displayCategories[0].id ? emp.completedLearning || 0 : 0);
+                        // 防呆，不超過總數
+                        const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
+
                         return (
                           <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
                             {/* 編輯模式表單 */}
@@ -1635,7 +1566,7 @@ export default function App() {
                                    </div>
                                  </div>
                                  
-                                 {/* 大頭貼選擇 (表情符號) */}
+                                 {/* 大頭貼選擇 (Emoji 代替圖片上傳) */}
                                  <div>
                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
                                    <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
@@ -1676,14 +1607,13 @@ export default function App() {
                                 <div className="flex justify-between items-start mb-5">
                                   <div className="flex items-center space-x-4">
                                     <div className="relative">
-                                      <div className="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                        {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
+                                        {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                       </div>
                                     </div>
                                     <div>
                                       <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
-                                      <RoleBadge role={emp.role} />
-                                      <span className="text-xs text-gray-500 font-bold ml-2">{String(emp.store)}</span>
+                                      <span className="text-xs text-gray-500 font-bold">{String(emp.store)}</span>
                                     </div>
                                   </div>
                                   
@@ -1711,6 +1641,57 @@ export default function App() {
                                   </div>
                                 </div>
 
+                                {/* --- 新增：分類選擇器與考試成就解鎖進度條 --- */}
+                                <div className="bg-white rounded-xl border border-gray-100 p-4 z-10 shadow-sm mt-2 mb-2">
+                                    <div className="flex justify-between items-center mb-3">
+                                       <p className="text-sm text-gray-800 font-bold flex items-center">
+                                         <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
+                                       </p>
+                                       <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                         已解鎖 {displayCompleted} / {currentCatTotalSteps}
+                                       </span>
+                                    </div>
+                                    
+                                    {/* 選擇分類 */}
+                                    <div className="flex overflow-x-auto gap-2 pb-2 mb-2 hide-scrollbar">
+                                      {displayCategories.map(cat => (
+                                        <button 
+                                          key={cat.id} 
+                                          onClick={() => setActiveCategoryId(cat.id)}
+                                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}
+                                        >
+                                          {String(cat.name)}
+                                        </button>
+                                      ))}
+                                    </div>
+
+                                    {/* 動態進度條橫向顯示 */}
+                                    <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-2 px-1 relative">
+                                        {currentCatTotalSteps === 0 ? (
+                                            <p className="text-xs text-gray-400 w-full text-center">此分類尚無學習項目</p>
+                                        ) : (
+                                            Array.from({ length: currentCatTotalSteps }).map((_, index) => {
+                                                const isUnlocked = index < displayCompleted;
+                                                return (
+                                                    <div key={index} className="flex flex-col items-center shrink-0 w-12 relative">
+                                                        {/* 連接線 */}
+                                                        {index > 0 && (
+                                                            <div className={`absolute top-5 -left-[calc(50%+6px)] w-full h-[3px] -z-10 ${isUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                        )}
+                                                        {/* 圖示 */}
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 shadow-sm transition-all ${isUnlocked ? 'bg-blue-500 border-blue-100 text-white shadow-blue-200' : 'bg-white border-gray-100 text-gray-300'}`}>
+                                                            {isUnlocked ? <CheckCircle2 c="w-5 h-5" /> : <Lock c="w-4 h-4" />}
+                                                        </div>
+                                                        <span className={`text-[10px] mt-1.5 font-bold ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                            {index + 1}
+                                                        </span>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* --- 學習通過紀錄卡片 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
@@ -1732,7 +1713,7 @@ export default function App() {
                                                   {/* 後台可編輯教學人員，前台僅顯示 */}
                                                   {canEdit ? (
                                                     <div className="flex items-center text-[10px] text-red-500 font-bold">
-                                                      <User c="w-3 h-3 mr-0.5" />教學:
+                                                      <UserIcon c="w-3 h-3 mr-0.5" />教學:
                                                       <select 
                                                         value={h.trainerName || ''} 
                                                         onChange={(e) => updateLearningRecordTrainer(emp, i, e.target.value)}
@@ -1745,7 +1726,7 @@ export default function App() {
                                                   ) : (
                                                     h.trainerName && h.trainerName !== '無' && (
                                                       <span className="text-[10px] text-red-500 font-bold flex items-center">
-                                                        <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                        <UserIcon c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
                                                       </span>
                                                     )
                                                   )}
@@ -1784,7 +1765,7 @@ export default function App() {
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習進度</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <User c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : '個人資料'}</span>
+            <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : '個人資料'}</span>
           </button>
         </nav>
       </div>
@@ -1836,7 +1817,7 @@ export default function App() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowTrainerModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
-              <h3 className="font-black text-lg flex items-center"><User c="w-5 h-5 mr-2" /> 選擇教學人員</h3>
+              <h3 className="font-black text-lg flex items-center"><UserIcon c="w-5 h-5 mr-2" /> 選擇教學人員</h3>
               <button onClick={() => setShowTrainerModal(false)} className="text-indigo-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
             </div>
             
