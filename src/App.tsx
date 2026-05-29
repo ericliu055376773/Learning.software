@@ -34,7 +34,6 @@ function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2
 // === 圖示組件 ===
 const I = ({ children, c = "", onClick }: any) => <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={c}>{children}</svg>;
 const BookOpen = ({ c }: any) => <I c={c}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></I>;
-const ListTodo = ({ c }: any) => <I c={c}><path d="M14 14h6"/><path d="M14 19h6"/><path d="M14 9h6"/><path d="M4 14h.01"/><path d="M4 19h.01"/><path d="M4 9h.01"/></I>;
 const User = ({ c }: any) => <I c={c}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></I>;
 const Trash2 = ({ c }: any) => <I c={c}><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></I>;
 const PlusCircle = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></I>;
@@ -49,14 +48,44 @@ const Edit = ({ c }: any) => <I c={c}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 2
 const SproutLeaf = ({ c }: any) => <I c={c}><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 12"/></I>;
 const ChevronLeft = ({ c }: any) => <I c={c}><polyline points="15 18 9 12 15 6"/></I>;
 const ChevronRight = ({ c }: any) => <I c={c}><polyline points="9 18 15 12 9 6"/></I>;
-const ClipboardCheck = ({ c }: any) => <I c={c}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1Z"/><path d="m9 14 2 2 4-4"/></I>;
 const Lock = ({ c }: any) => <I c={c}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></I>;
-const Settings = ({ c }: any) => <I c={c}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0 2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></I>;
+const Settings = ({ c }: any) => <I c={c}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></I>;
 const Camera = ({ c }: any) => <I c={c}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></I>;
 const FolderPlus = ({ c }: any) => <I c={c}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/><line x1="12" x2="12" y1="11" y2="17"/><line x1="9" x2="15" y1="14" y2="14"/></I>;
 const MapPin = ({ c }: any) => <I c={c}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></I>;
 const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></I>;
 const GripVertical = ({ c }: any) => <I c={c}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></I>;
+
+// 擴充至 24 種中性文青主題色
+const extendedThemeColors = [
+  { id: 'indigo', name: '靛藍', main: '#4f46e5', light: '#eef2ff' },
+  { id: 'slate', name: '石板', main: '#475569', light: '#f8fafc' },
+  { id: 'zinc', name: '鋅灰', main: '#52525b', light: '#f4f4f5' },
+  { id: 'neutral', name: '中性', main: '#525252', light: '#f5f5f5' },
+  { id: 'stone', name: '石頭', main: '#57534e', light: '#fafaf9' },
+  { id: 'red', name: '磚紅', main: '#dc2626', light: '#fef2f2' },
+  { id: 'orange', name: '橘褐', main: '#ea580c', light: '#fff7ed' },
+  { id: 'amber', name: '琥珀', main: '#d97706', light: '#fffbeb' },
+  { id: 'yellow', name: '芥末', main: '#ca8a04', light: '#fefce8' },
+  { id: 'lime', name: '萊姆', main: '#65a30d', light: '#f7fee7' },
+  { id: 'green', name: '草綠', main: '#16a34a', light: '#f0fdf4' },
+  { id: 'emerald', name: '翡翠', main: '#059669', light: '#ecfdf5' },
+  { id: 'teal', name: '藍綠', main: '#0d9488', light: '#f0fdfa' },
+  { id: 'cyan', name: '青色', main: '#0891b2', light: '#ecfeff' },
+  { id: 'sky', name: '天藍', main: '#0284c7', light: '#f0f9ff' },
+  { id: 'blue', name: '海藍', main: '#2563eb', light: '#eff6ff' },
+  { id: 'violet', name: '紫羅蘭', main: '#7c3aed', light: '#f5f3ff' },
+  { id: 'purple', name: '紫色', main: '#9333ea', light: '#faf5ff' },
+  { id: 'fuchsia', name: '紫紅', main: '#c026d3', light: '#fdf4ff' },
+  { id: 'pink', name: '粉紅', main: '#db2777', light: '#fdf2f8' },
+  { id: 'rose', name: '玫瑰', main: '#e11d48', light: '#ffe4e6' },
+  { id: 'brown', name: '泥褐', main: '#8b5a2b', light: '#fdf8f5' },
+  { id: 'olive', name: '橄欖', main: '#808000', light: '#fafaf0' },
+  { id: 'navy', name: '海軍藍', main: '#000080', light: '#f0f0fa' },
+];
+
+// 預設頭貼選項 (Emoji 代替圖片)
+const defaultAvatars = ['🧑🏻‍💻', '👩🏻‍💻', '👨🏽‍🏫', '👩🏼‍🏫', '👨🏻‍🍳', '👩🏻‍🍳', '🧑🏼‍🔧', '👩🏽‍🔧'];
 
 const customStyles = `
   /* 小標籤顏色 */
@@ -68,8 +97,8 @@ const customStyles = `
   .badge-solid-green { background-color: #22c55e; color: white; }
   .badge-solid-gray { background-color: #f3f4f6; color: #4b5563; }
   
-  /* 等級大卡片顏色與發光 */
-  .bg-role-manager { background: linear-gradient(90deg, #ef4444, #eab308, #22c55e, #3b82f6, #a855f7, #ef4444); background-size: 200% auto; animation: gradient-move 3s linear infinite; }
+  /* 等級大卡片顏色 - 移除動畫與光暈 */
+  .bg-role-manager { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e); }
   .bg-role-deputy { background: linear-gradient(135deg, #fbbf24, #f59e0b, #b45309); }
   .bg-role-leader { background: linear-gradient(135deg, #cbd5e1, #94a3b8, #64748b); }
   .bg-role-reserve { background: linear-gradient(135deg, #d97706, #b45309, #78350f); }
@@ -77,16 +106,7 @@ const customStyles = `
   .bg-role-intern { background: linear-gradient(135deg, #4ade80, #22c55e, #15803d); }
   .bg-role-default { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); }
 
-  @keyframes pulse-glow {
-    0% { box-shadow: 0 0 10px rgba(99, 102, 241, 0.4); }
-    100% { box-shadow: 0 0 25px rgba(236, 72, 153, 0.7); }
-  }
-  .level-card-glow {
-    box-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
-    animation: pulse-glow 2.5s infinite alternate;
-  }
-
-  /* 表面閃閃發光特效 */
+  /* 表面閃閃發光特效 (保留質感) */
   @keyframes shine {
     0% { left: -100%; opacity: 0; }
     10% { opacity: 1; }
@@ -100,15 +120,11 @@ const customStyles = `
     left: -100%;
     width: 50%;
     height: 100%;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%);
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
     transform: skewX(-20deg);
-    animation: shine 4s infinite;
+    animation: shine 6s infinite;
     z-index: 1;
     pointer-events: none;
-  }
-  @keyframes gradient-move {
-    0% { background-position: 0% center; }
-    100% { background-position: -200% center; }
   }
 
   /* 風琴夾樣式與滾動條隱藏 */
@@ -131,7 +147,7 @@ const RoleBadge = ({ role }: any) => {
 
 // 依據職位決定等級大卡片的顏色與特效
 const getRoleCardStyle = (role: any) => {
-  let baseStyle = "level-card-glow animate-shine relative overflow-hidden rounded-xl p-5 text-white mb-5 ";
+  let baseStyle = "animate-shine relative overflow-hidden rounded-xl p-5 text-white mb-5 shadow-sm ";
   if (role === '店長') return baseStyle + "bg-role-manager";
   if (role === '副店長') return baseStyle + "bg-role-deputy";
   if (role === '組長') return baseStyle + "bg-role-leader";
@@ -147,7 +163,7 @@ export default function App() {
   const [currentUserRole, setCurrentUserRole] = useState<any>(null); 
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [showSecretModal, setShowSecretModal] = useState<boolean>(false);
-  const [showGpsModal, setShowGpsModal] = useState<boolean>(false); // GPS 權限模態框
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false); // 整合系統設定與 GPS 設定的視窗
   const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false); // 通知中心模態框
   const [hasShownLoginNotice, setHasShownLoginNotice] = useState<boolean>(false); // 控制登入自動彈窗
   const [isCheckingGPS, setIsCheckingGPS] = useState<boolean>(false); // GPS 驗證中的狀態
@@ -161,14 +177,12 @@ export default function App() {
   const jobRoles = ['店長', '副店長', '組長', '儲備', '正職', '兼職', '實習正職', '實習兼職'];
   
   const [editingEmployeeId, setEditingEmployeeId] = useState<any>(null);
-  const [editEmployeeData, setEditEmployeeData] = useState<any>({ name: '', store: '', role: '', password: '', birthdate: '', hireDate: '', phone: '', mbti: '' });
+  const [editEmployeeData, setEditEmployeeData] = useState<any>({ name: '', store: '', role: '', password: '', birthdate: '', hireDate: '', phone: '', mbti: '', avatarUrl: '' });
 
   const [stores, setStores] = useState<any[]>([]);
   const [learningSteps, setLearningSteps] = useState<any[]>([]);
-  const [tasks, setTasks] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
-  const [progressApprovals, setProgressApprovals] = useState<any[]>([]);
   
   // 學習設定相關狀態
   const [learningLevelUpThreshold, setLearningLevelUpThreshold] = useState<number>(3);
@@ -178,13 +192,7 @@ export default function App() {
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
-
-  // 工作項目相關狀態
-  const [taskRoles, setTaskRoles] = useState<any[]>([]); 
-  const [editingTaskRoles, setEditingTaskRoles] = useState<any[]>([]); 
-  const [activeTaskId, setActiveTaskId] = useState<string>('');
-  const [showTaskManager, setShowTaskManager] = useState<boolean>(false);
-  const [editingTasks, setEditingTasks] = useState<any[]>([]);
+  const [globalTheme, setGlobalTheme] = useState<string>('indigo');
 
   // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -224,13 +232,6 @@ export default function App() {
       (snap: any) => setLearningSteps(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)),
       (err: any) => console.error("Steps fetch error:", err)
     );
-    const unsubTasks = onSnapshot(collection(db, 'tasks'), 
-      (snap: any) => {
-        const fetchedTasks = snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt);
-        setTasks(fetchedTasks);
-      },
-      (err: any) => console.error("Tasks fetch error:", err)
-    );
     const unsubEmp = onSnapshot(collection(db, 'employees'), 
       (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
       (err: any) => console.error("Employees fetch error:", err)
@@ -239,21 +240,14 @@ export default function App() {
       (snap: any) => setPendingAccounts(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
       (err: any) => console.error("PendingAccounts fetch error:", err)
     );
-    const unsubProg = onSnapshot(collection(db, 'progressApprovals'), 
-      (snap: any) => setProgressApprovals(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
-      (err: any) => console.error("ProgressApprovals fetch error:", err)
-    );
     const unsubConfig = onSnapshot(doc(db, 'config', 'global'), 
       (d: any) => { 
         if(d.exists()) {
           const data = d.data();
           setLearningLevelUpThreshold(data.learningLevelUpThreshold || 3); 
-          
-          setTaskRoles(data.taskRoles || []); 
-          setEditingTaskRoles(prev => prev.length === 0 && data.taskRoles?.length > 0 ? data.taskRoles : prev);
-
           setLevelRules(data.levelRules || []);
           setEditingLevelRules(prev => prev.length === 0 && data.levelRules?.length > 0 ? data.levelRules : prev);
+          setGlobalTheme(data.theme || 'indigo');
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -264,22 +258,14 @@ export default function App() {
       (err: any) => console.error("Config fetch error:", err)
     );
 
-    return () => { unsubStores(); unsubSteps(); unsubTasks(); unsubEmp(); unsubPending(); unsubProg(); unsubConfig(); };
+    return () => { unsubStores(); unsubSteps(); unsubEmp(); unsubPending(); unsubConfig(); };
   }, [activeCategoryId]);
 
-  useEffect(() => {
-    if (tasks.length > 0 && !activeTaskId) {
-        setActiveTaskId(tasks[0].id);
-    }
-  }, [tasks, activeTaskId]);
-
   const canEdit = currentUserRole === 'super_admin';
-  const canEditTaskCount = canEdit || taskRoles.includes(currentUserRole); 
   const currentUserData = employees.find(e => e.name === currentUserName);
   
-  // 計算總部的通知數量
-  const adminPendingApprovals = progressApprovals.filter(pa => pa.status === 'first_approved');
-  const totalAdminNotifications = pendingAccounts.length + adminPendingApprovals.length;
+  // 計算總部的通知數量 (現僅計算註冊申請)
+  const totalAdminNotifications = pendingAccounts.length;
 
   // 登入後自動彈出通知中心的邏輯
   useEffect(() => {
@@ -467,22 +453,6 @@ export default function App() {
      await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
   }
 
-  async function handleAvatarUpload(empId: any, e: any) {
-    const file = e.target.files[0];
-    if (!file) return;
-    showToast("上傳大頭照中...");
-    try {
-      const storageRef = ref(storage, `avatars/${empId}_${Date.now()}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
-      await updateDoc(doc(db, 'employees', empId), { avatarUrl: url });
-      showToast("大頭照更新成功！");
-    } catch (err: any) { 
-      console.error("Upload error:", err);
-      showToast("上傳失敗：" + (err.message || "請檢查權限設定！")); 
-    } finally { e.target.value = null; }
-  }
-
   function startEditEmployee(emp: any) {
     setEditingEmployeeId(emp.id);
     setEditEmployeeData({ 
@@ -493,7 +463,8 @@ export default function App() {
       birthdate: emp.birthdate || '',
       hireDate: emp.hireDate || '',
       phone: emp.phone || '',
-      mbti: emp.mbti || ''
+      mbti: emp.mbti || '',
+      avatarUrl: emp.avatarUrl || ''
     });
   }
 
@@ -537,96 +508,51 @@ export default function App() {
     } catch(e) { showToast('分類儲存失敗！'); }
   }
 
-  async function saveTaskRolesConfig() {
-    try {
-      await setDoc(doc(db, 'config', 'global'), { taskRoles: editingTaskRoles }, { merge: true });
-      setTaskRoles(editingTaskRoles);
-      showToast('工作項目統計權限已儲存！');
-    } catch (e) {
-      showToast('儲存權限失敗！');
-    }
-  }
-
-  async function saveTasksConfig() {
-    try {
-      const validTasks = editingTasks.filter((t: any) => t.name.trim() !== '');
-      const taskIdsToKeep = validTasks.map(t => t.id);
-      const tasksToDelete = tasks.filter(t => !taskIdsToKeep.includes(t.id));
-      
-      for (const t of tasksToDelete) {
-         await deleteDoc(doc(db, 'tasks', t.id));
-      }
-      for (const t of validTasks) {
-         if (t.id.startsWith('temp_')) {
-             await addDoc(collection(db, 'tasks'), { name: t.name, count: 0, createdAt: Date.now() });
-         } else {
-             await updateDoc(doc(db, 'tasks', t.id), { name: t.name });
-         }
-      }
-      setShowTaskManager(false);
-      showToast('工作項目已成功儲存！');
-    } catch(e) {
-      showToast('工作項目儲存失敗！');
-    }
-  }
-
-  async function incrementEmployeeTask(empId: string, taskId: string, taskName: string) {
-      const emp = employees.find(e => e.id === empId);
-      if (!emp) return;
-      const currentDetails = emp.tasksDetail || [];
-      const existingTaskIndex = currentDetails.findIndex((t: any) => t.id === taskId);
-      let newDetails = [...currentDetails];
-
-      if (existingTaskIndex >= 0) {
-          newDetails[existingTaskIndex].count += 1;
-          newDetails[existingTaskIndex].name = taskName; 
-      } else {
-          newDetails.push({ id: taskId, name: taskName, count: 1 });
-      }
-
-      await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
-      showToast('已增加 1 次！');
-  }
-
-  async function editEmployeeTaskCount(empId: string, taskId: string, taskName: string, newCount: number) {
-      const emp = employees.find(e => e.id === empId);
-      if (!emp) return;
-      const currentDetails = emp.tasksDetail || [];
-      const existingTaskIndex = currentDetails.findIndex((t: any) => t.id === taskId);
-      let newDetails = [...currentDetails];
-
-      if (existingTaskIndex >= 0) {
-          newDetails[existingTaskIndex].count = newCount;
-          newDetails[existingTaskIndex].name = taskName;
-      } else {
-          newDetails.push({ id: taskId, name: taskName, count: newCount });
-      }
-
-      await updateDoc(doc(db, 'employees', empId), { tasksDetail: newDetails });
-  }
-
-  // === 提交學習核准 (附帶教學人員) ===
+  // === 提交學習核准 (附帶教學人員) - 現已改為直接紀錄 ===
   async function submitLearningRequest() {
     if (!selectedTrainerName) {
       showToast('請選擇教學人員！');
       return;
     }
-    
-    await addDoc(collection(db, 'progressApprovals'), {
-      employeeName: currentUserName || '員工',
-      stepName: trainerModalStep.title,
-      stepId: trainerModalStep.id,
-      categoryId: activeCategoryId || (categories[0]?.id || 'default'),
-      status: 'pending',
-      trainerName: selectedTrainerName, // 寫入教學人員紀錄
-      createdAt: Date.now()
-    });
+
+    const emp = employees.find(e => e.name === currentUserName);
+    if(emp) {
+      const targetCatId = activeCategoryId || (categories[0]?.id || 'default');
+      const newProgress = typeof emp.completedLearning === 'object' ? {...emp.completedLearning} : { [targetCatId]: emp.completedLearning || 0 };
+      newProgress[targetCatId] = (newProgress[targetCatId] || 0) + 1;
+      
+      const newHistory = emp.learningHistory ? [...emp.learningHistory] : [];
+      newHistory.push({
+        stepId: trainerModalStep.id,
+        stepName: trainerModalStep.title,
+        firstApprover: '直接通關紀錄', // 保留欄位相容性
+        trainerName: selectedTrainerName, // 寫入教學人員紀錄
+        approvedAt: Date.now()
+      });
+
+      await updateDoc(doc(db, 'employees', emp.id), { 
+        completedLearning: newProgress,
+        learningHistory: newHistory
+      });
+    }
     
     setShowTrainerModal(false);
-    showToast('已提交核准！請通知同事進行初審。');
+    showToast('已完成學習，紀錄已保存！');
   }
 
-  // 新增：刪除學習紀錄與重置進度
+  // 修改學習紀錄的教學人員
+  async function updateLearningRecordTrainer(emp: any, historyIndex: number, newTrainerName: string) {
+      const newHistory = [...emp.learningHistory];
+      newHistory[historyIndex].trainerName = newTrainerName;
+      try {
+          await updateDoc(doc(db, 'employees', emp.id), { learningHistory: newHistory });
+          showToast('教學人員已更新！');
+      } catch (error) {
+          showToast('更新失敗！請檢查網路。');
+      }
+  }
+
+  // 刪除學習紀錄與重置進度
   async function handleDeleteLearningRecord(emp: any, historyIndex: number) {
       if (!window.confirm('確定要刪除這筆學習紀錄嗎？該人員將需要重新學習此項目。')) return;
 
@@ -694,10 +620,40 @@ export default function App() {
                            ? (currentUserData?.completedLearning[currentActiveCatId] || 0) 
                            : (currentActiveCatId === displayCategories[0].id ? currentUserData?.completedLearning || 0 : 0);
 
+  // 主題樣式配置提取
+  const currentThemeObj = extendedThemeColors.find(t => t.id === globalTheme) || extendedThemeColors[0];
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-4 py-10 font-sans relative">
-        <style>{customStyles}</style>
+        <style>{`
+          :root {
+            --theme-main: ${currentThemeObj.main};
+            --theme-light: ${currentThemeObj.light};
+          }
+          .bg-indigo-600, .hover\\:bg-indigo-600:hover { background-color: var(--theme-main) !important; }
+          .bg-indigo-500 { background-color: var(--theme-main) !important; opacity: 0.9; }
+          .text-indigo-600 { color: var(--theme-main) !important; }
+          .text-indigo-500 { color: var(--theme-main) !important; opacity: 0.9; }
+          .border-indigo-600 { border-color: var(--theme-main) !important; }
+          .border-indigo-500 { border-color: var(--theme-main) !important; }
+          .border-indigo-400 { border-color: var(--theme-main) !important; opacity: 0.7;}
+          .focus\\:border-indigo-500:focus { border-color: var(--theme-main) !important; }
+          .bg-indigo-50 { background-color: var(--theme-light) !important; }
+          .bg-indigo-100 { background-color: var(--theme-light) !important; filter: brightness(0.95); }
+          .hover\\:bg-indigo-50:hover { background-color: var(--theme-light) !important; }
+          .text-indigo-900 { color: var(--theme-main) !important; filter: brightness(0.5); }
+          .text-indigo-700 { color: var(--theme-main) !important; filter: brightness(0.8); }
+          .text-indigo-400 { color: var(--theme-main) !important; filter: brightness(1.2); }
+          .border-indigo-200 { border-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .border-indigo-100 { border-color: var(--theme-light) !important; filter: brightness(0.9); }
+          .ring-indigo-200 { --tw-ring-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .focus\\:ring-indigo-500:focus { --tw-ring-color: var(--theme-main) !important; }
+          .shadow-indigo-100 { --tw-shadow-color: var(--theme-light) !important; }
+          .shadow-indigo-200 { --tw-shadow-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .fill-indigo-50 { fill: var(--theme-light) !important; }
+          ${customStyles}
+        `}</style>
         
         <div className="w-full max-w-md bg-white p-6 sm:p-10 rounded-2xl shadow-xl relative animate-in fade-in duration-500 border border-gray-100">
           <div onClick={() => setShowSecretModal(true)} className="w-16 h-16 sm:w-20 sm:h-20 bg-indigo-50 rounded-2xl mx-auto mb-6 flex items-center justify-center cursor-pointer hover:bg-indigo-100 transition-colors">
@@ -854,65 +810,118 @@ export default function App() {
 
   return (
     <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-hidden">
-      <style>{customStyles}</style>
+      <style>{`
+          :root {
+            --theme-main: ${currentThemeObj.main};
+            --theme-light: ${currentThemeObj.light};
+          }
+          .bg-indigo-600, .hover\\:bg-indigo-600:hover { background-color: var(--theme-main) !important; }
+          .bg-indigo-500 { background-color: var(--theme-main) !important; opacity: 0.9; }
+          .text-indigo-600 { color: var(--theme-main) !important; }
+          .text-indigo-500 { color: var(--theme-main) !important; opacity: 0.9; }
+          .border-indigo-600 { border-color: var(--theme-main) !important; }
+          .border-indigo-500 { border-color: var(--theme-main) !important; }
+          .border-indigo-400 { border-color: var(--theme-main) !important; opacity: 0.7;}
+          .focus\\:border-indigo-500:focus { border-color: var(--theme-main) !important; }
+          .bg-indigo-50 { background-color: var(--theme-light) !important; }
+          .bg-indigo-100 { background-color: var(--theme-light) !important; filter: brightness(0.95); }
+          .hover\\:bg-indigo-50:hover { background-color: var(--theme-light) !important; }
+          .text-indigo-900 { color: var(--theme-main) !important; filter: brightness(0.5); }
+          .text-indigo-700 { color: var(--theme-main) !important; filter: brightness(0.8); }
+          .text-indigo-400 { color: var(--theme-main) !important; filter: brightness(1.2); }
+          .border-indigo-200 { border-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .border-indigo-100 { border-color: var(--theme-light) !important; filter: brightness(0.9); }
+          .ring-indigo-200 { --tw-ring-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .focus\\:ring-indigo-500:focus { --tw-ring-color: var(--theme-main) !important; }
+          .shadow-indigo-100 { --tw-shadow-color: var(--theme-light) !important; }
+          .shadow-indigo-200 { --tw-shadow-color: var(--theme-light) !important; filter: brightness(0.85); }
+          .fill-indigo-50 { fill: var(--theme-light) !important; }
+          ${customStyles}
+      `}</style>
       
-      {/* 總部專屬 GPS 設定彈出視窗 */}
-      {showGpsModal && canEdit && (
+      {/* 總部專屬設定彈出視窗：整合 主題設定 與 GPS 定位 */}
+      {showSettingsModal && canEdit && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+          <div className="bg-white p-6 rounded-2xl w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="font-black text-xl text-gray-800 flex items-center"><MapPin c="w-6 h-6 mr-2 text-indigo-600" />各店 GPS 定位設定</h3>
-              <button onClick={() => setShowGpsModal(false)} className="text-gray-400 hover:text-gray-600"><XCircle c="w-6 h-6" /></button>
+              <h3 className="font-black text-xl text-gray-800 flex items-center"><Settings c="w-6 h-6 mr-2 text-indigo-600" />系統進階設定</h3>
+              <button onClick={() => setShowSettingsModal(false)} className="text-gray-400 hover:text-gray-600"><XCircle c="w-6 h-6" /></button>
             </div>
-            <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，該門店員工登入時須距離此座標 100 公尺內。未設定座標的門店將不受限制。</p>
 
-            <div className="overflow-y-auto flex-1 space-y-4 pr-2 hide-scrollbar">
-              {stores.map(store => (
-                <div key={store.id} className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-bold text-indigo-900 text-sm">{String(store.name)}</h4>
+            <div className="overflow-y-auto flex-1 space-y-6 pr-2 hide-scrollbar">
+              
+              {/* 主題顏色設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Edit c="w-4 h-4 mr-1.5 text-indigo-500"/>主題顏色設定</h4>
+                <div className="grid grid-cols-6 sm:grid-cols-8 gap-3 justify-items-center">
+                  {extendedThemeColors.map(t => (
                     <button
-                      onClick={() => {
-                        if (!navigator.geolocation) {
-                          showToast('您的裝置不支援定位功能'); return;
-                        }
-                        showToast('定位中...');
-                        navigator.geolocation.getCurrentPosition(
-                          (pos) => {
-                            updateDoc(doc(db, 'stores', store.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
-                            showToast(`${store.name} 座標已更新！`);
-                          },
-                          (err) => showToast('無法取得定位，請確認權限是否開啟'),
-                          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                        );
-                      }}
-                      className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-1 rounded font-bold hover:bg-indigo-200 transition-colors"
+                      key={t.id}
+                      title={t.name}
+                      onClick={() => updateDoc(doc(db, 'config', 'global'), { theme: t.id })}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center transition-transform shadow-sm ${globalTheme === t.id ? 'ring-2 ring-offset-2 scale-110' : 'hover:scale-110'}`}
+                      style={{ backgroundColor: t.main, '--tw-ring-color': t.main }}
                     >
-                      抓取目前位置
+                      {globalTheme === t.id && <CheckCircle2 c="w-4 h-4 text-white" />}
                     </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="text-[10px] text-gray-500 font-bold block mb-1">緯度 (Latitude)</label>
-                      <input type="number" step="any" value={store.lat || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lat: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-gray-500 font-bold block mb-1">經度 (Longitude)</label>
-                      <input type="number" step="any" value={store.lng || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lng: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" placeholder="未設定" />
-                    </div>
-                  </div>
-                  {(store.lat && store.lng) && (
-                     <div className="mt-2 text-[10px] text-green-600 font-bold flex items-center">
-                       <CheckCircle2 c="w-3 h-3 mr-1" /> 已啟用距離防護 (100m內)
-                     </div>
-                  )}
+                  ))}
                 </div>
-              ))}
-              {stores.length === 0 && <p className="text-center text-gray-400 text-xs py-4 font-bold">目前無門店資料，請先新增門店</p>}
+              </div>
+
+              {/* 各店 GPS 定位設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />各店 GPS 定位設定</h4>
+                <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，該門店員工登入時須距離此座標 100 公尺內。未設定座標的門店將不受限制。</p>
+
+                <div className="space-y-4">
+                  {stores.map(store => (
+                    <div key={store.id} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-bold text-gray-800 text-sm">{String(store.name)}</h4>
+                        <button
+                          onClick={() => {
+                            if (!navigator.geolocation) {
+                              showToast('您的裝置不支援定位功能'); return;
+                            }
+                            showToast('定位中...');
+                            navigator.geolocation.getCurrentPosition(
+                              (pos) => {
+                                updateDoc(doc(db, 'stores', store.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                showToast(`${store.name} 座標已更新！`);
+                              },
+                              (err) => showToast('無法取得定位，請確認權限是否開啟'),
+                              { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                            );
+                          }}
+                          className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded font-bold hover:bg-indigo-100 transition-colors"
+                        >
+                          抓取目前位置
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] text-gray-500 font-bold block mb-1">緯度 (Latitude)</label>
+                          <input type="number" step="any" value={store.lat || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lat: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-500 font-bold block mb-1">經度 (Longitude)</label>
+                          <input type="number" step="any" value={store.lng || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lng: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
+                        </div>
+                      </div>
+                      {(store.lat && store.lng) && (
+                        <div className="mt-2 text-[10px] text-green-600 font-bold flex items-center">
+                          <CheckCircle2 c="w-3 h-3 mr-1" /> 已啟用距離防護 (100m內)
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {stores.length === 0 && <p className="text-center text-gray-400 text-xs py-4 font-bold">目前無門店資料，請先新增門店</p>}
+                </div>
+              </div>
             </div>
 
             <div className="pt-4 mt-4 border-t border-gray-100">
-              <button onClick={() => setShowGpsModal(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-md shadow-indigo-200 active:scale-95 transition-transform">
+              <button onClick={() => setShowSettingsModal(false)} className="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold shadow-md shadow-indigo-200 active:scale-95 transition-transform">
                 完成設定
               </button>
             </div>
@@ -929,12 +938,12 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {canEdit && (
-              <button onClick={() => setShowGpsModal(true)} className="bg-gray-100 p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="GPS 定位設定">
+              <button onClick={() => setShowSettingsModal(true)} className="bg-gray-100 p-1.5 rounded-lg text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 transition-colors" title="系統設定">
                 <Settings c="w-5 h-5" />
               </button>
             )}
             
-            {/* 新版：系統通知中心按鈕 */}
+            {/* 系統通知中心按鈕 */}
             {canEdit && (
               <button onClick={() => setShowNotificationModal(true)} className="relative bg-gray-100 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors group cursor-pointer" title="系統通知">
                 <Bell c={`w-5 h-5 text-gray-500 group-hover:text-indigo-600 ${totalAdminNotifications > 0 ? 'text-indigo-500' : ''}`} />
@@ -978,7 +987,7 @@ export default function App() {
                       <div className="flex gap-3 pl-2">
                         <button onClick={async () => {
                           await deleteDoc(doc(db, 'pendingAccounts', pa.id));
-                          await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], learningHistory: [], examRecords: {}, createdAt: Date.now() });
+                          await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], learningHistory: [], examRecords: {}, avatarUrl: '', createdAt: Date.now() });
                           showToast('已加入名單！');
                           if(pendingAccounts.length === 1) setActiveTab('profile'); 
                         }} className="flex-1 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-bold shadow-md shadow-blue-200 active:scale-95 transition-transform">核准開通</button>
@@ -994,79 +1003,16 @@ export default function App() {
             </div>
           )}
 
-          {}
           {/* TAB 1: 學習地圖 */}
           {activeTab === 'learning' && (
             <div className="space-y-6 animate-in fade-in duration-300">
-              
-              <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
-                <h2 className="font-bold mb-4 flex items-center text-gray-800"><CheckCircle2 c="w-5 h-5 mr-2 text-indigo-500" />進度審核 ({progressApprovals.length})</h2>
-                {progressApprovals.length === 0 ? <p className="text-xs text-gray-400 text-center py-4 font-medium">目前無待審核項目</p> : (
-                  <div className="space-y-2">
-                    {progressApprovals.map(pa => {
-                      const categoryName = displayCategories.find(c => c.id === pa.categoryId)?.name || '綜合學習';
-                      return (
-                      <div key={pa.id} className="bg-gray-50 p-3 rounded-lg flex justify-between items-center border border-gray-100">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-800 text-sm">學習新人: {String(pa.employeeName)}<span className="font-normal text-gray-500 ml-1">｜教學人員: {String(pa.trainerName || '無')}</span></span>
-                          <span className="text-[10px] text-gray-500 font-medium">分類: {String(categoryName)}</span>
-                          <span className="text-[10px] text-gray-500 font-medium">項目: {String(pa.stepName)}</span>
-                          {pa.status === 'first_approved' && (
-                            <span className="text-[10px] text-blue-500 font-bold mt-0.5 flex items-center"><CheckCircle2 c="w-3 h-3 mr-1" />初審通過 ({String(pa.firstApprover)})</span>
-                          )}
-                        </div>
-                        <div>
-                          {(!pa.status || pa.status === 'pending') ? (
-                            currentUserName === pa.employeeName ? (
-                              <span className="text-xs font-bold text-gray-400 px-2 py-1 bg-gray-100 rounded border border-gray-200 shadow-inner inline-block">待同事初審</span>
-                            ) : (
-                              <button onClick={async () => {
-                                await updateDoc(doc(db, 'progressApprovals', pa.id), { status: 'first_approved', firstApprover: currentUserName || '員工' });
-                                showToast('已完成初審！');
-                              }} className="bg-blue-500 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-blue-600 transition-colors">初審核准</button>
-                            )
-                          ) : canEdit ? (
-                            <button onClick={async () => {
-                              await deleteDoc(doc(db, 'progressApprovals', pa.id));
-                              const emp = employees.find(e => e.name === pa.employeeName);
-                              if(emp) {
-                                const targetCatId = pa.categoryId || displayCategories[0]?.id || 'default';
-                                const newProgress = typeof emp.completedLearning === 'object' ? {...emp.completedLearning} : { [displayCategories[0]?.id || 'default']: emp.completedLearning || 0 };
-                                newProgress[targetCatId] = (newProgress[targetCatId] || 0) + 1;
-                                
-                                // 寫入學習歷程紀錄
-                                const newHistory = emp.learningHistory ? [...emp.learningHistory] : [];
-                                newHistory.push({
-                                  stepId: pa.stepId,
-                                  stepName: pa.stepName,
-                                  firstApprover: pa.firstApprover || '總部直接核准',
-                                  trainerName: pa.trainerName || '無', // 儲存教學人員
-                                  approvedAt: Date.now()
-                                });
-
-                                await updateDoc(doc(db, 'employees', emp.id), { 
-                                  completedLearning: newProgress,
-                                  learningHistory: newHistory
-                                });
-                              }
-                              showToast('複審完成，已核發進度並記錄！');
-                            }} className="bg-indigo-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors">最終核准</button>
-                          ) : (
-                            <span className="text-xs font-bold text-gray-400 px-2 py-1 bg-gray-100 rounded border border-gray-200 shadow-inner inline-block">待後台核准</span>
-                          )}
-                        </div>
-                      </div>
-                    )})}
-                  </div>
-                )}
-              </div>
 
               {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 <div className="flex justify-between items-center mb-2 px-1">
                   <div>
                      <h2 className="font-bold text-gray-800 text-lg">學習內容設定</h2>
-                     {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 完成後請提交至主管審核</p>}
+                     {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 完成後請點擊紀錄進度並選擇教學人員</p>}
                   </div>
                   {canEdit && (
                     <div className="flex gap-2">
@@ -1243,7 +1189,6 @@ export default function App() {
                             const isCompleted = index < categoryProgress;
                             const isCurrent = index === categoryProgress;
                             const isLocked = index > categoryProgress;
-                            const pendingApproval = progressApprovals.find(pa => pa.employeeName === currentUserName && pa.stepId === step.id);
 
                             if (isLocked) {
                               return (
@@ -1260,18 +1205,27 @@ export default function App() {
                             }
 
                             if (isCompleted) {
+                              const historyRecord = currentUserData?.learningHistory?.find(h => h.stepId === step.id);
+                              const trainerName = historyRecord?.trainerName;
                               return (
                                 <div key={step.id} className="relative group">
                                   <div className="absolute -left-[39px] top-2 w-7 h-7 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
                                     <CheckCircle2 c="w-4 h-4 text-white" />
                                   </div>
                                   <div className="bg-white border border-green-200 rounded-xl p-4 shadow-sm opacity-70 hover:opacity-100 transition-opacity">
-                                    <div className="flex items-center gap-2">
-                                      <span className="bg-green-100 text-green-700 font-black text-[10px] px-2 py-1 rounded">Lv.{index + 1}</span>
-                                      <h3 className="font-bold text-gray-700 text-sm line-clamp-1">{String(step.title)}</h3>
-                                      <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-2 py-0.5 rounded-full">
-                                        <CheckCircle2 c="w-3 h-3 mr-1"/>已通過
-                                      </span>
+                                    <div className="flex flex-col gap-1.5">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span className="bg-green-100 text-green-700 font-black text-[10px] px-2 py-1 rounded">Lv.{index + 1}</span>
+                                        <h3 className="font-bold text-gray-700 text-sm line-clamp-1">{String(step.title)}</h3>
+                                        <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-2 py-0.5 rounded-full">
+                                          <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
+                                        </span>
+                                      </div>
+                                      {trainerName && trainerName !== '無' && (
+                                        <div className="text-[11px] font-bold text-red-500 flex items-center bg-red-50 px-2 py-1 rounded w-fit">
+                                          <User c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
@@ -1284,19 +1238,19 @@ export default function App() {
                                   <div className="absolute -left-[43px] top-2 w-9 h-9 bg-indigo-600 rounded-full border-4 border-white flex items-center justify-center shadow-md animate-pulse">
                                     <BookOpen c="w-4 h-4 text-white" />
                                   </div>
-                                  <div className="bg-white border-2 border-indigo-400 rounded-xl p-5 shadow-lg relative overflow-hidden">
+                                  <div className="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden">
                                     <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
                                     <div className="flex items-center gap-2 mb-4">
                                       <span className="bg-indigo-100 text-indigo-700 font-black text-xs px-2 py-1 rounded">Lv.{index + 1}</span>
-                                      <h3 className="font-bold text-indigo-900 text-lg">{String(step.title)}</h3>
-                                      <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full animate-bounce">目前進度</span>
+                                      <h3 className="font-bold text-gray-800 text-lg">{String(step.title)}</h3>
+                                      <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">目前進度</span>
                                     </div>
                                     
                                     {/* 組合區塊：子標題 -> 內容 -> 圖片 迭代顯示 */}
                                     <div className="space-y-4 mb-4">
                                       {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                        <div key={block.id} className="bg-indigo-50/40 rounded-xl p-4 border border-indigo-100/50 shadow-inner inset-shadow">
-                                          <div className="flex items-center justify-between mb-2 border-b border-indigo-100/60 pb-2">
+                                        <div key={block.id} className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
+                                          <div className="flex items-center justify-between mb-2 border-b border-gray-200/60 pb-2">
                                             {block.subtitle ? (
                                               <h4 className="font-bold text-indigo-800 text-base">{String(block.subtitle)}</h4>
                                             ) : (
@@ -1304,7 +1258,7 @@ export default function App() {
                                             )}
                                             
                                             {/* --- 前台專用：教學完畢打勾儲存 --- */}
-                                            <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-indigo-50 transition-colors">
+                                            <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
                                               <input 
                                                 type="checkbox" 
                                                 checked={currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] || false}
@@ -1316,7 +1270,7 @@ export default function App() {
                                                 }}
                                                 className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
                                               />
-                                              <span className="text-[10px] text-indigo-700 font-bold">教學完畢</span>
+                                              <span className="text-[10px] text-gray-600 font-bold">教學完畢</span>
                                             </label>
                                           </div>
                                           <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
@@ -1335,24 +1289,15 @@ export default function App() {
                                     </div>
 
                                     <div className="mt-4 pt-4 border-t border-gray-100">
-                                      {pendingApproval ? (
-                                        <div className={`py-4 rounded-xl text-sm font-bold flex justify-center items-center border ${pendingApproval.status === 'first_approved' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-orange-50 text-orange-600 border-orange-200'}`}>
-                                          <span className="animate-pulse flex items-center">
-                                            <Bell c="w-5 h-5 mr-2"/>
-                                            {pendingApproval.status === 'first_approved' ? `初審已過 (${String(pendingApproval.firstApprover)})，等待複審...` : '審核中，請通知同事初審...'}
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        <button onClick={() => {
-                                            // 開啟選擇教學人員 Modal
-                                            setTrainerModalStep(step);
-                                            setSelectedTrainerStore(currentUserData?.store || '');
-                                            setSelectedTrainerName('');
-                                            setShowTrainerModal(true);
-                                          }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
-                                          <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，提交核准
-                                        </button>
-                                      )}
+                                      <button onClick={() => {
+                                          // 開啟選擇教學人員 Modal，改為直接紀錄
+                                          setTrainerModalStep(step);
+                                          setSelectedTrainerStore(currentUserData?.store || '');
+                                          setSelectedTrainerName('');
+                                          setShowTrainerModal(true);
+                                        }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
+                                        <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
+                                      </button>
                                     </div>
                                   </div>
                                 </div>
@@ -1366,157 +1311,6 @@ export default function App() {
                   )}
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* TAB 2: 工作項目管理 */}
-          {activeTab === 'tasks' && (
-            <div className="space-y-6 animate-in fade-in duration-300">
-              
-              <div className="flex justify-between items-center mb-2 px-1">
-                <div>
-                   <h2 className="font-bold text-gray-800 text-lg">工作項目管理</h2>
-                   {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 點擊下方標籤查看並登錄人員次數</p>}
-                </div>
-                {canEdit && (
-                  <button onClick={() => { setEditingTasks([...tasks]); setShowTaskManager(true); }} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
-                    <Settings c="w-3.5 h-3.5 mr-1" /><span>管理工作項目</span>
-                  </button>
-                )}
-              </div>
-
-              {/* 總部專屬：權限設定區塊 */}
-              {canEdit && (
-                <div className="mb-4 bg-slate-900 text-white rounded-xl p-4 shadow-lg">
-                  <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-3">
-                    <div className="flex items-center space-x-2">
-                      <Settings c="w-4 h-4 text-blue-400" />
-                      <h3 className="text-sm font-bold tracking-wider">工作項目統計權限</h3>
-                    </div>
-                    <button onClick={saveTaskRolesConfig} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow transition-colors active:scale-95">
-                      儲存設定
-                    </button>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mb-3 font-medium">請勾選哪些職位可以在系統中為人員「增加」工作項目次數：</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {jobRoles.map(role => (
-                      <label key={role} className="flex items-center space-x-2 bg-white/10 p-2 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
-                        <input 
-                          type="checkbox" 
-                          checked={editingTaskRoles.includes(role)} 
-                          onChange={() => {
-                              setEditingTaskRoles(prev => prev.includes(role) ? prev.filter((r: any) => r !== role) : [...prev, role]);
-                          }}
-                          className="w-3.5 h-3.5 rounded border-gray-300 text-blue-500 focus:ring-blue-500"
-                        />
-                        <span className="text-[11px] font-bold">{String(role)}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 後台專屬：任務管理模式 */}
-              {canEdit && showTaskManager && (
-                 <div className="mb-4 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
-                     <h3 className="font-bold mb-3 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯工作項目標籤</h3>
-                     <p className="text-[10px] text-gray-400 mb-3">新增、編輯或刪除工作項目（如洗碗、收桌等）：</p>
-                     <div className="space-y-2 mb-4">
-                       {editingTasks.map((t: any) => (
-                         <div key={t.id} className="flex gap-2 items-center">
-                           <input type="text" value={t.name} onChange={e => setEditingTasks(editingTasks.map((tt: any) => tt.id === t.id ? {...tt, name: e.target.value} : tt))} className="flex-1 p-2 rounded bg-slate-700 border border-slate-600 text-sm font-bold outline-none focus:border-indigo-400" placeholder="工作名稱" />
-                           <button onClick={() => setEditingTasks(editingTasks.filter((tt: any) => tt.id !== t.id))} className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition-colors"><Trash2 c="w-4 h-4"/></button>
-                         </div>
-                       ))}
-                       <button onClick={() => setEditingTasks([...editingTasks, {id: 'temp_' + Date.now().toString(), name: ''}])} className="w-full p-2 mt-1 border border-dashed border-slate-600 rounded text-slate-400 font-bold hover:text-white hover:border-slate-400 text-xs transition-colors"> + 新增工作標籤</button>
-                     </div>
-                     <div className="flex gap-2 pt-2 border-t border-slate-700">
-                       <button onClick={() => setShowTaskManager(false)} className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold transition-colors">取消</button>
-                       <button onClick={saveTasksConfig} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md shadow-indigo-500/30 transition-colors">儲存工作項目</button>
-                     </div>
-                 </div>
-              )}
-
-              {/* 任務風琴夾列表 與 人員統計清單 */}
-              {!showTaskManager && (
-                  <div className="bg-transparent">
-                      {/* 任務標籤 */}
-                      {tasks.length > 0 && (
-                          <div className="flex overflow-x-auto pl-2 pt-2 -mb-[1px] hide-scrollbar z-10 relative">
-                              {tasks.map((task: any, i: number) => {
-                                  const isActive = activeTaskId === task.id;
-                                  return (
-                                      <div
-                                          key={task.id}
-                                          onClick={() => setActiveTaskId(task.id)}
-                                          className={`relative cursor-pointer px-4 sm:px-6 py-2.5 min-w-[80px] max-w-[120px] text-center rounded-t-xl -ml-2 border border-gray-200 transition-all select-none flex-shrink-0 ${
-                                              isActive
-                                                  ? 'bg-white text-indigo-600 font-black border-b-white z-20 pt-3.5 -mt-1.5 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]'
-                                                  : 'bg-indigo-50/90 text-gray-500 font-bold hover:bg-indigo-100/90 shadow-inner inset-shadow'
-                                          }`}
-                                          style={{ zIndex: isActive ? 20 : tasks.length - i }}
-                                      >
-                                          <span className="truncate block text-[13px]">{String(task.name)}</span>
-                                      </div>
-                                  )
-                              })}
-                          </div>
-                      )}
-
-                      {/* 選定任務的統計內容 */}
-                      <div className="bg-white border border-gray-200 rounded-xl rounded-tl-none shadow-sm relative z-10 p-4 min-h-[200px]">
-                          {tasks.length === 0 ? (
-                              <div className="p-10 text-center text-gray-400 text-sm font-bold">
-                                  <ListTodo c="w-10 h-10 mx-auto mb-3 text-gray-200" />
-                                  尚無工作項目，請總部新增
-                              </div>
-                          ) : (
-                              <div className="space-y-3">
-                                  {employees.map(emp => {
-                                      const activeTask = tasks.find(t => t.id === activeTaskId);
-                                      const taskRecord = emp.tasksDetail?.find((t: any) => t.id === activeTaskId);
-                                      const count = taskRecord ? taskRecord.count : 0;
-
-                                      return (
-                                          <div key={emp.id} className="flex justify-between items-center p-3 border border-gray-100 rounded-xl bg-gray-50">
-                                              <div className="flex items-center gap-3">
-                                                  <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden border border-gray-200">
-                                                      {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-5 h-5 text-gray-400" />}
-                                                  </div>
-                                                  <div>
-                                                      <h4 className="font-bold text-gray-800 text-sm">{String(emp.name)}</h4>
-                                                      <RoleBadge role={emp.role} />
-                                                  </div>
-                                              </div>
-                                              <div className="flex items-center gap-3">
-                                                  <div className="text-right mr-1">
-                                                      <span className="text-[10px] text-gray-500 block font-bold">完成次數</span>
-                                                      <span className="font-black text-lg text-indigo-600">{Number(count)}</span>
-                                                  </div>
-                                                  {/* 總部管理員 (加減修改) */}
-                                                  {canEdit ? (
-                                                      <div className="flex items-center gap-1 bg-white border border-gray-200 p-1 rounded-lg shadow-sm">
-                                                          <button onClick={() => editEmployeeTaskCount(emp.id, activeTaskId, activeTask?.name, Math.max(0, count - 1))} className="w-6 h-6 rounded-md bg-gray-100 text-gray-600 hover:bg-gray-200 flex items-center justify-center font-black transition-colors active:scale-95">-</button>
-                                                          <input type="number" value={count} onChange={(e) => editEmployeeTaskCount(emp.id, activeTaskId, activeTask?.name, parseInt(e.target.value)||0)} className="w-10 text-center text-sm font-bold bg-transparent outline-none text-indigo-600" />
-                                                          <button onClick={() => editEmployeeTaskCount(emp.id, activeTaskId, activeTask?.name, count + 1)} className="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 hover:bg-indigo-200 flex items-center justify-center font-black transition-colors active:scale-95">+</button>
-                                                      </div>
-                                                  ) : (
-                                                    /* 授權職位 (只加不減的 +1 按鈕) */
-                                                    canEditTaskCount && (
-                                                        <button onClick={() => incrementEmployeeTask(emp.id, activeTaskId, activeTask?.name)} className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 hover:bg-indigo-200 border border-indigo-200 flex items-center justify-center font-black transition-all active:scale-90 shadow-sm text-xl shadow-indigo-100">
-                                                            +
-                                                        </button>
-                                                    )
-                                                  )}
-                                              </div>
-                                          </div>
-                                      );
-                                  })}
-                              </div>
-                          )}
-                      </div>
-                  </div>
-              )}
             </div>
           )}
           
@@ -1642,7 +1436,6 @@ export default function App() {
                     
                     <div className="space-y-4">
                        {filteredDisplayEmployees.map(emp => {
-                         const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
                          
                          return (
                            <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
@@ -1668,6 +1461,23 @@ export default function App() {
                                       </select>
                                     </div>
                                   </div>
+                                  
+                                  {/* 大頭貼選擇 (表情符號) */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
+                                    <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
+                                      {defaultAvatars.map(avatar => (
+                                        <button 
+                                          key={avatar} 
+                                          onClick={() => setEditEmployeeData({...editEmployeeData, avatarUrl: avatar})}
+                                          className={`text-2xl p-1 rounded-lg transition-transform ${editEmployeeData.avatarUrl === avatar ? 'bg-blue-100 scale-110' : 'hover:bg-gray-100'}`}
+                                        >
+                                          {avatar}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+
                                   <div>
                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
                                     <input 
@@ -1693,19 +1503,9 @@ export default function App() {
                                  <div className="flex justify-between items-start mb-5">
                                    <div className="flex items-center space-x-4">
                                      <div className="relative">
-                                       <label className={`block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center group ${canEdit || currentUserName === emp.name ? 'cursor-pointer' : ''}`}>
-                                         {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
-                                         
-                                         {/* 只有自己或後台可以上傳大頭照 */}
-                                         {(canEdit || currentUserName === emp.name) && (
-                                           <>
-                                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Camera c="w-6 h-6 text-white" />
-                                             </div>
-                                             <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(emp.id, e)} />
-                                           </>
-                                         )}
-                                       </label>
+                                       <div className="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
+                                         {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                       </div>
                                      </div>
                                      <div>
                                        <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
@@ -1738,23 +1538,6 @@ export default function App() {
                                    </div>
                                  </div>
 
-                                 {/* 詳細工作統計 (若有統計數據則顯示在最下方) */}
-                                 {emp.tasksDetail && emp.tasksDetail.length > 0 && (
-                                   <div className="bg-white rounded-lg border border-gray-100 p-3 z-10 shadow-sm mt-1 mb-2">
-                                      <div className="flex justify-between items-center mb-2">
-                                         <p className="text-[10px] text-gray-400 font-bold">詳細工作統計：</p>
-                                         <p className="text-[10px] text-gray-400 font-bold">總計 {Number(totalTasks)} 次</p>
-                                      </div>
-                                      <div className="flex flex-wrap gap-2">
-                                        {emp.tasksDetail.map((t: any) => (
-                                          <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
-                                            {String(t.name)} <span className="font-black text-blue-600 ml-1.5">{Number(t.count)}</span>
-                                          </span>
-                                        ))}
-                                      </div>
-                                   </div>
-                                 )}
-
                                  {/* --- 學習通過紀錄卡片 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
@@ -1767,27 +1550,41 @@ export default function App() {
                                       <div className="space-y-2 mt-2">
                                         {emp.learningHistory.map((h: any, i: number) => (
                                           <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
-                                            <div className="flex flex-col">
+                                            <div className="flex flex-col w-full">
                                               <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
-                                              <div className="flex items-center mt-1 gap-2">
-                                                <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
-                                                {h.trainerName && h.trainerName !== '無' && (
-                                                  <span className="text-[9px] text-indigo-500 font-bold flex items-center">
-                                                    <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
-                                                  </span>
+                                              <div className="flex items-center mt-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                                  
+                                                  {/* 後台可編輯教學人員，前台僅顯示 */}
+                                                  {canEdit ? (
+                                                    <div className="flex items-center text-[10px] text-red-500 font-bold">
+                                                      <User c="w-3 h-3 mr-0.5" />教學:
+                                                      <select 
+                                                        value={h.trainerName || ''} 
+                                                        onChange={(e) => updateLearningRecordTrainer(emp, i, e.target.value)}
+                                                        className="ml-1 bg-transparent border-b border-red-200 outline-none focus:border-red-500 py-0.5 text-red-600"
+                                                      >
+                                                        <option value="無">無</option>
+                                                        {employees.map(e => <option key={e.id} value={e.name}>{String(e.name)}</option>)}
+                                                      </select>
+                                                    </div>
+                                                  ) : (
+                                                    h.trainerName && h.trainerName !== '無' && (
+                                                      <span className="text-[10px] text-red-500 font-bold flex items-center">
+                                                        <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                      </span>
+                                                    )
+                                                  )}
+                                                </div>
+                                                
+                                                {canEdit && (
+                                                  <button onClick={() => handleDeleteLearningRecord(emp, i)} className="text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
+                                                    <Trash2 c="w-3.5 h-3.5" />
+                                                  </button>
                                                 )}
                                               </div>
                                              </div>
-                                            <div className="flex items-center">
-                                              <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
-                                                審核: {String(h.firstApprover)}
-                                              </span>
-                                              {canEdit && (
-                                                <button onClick={() => handleDeleteLearningRecord(emp, i)} className="ml-2 text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
-                                                  <Trash2 c="w-3.5 h-3.5" />
-                                                </button>
-                                              )}
-                                            </div>
                                           </div>
                                         ))}
                                       </div>
@@ -1813,7 +1610,6 @@ export default function App() {
                    </h2>
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
-                        const totalTasks = emp.tasksDetail?.reduce((sum: any, t: any) => sum + t.count, 0) || 0;
                         
                         return (
                           <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
@@ -1838,6 +1634,23 @@ export default function App() {
                                      </select>
                                    </div>
                                  </div>
+                                 
+                                 {/* 大頭貼選擇 (表情符號) */}
+                                 <div>
+                                   <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
+                                   <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
+                                     {defaultAvatars.map(avatar => (
+                                       <button 
+                                         key={avatar} 
+                                         onClick={() => setEditEmployeeData({...editEmployeeData, avatarUrl: avatar})}
+                                         className={`text-2xl p-1 rounded-lg transition-transform ${editEmployeeData.avatarUrl === avatar ? 'bg-blue-100 scale-110' : 'hover:bg-gray-100'}`}
+                                       >
+                                         {avatar}
+                                       </button>
+                                     ))}
+                                   </div>
+                                 </div>
+
                                  <div>
                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">登入密碼 (6碼)</label>
                                    <input 
@@ -1863,19 +1676,9 @@ export default function App() {
                                 <div className="flex justify-between items-start mb-5">
                                   <div className="flex items-center space-x-4">
                                     <div className="relative">
-                                      <label className={`block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center group ${canEdit || currentUserName === emp.name ? 'cursor-pointer' : ''}`}>
-                                        {emp.avatarUrl ? <img src={emp.avatarUrl} className="w-full h-full object-cover"/> : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
-                                        
-                                        {/* 只有自己或後台可以上傳大頭照 */}
-                                        {(canEdit || currentUserName === emp.name) && (
-                                          <>
-                                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                               <Camera c="w-6 h-6 text-white" />
-                                            </div>
-                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleAvatarUpload(emp.id, e)} />
-                                          </>
-                                        )}
-                                      </label>
+                                      <div className="block w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
+                                        {emp.avatarUrl && emp.avatarUrl.length <= 2 ? emp.avatarUrl : <User c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                      </div>
                                     </div>
                                     <div>
                                       <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
@@ -1908,23 +1711,6 @@ export default function App() {
                                   </div>
                                 </div>
 
-                                {/* 詳細工作統計 (若有統計數據則顯示在最下方) */}
-                                {emp.tasksDetail && emp.tasksDetail.length > 0 && (
-                                  <div className="bg-white rounded-lg border border-gray-100 p-3 z-10 shadow-sm mt-1 mb-2">
-                                     <div className="flex justify-between items-center mb-2">
-                                        <p className="text-[10px] text-gray-400 font-bold">詳細工作統計：</p>
-                                        <p className="text-[10px] text-gray-400 font-bold">總計 {Number(totalTasks)} 次</p>
-                                     </div>
-                                     <div className="flex flex-wrap gap-2">
-                                       {emp.tasksDetail.map((t: any) => (
-                                         <span key={t.id} className="text-xs bg-gray-50 border border-gray-100 text-gray-600 px-2 py-1 rounded-md flex items-center font-medium">
-                                           {String(t.name)} <span className="font-black text-blue-600 ml-1.5">{Number(t.count)}</span>
-                                         </span>
-                                       ))}
-                                     </div>
-                                  </div>
-                                )}
-
                                 {/* --- 學習通過紀錄卡片 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
@@ -1937,27 +1723,41 @@ export default function App() {
                                      <div className="space-y-2 mt-2">
                                        {emp.learningHistory.map((h: any, i: number) => (
                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
-                                           <div className="flex flex-col">
+                                           <div className="flex flex-col w-full">
                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
-                                             <div className="flex items-center mt-1 gap-2">
-                                               <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
-                                               {h.trainerName && h.trainerName !== '無' && (
-                                                 <span className="text-[9px] text-indigo-500 font-bold flex items-center">
-                                                   <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
-                                                 </span>
-                                               )}
-                                             </div>
+                                             <div className="flex items-center mt-2 justify-between">
+                                                <div className="flex items-center gap-2">
+                                                  <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
+                                                  
+                                                  {/* 後台可編輯教學人員，前台僅顯示 */}
+                                                  {canEdit ? (
+                                                    <div className="flex items-center text-[10px] text-red-500 font-bold">
+                                                      <User c="w-3 h-3 mr-0.5" />教學:
+                                                      <select 
+                                                        value={h.trainerName || ''} 
+                                                        onChange={(e) => updateLearningRecordTrainer(emp, i, e.target.value)}
+                                                        className="ml-1 bg-transparent border-b border-red-200 outline-none focus:border-red-500 py-0.5 text-red-600"
+                                                      >
+                                                        <option value="無">無</option>
+                                                        {employees.map(e => <option key={e.id} value={e.name}>{String(e.name)}</option>)}
+                                                      </select>
+                                                    </div>
+                                                  ) : (
+                                                    h.trainerName && h.trainerName !== '無' && (
+                                                      <span className="text-[10px] text-red-500 font-bold flex items-center">
+                                                        <User c="w-3 h-3 mr-0.5" />教學: {String(h.trainerName)}
+                                                      </span>
+                                                    )
+                                                  )}
+                                                </div>
+                                                
+                                                {canEdit && (
+                                                  <button onClick={() => handleDeleteLearningRecord(emp, i)} className="text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
+                                                    <Trash2 c="w-3.5 h-3.5" />
+                                                  </button>
+                                                )}
+                                              </div>
                                             </div>
-                                           <div className="flex items-center">
-                                             <span className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded border border-indigo-100 font-bold whitespace-nowrap ml-2">
-                                               審核: {String(h.firstApprover)}
-                                             </span>
-                                             {canEdit && (
-                                               <button onClick={() => handleDeleteLearningRecord(emp, i)} className="ml-2 text-gray-300 hover:text-red-500 p-1 rounded transition-colors" title="刪除紀錄，重新學習">
-                                                 <Trash2 c="w-3.5 h-3.5" />
-                                               </button>
-                                             )}
-                                           </div>
                                          </div>
                                        ))}
                                      </div>
@@ -1981,10 +1781,7 @@ export default function App() {
 
         <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0">
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習審核</span>
-          </button>
-          <button onClick={() => setActiveTab('tasks')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'tasks' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <ListTodo c={`w-5 h-5 ${activeTab === 'tasks' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">工作項目</span>
+            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習進度</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <User c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : '個人資料'}</span>
@@ -2017,15 +1814,6 @@ export default function App() {
                       <button onClick={() => { setShowNotificationModal(false); setActiveTab('pending'); }} className="bg-blue-600 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm hover:bg-blue-700 active:scale-95 transition-all">前往審核</button>
                     </div>
                   )}
-                  {adminPendingApprovals.length > 0 && (
-                    <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex justify-between items-center shadow-sm">
-                      <div>
-                        <p className="text-[10px] font-bold text-indigo-500 tracking-wider mb-1">學習進度</p>
-                        <p className="text-sm font-bold text-indigo-900">有 <span className="text-red-500 text-base mx-1">{adminPendingApprovals.length}</span> 項學習待最終核准</p>
-                      </div>
-                      <button onClick={() => { setShowNotificationModal(false); setActiveTab('learning'); }} className="bg-indigo-600 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-sm hover:bg-indigo-700 active:scale-95 transition-all">前往審核</button>
-                    </div>
-                  )}
                 </>
               )}
             </div>
@@ -2043,7 +1831,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 新增：選擇教學人員 Modal */}
+      {/* 選擇教學人員 Modal */}
       {showTrainerModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowTrainerModal(false)}>
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
@@ -2105,7 +1893,7 @@ export default function App() {
                   disabled={!selectedTrainerName}
                   className={`flex-1 py-3 rounded-xl font-bold text-sm shadow-md transition-all flex items-center justify-center ${!selectedTrainerName ? 'bg-indigo-300 text-white cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 active:scale-95'}`}
                 >
-                  <CheckCircle2 c="w-4 h-4 mr-1.5" />送出審核
+                  <CheckCircle2 c="w-4 h-4 mr-1.5" />儲存紀錄
                 </button>
               </div>
             </div>
