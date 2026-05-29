@@ -54,6 +54,7 @@ const MapPin = ({ c }: any) => <I c={c}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a
 const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></I>;
 const GripVertical = ({ c }: any) => <I c={c}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></I>;
 const Award = ({ c }: any) => <I c={c}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></I>;
+const Star = ({ c }: any) => <I c={c}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></I>;
 
 // 擴充至 24 種中性文青主題色
 const extendedThemeColors = [
@@ -149,6 +150,14 @@ export default function App() {
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
+  
+  // 系統自訂標題
+  const [customTitles, setCustomTitles] = useState({
+    hqTitle: '總部學習系統',
+    storeTitle: '門店學習系統',
+    learningTab: '學習進度',
+    profileTab: '個人資料'
+  });
 
   // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -202,6 +211,7 @@ export default function App() {
           const data = d.data();
           setGlobalTheme(data.theme || 'indigo');
           setSystemLogoUrl(data.logoUrl || '');
+          if (data.customTitles) setCustomTitles(data.customTitles);
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -795,6 +805,29 @@ export default function App() {
 
             <div className="overflow-y-auto flex-1 space-y-6 pr-2 hide-scrollbar">
               
+              {/* 自訂標題設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Edit c="w-4 h-4 mr-1.5 text-indigo-500"/>自訂系統標題</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">總部端標題</label>
+                    <input type="text" value={customTitles.hqTitle} onChange={e => setCustomTitles({...customTitles, hqTitle: e.target.value})} onBlur={() => updateDoc(doc(db, 'config', 'global'), { customTitles })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">門店端標題</label>
+                    <input type="text" value={customTitles.storeTitle} onChange={e => setCustomTitles({...customTitles, storeTitle: e.target.value})} onBlur={() => updateDoc(doc(db, 'config', 'global'), { customTitles })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">學習分頁名稱</label>
+                    <input type="text" value={customTitles.learningTab} onChange={e => setCustomTitles({...customTitles, learningTab: e.target.value})} onBlur={() => updateDoc(doc(db, 'config', 'global'), { customTitles })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-gray-500 font-bold block mb-1">個人資料分頁</label>
+                    <input type="text" value={customTitles.profileTab} onChange={e => setCustomTitles({...customTitles, profileTab: e.target.value})} onBlur={() => updateDoc(doc(db, 'config', 'global'), { customTitles })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500" />
+                  </div>
+                </div>
+              </div>
+
               {/* 主題顏色設定 */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <h4 className="font-bold text-gray-800 text-sm mb-3 flex items-center"><Edit c="w-4 h-4 mr-1.5 text-indigo-500"/>主題顏色設定</h4>
@@ -898,9 +931,9 @@ export default function App() {
             {systemLogoUrl ? (
               <img src={systemLogoUrl} className="h-8 max-w-[120px] object-contain" alt="Logo" />
             ) : (
-              <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><Store c="w-4 h-4" /></div>
+              <Store c="w-6 h-6 text-indigo-600" />
             )}
-            {!systemLogoUrl && <h1 className="font-black text-gray-800 tracking-wide text-lg">{canEdit ? '總部學習系統' : '門店學習系統'}</h1>}
+            {!systemLogoUrl && <h1 className="font-black text-gray-800 tracking-wide text-lg">{canEdit ? customTitles.hqTitle : customTitles.storeTitle}</h1>}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {canEdit && (
@@ -1035,7 +1068,7 @@ export default function App() {
                   {/* 後台專屬：新增當前分類的按鈕 */}
                   {canEdit && (
                     <div className="p-4 border-b border-gray-100 bg-gray-50/50 rounded-tr-xl">
-                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-2 border border-dashed border-indigo-300 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
+                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-2 border border-gray-200 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-100 transition-colors shadow-sm bg-white">
                         <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(displayCategories.find(c=>c.id === currentActiveCatId)?.name || '')}」新增內容
                       </button>
                     </div>
@@ -1061,15 +1094,15 @@ export default function App() {
                               </div>
                             </div>
                             
-                            <div className="pl-7 mt-3 space-y-4 border-l-2 border-indigo-100 ml-2 pb-2">
+                            <div className="pl-7 mt-3 space-y-4 ml-2 pb-2">
                               {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                <div key={block.id} className="bg-gray-50/50 p-3 rounded-xl border border-gray-100 relative">
+                                <div key={block.id} className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative">
                                   <div className="flex justify-between items-center mb-2">
                                     <span className="text-xs font-bold text-indigo-400">區塊 {bIndex + 1}</span>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
                                   
-                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} className="w-full p-2 border border-indigo-100 rounded-lg font-bold text-indigo-700 bg-indigo-50/30 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-2" placeholder="請輸入子標題（選填）"/>
+                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-gray-700 bg-gray-50 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-2" placeholder="請輸入子標題（選填）"/>
                                   
                                   <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} className="w-full p-3 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]" placeholder="請輸入學習內容..." />
                                 
@@ -1094,7 +1127,7 @@ export default function App() {
                                 </div>
                               ))}
                               
-                              <button onClick={() => addBlock(step)} className="w-full py-2.5 bg-indigo-50/50 border border-indigo-200 border-dashed rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-100 transition-colors">
+                              <button onClick={() => addBlock(step)} className="w-full py-2.5 bg-white border border-gray-200 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm">
                                 <PlusCircle c="w-4 h-4 mr-1.5"/> 新增內容區塊
                               </button>
                               
@@ -1109,7 +1142,7 @@ export default function App() {
                         ))
                       ) : (
                         /* 員工視角：遊戲化的一關一關解鎖地圖 (依據分類進度) */
-                        <div className="relative border-l-2 border-indigo-200 ml-4 pl-6 space-y-8 my-2 pb-4">
+                        <div className="space-y-4 my-2">
                           {filteredSteps.map((step, index) => {
                             const isCompleted = index < categoryProgress;
                             const isCurrent = index === categoryProgress;
@@ -1117,14 +1150,27 @@ export default function App() {
 
                             if (isLocked) {
                               return (
-                                <div key={step.id} className="relative">
-                                  <div className="absolute -left-[39px] top-2 w-7 h-7 bg-gray-100 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
-                                    <Lock c="w-3 h-3 text-gray-400" />
-                                  </div>
-                                  <div className="bg-white border border-gray-100 rounded-xl p-4 flex items-center space-x-3">
-                                    <div className="bg-gray-200 text-gray-500 font-black text-xs px-2 py-1 rounded">Lv.{index + 1}</div>
-                                    <div className="text-gray-400 font-bold text-sm tracking-widest">尚未解鎖</div>
-                                  </div>
+                                <div key={step.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm opacity-70">
+                                   <div className="flex items-center gap-2 mb-4">
+                                     <span className="bg-gray-100 text-gray-500 font-black text-xs px-2 py-1 rounded flex items-center">
+                                       <Lock c="w-3 h-3 mr-1" />Lv.{index + 1}
+                                     </span>
+                                     <h3 className="font-bold text-gray-500 text-lg">{String(step.title)}</h3>
+                                     <span className="ml-auto text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">尚未解鎖</span>
+                                   </div>
+                                   
+                                   {/* 未解鎖可預覽的半透明內容 */}
+                                   <div className="space-y-4 pointer-events-none select-none filter grayscale">
+                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                       <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-100 opacity-60">
+                                         <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
+                                           <h4 className="font-bold text-gray-400 text-base">{String(block.subtitle || '內容區塊')}</h4>
+                                           <span className="text-[10px] text-gray-400 font-bold flex items-center"><Lock c="w-3 h-3 mr-1" />鎖定中</span>
+                                         </div>
+                                         <p className="text-sm text-gray-400 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
+                                       </div>
+                                     ))}
+                                   </div>
                                 </div>
                               );
                             }
@@ -1133,24 +1179,21 @@ export default function App() {
                               const historyRecord = currentUserData?.learningHistory?.find(h => h.stepId === step.id);
                               const trainerName = historyRecord?.trainerName;
                               return (
-                                <div key={step.id} className="relative group">
-                                  <div className="absolute -left-[39px] top-2 w-7 h-7 bg-green-500 rounded-full border-4 border-white flex items-center justify-center shadow-sm">
-                                    <CheckCircle2 c="w-4 h-4 text-white" />
-                                  </div>
-                                  <div className="bg-white border border-green-200 rounded-xl p-4 shadow-sm transition-opacity">
-                                    <div className="flex flex-col gap-1.5">
-                                      {trainerName && trainerName !== '無' && (
-                                        <div className="text-[11px] font-bold text-red-500 flex items-center mb-1">
-                                          <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
-                                        </div>
-                                      )}
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <span className="bg-green-100 text-green-700 font-black text-[10px] px-2 py-1 rounded">Lv.{index + 1}</span>
-                                        <h3 className="font-bold text-gray-700 text-sm line-clamp-1">{String(step.title)}</h3>
-                                        <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-2 py-0.5 rounded-full">
-                                          <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
-                                        </span>
+                                <div key={step.id} className="bg-white border border-green-200 rounded-xl p-4 shadow-sm transition-opacity">
+                                  <div className="flex flex-col gap-1.5">
+                                    {trainerName && trainerName !== '無' && (
+                                      <div className="text-[11px] font-bold text-red-500 flex items-center mb-1">
+                                        <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
                                       </div>
+                                    )}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <span className="bg-green-100 text-green-700 font-black text-[10px] px-2 py-1 rounded flex items-center">
+                                        <CheckCircle2 c="w-3 h-3 mr-1" />Lv.{index + 1}
+                                      </span>
+                                      <h3 className="font-bold text-gray-700 text-sm line-clamp-1">{String(step.title)}</h3>
+                                      <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-2 py-0.5 rounded-full">
+                                        已完成
+                                      </span>
                                     </div>
                                   </div>
                                 </div>
@@ -1159,71 +1202,65 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} className="relative">
-                                  <div className="absolute -left-[43px] top-2 w-9 h-9 bg-indigo-600 rounded-full border-4 border-white flex items-center justify-center shadow-md animate-pulse">
-                                    <BookOpen c="w-4 h-4 text-white" />
+                                <div key={step.id} className="bg-white border-2 border-indigo-400 rounded-xl p-5 shadow-sm relative overflow-hidden">
+                                  <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
+                                  <div className="flex items-center gap-2 mb-4">
+                                    <span className="bg-indigo-100 text-indigo-700 font-black text-xs px-2 py-1 rounded">Lv.{index + 1}</span>
+                                    <h3 className="font-bold text-gray-800 text-lg">{String(step.title)}</h3>
+                                    <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">目前進度</span>
                                   </div>
-                                  <div className="bg-white border-2 border-indigo-100 rounded-xl p-5 shadow-sm relative overflow-hidden">
-                                    <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
-                                    <div className="flex items-center gap-2 mb-4">
-                                      <span className="bg-indigo-100 text-indigo-700 font-black text-xs px-2 py-1 rounded">Lv.{index + 1}</span>
-                                      <h3 className="font-bold text-gray-800 text-lg">{String(step.title)}</h3>
-                                      <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full">目前進度</span>
-                                    </div>
-                                    
-                                    {/* 組合區塊：子標題 -> 內容 -> 圖片 迭代顯示 */}
-                                    <div className="space-y-4 mb-4">
-                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                        <div key={block.id} className="bg-gray-50/50 rounded-xl p-4 border border-gray-100">
-                                          <div className="flex items-center justify-between mb-2 border-b border-gray-200/60 pb-2">
-                                            {block.subtitle ? (
-                                              <h4 className="font-bold text-indigo-800 text-base">{String(block.subtitle)}</h4>
-                                            ) : (
-                                              <h4 className="font-bold text-indigo-800 text-base">內容區塊</h4>
-                                            )}
-                                            
-                                            {/* --- 前台專用：教學完畢打勾儲存 --- */}
-                                            <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
-                                              <input 
-                                                type="checkbox" 
-                                                checked={currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] || false}
-                                                onChange={(e) => {
-                                                  const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                                  newCompletedBlocks[`${step.id}_${block.id}`] = e.target.checked;
-                                                  updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
-                                                  showToast(e.target.checked ? '已標記為教學完畢！' : '已取消標記！');
-                                                }}
-                                                className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                              />
-                                              <span className="text-[10px] text-gray-600 font-bold">教學完畢</span>
-                                            </label>
-                                          </div>
-                                          <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
-                                          
-                                          {block.mediaUrl && (
-                                            <div className="mt-3 rounded-lg overflow-hidden border border-gray-100 bg-white flex justify-center shadow-sm">
-                                              {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
-                                                <video src={block.mediaUrl} controls className="max-h-48 w-full object-contain" />
-                                              ) : ( 
-                                                <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-48 w-full object-contain cursor-pointer hover:opacity-80 transition-opacity" alt="教材" title="點擊放大" /> 
-                                              )}
-                                            </div>
+                                  
+                                  <div className="space-y-4 mb-4">
+                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                      <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                                        <div className="flex items-center justify-between mb-2 border-b border-gray-200/60 pb-2">
+                                          {block.subtitle ? (
+                                            <h4 className="font-bold text-indigo-800 text-base">{String(block.subtitle)}</h4>
+                                          ) : (
+                                            <h4 className="font-bold text-indigo-800 text-base">內容區塊</h4>
                                           )}
+                                          
+                                          {/* --- 前台專用：教學完畢打勾儲存 --- */}
+                                          <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
+                                            <input 
+                                              type="checkbox" 
+                                              checked={currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] || false}
+                                              onChange={(e) => {
+                                                const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                                newCompletedBlocks[`${step.id}_${block.id}`] = e.target.checked;
+                                                updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                                showToast(e.target.checked ? '已標記為教學完畢！' : '已取消標記！');
+                                              }}
+                                              className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
+                                            />
+                                            <span className="text-[10px] text-gray-600 font-bold">教學完畢</span>
+                                          </label>
                                         </div>
-                                      ))}
-                                    </div>
+                                        <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
+                                        
+                                        {block.mediaUrl && (
+                                          <div className="mt-3 rounded-lg overflow-hidden border border-gray-100 bg-white flex justify-center shadow-sm">
+                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                              <video src={block.mediaUrl} controls className="max-h-48 w-full object-contain" />
+                                            ) : ( 
+                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-48 w-full object-contain cursor-pointer hover:opacity-80 transition-opacity" alt="教材" title="點擊放大" /> 
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
 
-                                    <div className="mt-4 pt-4 border-t border-gray-100">
-                                      <button onClick={() => {
-                                          // 開啟選擇教學人員 Modal，改為直接紀錄
-                                          setTrainerModalStep(step);
-                                          setSelectedTrainerStore(currentUserData?.store || '');
-                                          setSelectedTrainerName('');
-                                          setShowTrainerModal(true);
-                                        }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
-                                        <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
-                                      </button>
-                                    </div>
+                                  <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <button onClick={() => {
+                                        // 開啟選擇教學人員 Modal，改為直接紀錄
+                                        setTrainerModalStep(step);
+                                        setSelectedTrainerStore(currentUserData?.store || '');
+                                        setSelectedTrainerName('');
+                                        setShowTrainerModal(true);
+                                      }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
+                                      <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -1447,7 +1484,7 @@ export default function App() {
                                    )}
                                  </div>
 
-                                 {/* 發光實色等級卡片 */}
+                                 {/* 實色等級卡片 */}
                                  <div className={getRoleCardStyle(emp.role)}>
                                    <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
                                    <div className="flex justify-between items-end relative z-10">
@@ -1462,7 +1499,7 @@ export default function App() {
                                    </div>
                                  </div>
 
-                                 {/* --- 學習通過紀錄卡片 --- */}
+                                 {/* --- 學習審核通過紀錄卡片 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                        <p className="text-xs text-gray-700 font-bold flex items-center">
@@ -1530,7 +1567,7 @@ export default function App() {
                 <div className="bg-transparent">
                    <h2 className="font-bold mb-4 flex items-center text-gray-800 px-2">
                      <UserIcon c="w-4 h-4 mr-2 text-indigo-500" />
-                     個人資料
+                     {customTitles.profileTab}
                    </h2>
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
@@ -1626,7 +1663,7 @@ export default function App() {
                                   )}
                                 </div>
 
-                                {/* 發光實色等級卡片 */}
+                                {/* 實色等級卡片 */}
                                 <div className={getRoleCardStyle(emp.role)}>
                                   <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
                                   <div className="flex justify-between items-end relative z-10">
@@ -1668,22 +1705,23 @@ export default function App() {
                                     {/* 動態進度條橫向顯示 */}
                                     <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-2 px-1 relative">
                                         {currentCatTotalSteps === 0 ? (
-                                            <p className="text-xs text-gray-400 w-full text-center">此分類尚無學習項目</p>
+                                            <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
                                         ) : (
                                             Array.from({ length: currentCatTotalSteps }).map((_, index) => {
+                                                const step = filteredSteps[index];
                                                 const isUnlocked = index < displayCompleted;
                                                 return (
-                                                    <div key={index} className="flex flex-col items-center shrink-0 w-12 relative">
+                                                    <div key={index} className="flex flex-col items-center shrink-0 w-[4.5rem] relative">
                                                         {/* 連接線 */}
                                                         {index > 0 && (
-                                                            <div className={`absolute top-5 -left-[calc(50%+6px)] w-full h-[3px] -z-10 ${isUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                            <div className={`absolute top-[18px] -left-[calc(50%+10px)] w-full h-[2px] -z-10 ${isUnlocked ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
                                                         )}
                                                         {/* 圖示 */}
-                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-4 shadow-sm transition-all ${isUnlocked ? 'bg-blue-500 border-blue-100 text-white shadow-blue-200' : 'bg-white border-gray-100 text-gray-300'}`}>
+                                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all bg-white z-10 ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-200 text-gray-300'}`}>
                                                             {isUnlocked ? <CheckCircle2 c="w-5 h-5" /> : <Lock c="w-4 h-4" />}
                                                         </div>
-                                                        <span className={`text-[10px] mt-1.5 font-bold ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
-                                                            {index + 1}
+                                                        <span className={`text-[9px] mt-2 font-bold text-center truncate w-full px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                            {step ? String(step.title) : index + 1}
                                                         </span>
                                                     </div>
                                                 );
@@ -1762,10 +1800,10 @@ export default function App() {
 
         <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0">
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">學習進度</span>
+            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
           </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : '個人資料'}</span>
+            <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : customTitles.profileTab}</span>
           </button>
         </nav>
       </div>
@@ -1802,7 +1840,7 @@ export default function App() {
         </div>
       )}
 
-      {/* 圖片放大預覽 */}
+      {/* 圖片滿版放大彈出視窗 */}
       {fullscreenImage && (
         <div className="fixed inset-0 bg-black/90 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setFullscreenImage(null)}>
           <button className="absolute top-4 right-4 text-white hover:text-gray-300 bg-black/40 rounded-full p-1.5 transition-colors" onClick={() => setFullscreenImage(null)}>
