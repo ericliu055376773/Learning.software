@@ -517,8 +517,8 @@ export default function App() {
   const displayCategories = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習'}];
   const currentActiveCatId = activeCategoryId || displayCategories[0].id;
   const filteredSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id));
-  const categoryProgress = typeof currentUserData?.completedLearning === 'object' 
-                           ? (currentUserData?.completedLearning[currentActiveCatId] || 0) 
+  const categoryProgress = (typeof currentUserData?.completedLearning === 'object' && currentUserData?.completedLearning !== null)
+                           ? (currentUserData.completedLearning[currentActiveCatId] || 0) 
                            : (currentActiveCatId === displayCategories[0].id ? currentUserData?.completedLearning || 0 : 0);
 
   const currentThemeObj = extendedThemeColors.find(t => t.id === globalTheme) || extendedThemeColors[0];
@@ -891,6 +891,7 @@ export default function App() {
               </button>
             )}
             
+            {/* 系統通知中心按鈕 */}
             {canEdit && (
               <button onClick={() => setShowNotificationModal(true)} className="relative bg-gray-100 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors group cursor-pointer" title="系統通知">
                 <Bell c={`w-5 h-5 text-gray-500 group-hover:text-indigo-600 ${totalAdminNotifications > 0 ? 'text-indigo-500' : ''}`} />
@@ -906,6 +907,7 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto p-4 pb-6 relative z-0 hide-scrollbar">
           
+          {/* TAB 1.5: 待審核名單 (僅後台可見) */}
           {activeTab === 'pending' && canEdit && (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 mb-2">
@@ -949,9 +951,11 @@ export default function App() {
             </div>
           )}
 
+          {/* TAB 1: 學習地圖 */}
           {activeTab === 'learning' && (
             <div className="space-y-6 animate-in fade-in duration-300">
 
+              {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 <div className="flex justify-between items-center mb-2 px-1">
                   <div>
@@ -965,6 +969,7 @@ export default function App() {
                   )}
                 </div>
 
+                {/* 分類管理介面 (僅後台) */}
                 {canEdit && showCategoryManager && (
                   <div className="mb-4 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
                      <h3 className="font-bold mb-3 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類</h3>
@@ -1008,6 +1013,7 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 風琴夾頁籤 UI (Folder Tabs) */}
                 <div className="flex overflow-x-auto pl-2 pt-2 -mb-[1px] hide-scrollbar z-10 relative">
                   {displayCategories.map((cat, i) => {
                     const isActive = currentActiveCatId === cat.id;
@@ -1028,8 +1034,10 @@ export default function App() {
                   })}
                 </div>
 
+                {/* 學習內容列表區域 */}
                 <div className="bg-white border border-gray-200 rounded-xl rounded-tl-none shadow-sm relative z-10">
                   
+                  {/* 後台專屬：新增當前分類的按鈕 */}
                   {canEdit && (
                     <div className="p-4 border-b border-gray-100 bg-white rounded-tr-xl">
                       <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-2.5 border border-gray-200 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm">
@@ -1046,6 +1054,7 @@ export default function App() {
                   ) : (
                     <div className="p-4 space-y-4">
                       {canEdit ? (
+                        /* 後台編輯視角：顯示所有可編輯的卡片 */
                         filteredSteps.map((step, index) => (
                           <div key={step.id} className="flex flex-col gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-sm relative">
                             <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-3 right-3 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
@@ -1103,6 +1112,7 @@ export default function App() {
                           </div>
                         ))
                       ) : (
+                        /* 員工視角：遊戲化的一關一關解鎖地圖 (依據分類進度) */
                         <div className="space-y-4 my-2">
                           {filteredSteps.map((step, index) => {
                             const isCompleted = index < categoryProgress;
@@ -1120,6 +1130,7 @@ export default function App() {
                                      <span className="ml-auto text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">尚未解鎖</span>
                                    </div>
                                    
+                                   {/* 未解鎖可預覽的內容 (無灰底透明層) */}
                                    <div className="space-y-4 pointer-events-none select-none opacity-50 filter grayscale">
                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
                                        <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
@@ -1180,6 +1191,7 @@ export default function App() {
                                             <h4 className="font-bold text-indigo-800 text-base">內容區塊</h4>
                                           )}
                                           
+                                          {/* --- 前台專用：教學完畢打勾儲存 --- */}
                                           <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
                                             <input 
                                               type="checkbox" 
@@ -1212,6 +1224,7 @@ export default function App() {
 
                                   <div className="mt-4 pt-4 border-t border-gray-100">
                                     <button onClick={() => {
+                                        // 開啟選擇教學人員 Modal，改為直接紀錄
                                         setTrainerModalStep(step);
                                         setSelectedTrainerStore(currentUserData?.store || '');
                                         setSelectedTrainerName('');
@@ -1356,7 +1369,7 @@ export default function App() {
                     <div className="space-y-4">
                        {filteredDisplayEmployees.map(emp => {
                          const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id)).length;
-                         const currentCatCompletedSteps = typeof emp.completedLearning === 'object' 
+                         const currentCatCompletedSteps = (typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                             ? (emp.completedLearning[currentActiveCatId] || 0) 
                             : (currentActiveCatId === displayCategories[0].id ? emp.completedLearning || 0 : 0);
                          const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
@@ -1426,7 +1439,9 @@ export default function App() {
                                    <div className="flex items-center space-x-4">
                                      <div className="relative">
                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                         {emp.avatarUrl ? <span className="text-4xl">{emp.avatarUrl}</span> : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                         {emp.avatarUrl ? (
+                                           (typeof emp.avatarUrl === 'string' && emp.avatarUrl.startsWith('http')) ? <img src={emp.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-4xl">{emp.avatarUrl}</span>
+                                         ) : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                        </div>
                                      </div>
                                      <div>
@@ -1498,7 +1513,7 @@ export default function App() {
                                                              </span>
                                                          </div>
                                                          {index < currentCatTotalSteps - 1 && (
-                                                             <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                             <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
                                                          )}
                                                      </React.Fragment>
                                                  );
@@ -1578,7 +1593,7 @@ export default function App() {
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
                         const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id)).length;
-                        const currentCatCompletedSteps = typeof emp.completedLearning === 'object' 
+                        const currentCatCompletedSteps = (typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                            ? (emp.completedLearning[currentActiveCatId] || 0) 
                            : (currentActiveCatId === displayCategories[0].id ? emp.completedLearning || 0 : 0);
                         const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
@@ -1646,7 +1661,9 @@ export default function App() {
                                   <div className="flex items-center space-x-4">
                                     <div className="relative">
                                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                        {emp.avatarUrl ? <span className="text-4xl">{emp.avatarUrl}</span> : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                        {emp.avatarUrl ? (
+                                          (typeof emp.avatarUrl === 'string' && emp.avatarUrl.startsWith('http')) ? <img src={emp.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-4xl">{emp.avatarUrl}</span>
+                                        ) : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                       </div>
                                     </div>
                                     <div>
@@ -1718,7 +1735,7 @@ export default function App() {
                                                             </span>
                                                         </div>
                                                         {index < currentCatTotalSteps - 1 && (
-                                                            <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                            <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
                                                         )}
                                                     </React.Fragment>
                                                 );
