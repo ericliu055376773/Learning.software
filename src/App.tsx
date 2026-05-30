@@ -1534,67 +1534,58 @@ export default function App() {
                                    </div>
                                  </div>
 
-                                 {/* --- 新增：分類選擇器與考試成就解鎖進度條 --- */}
+                                 {/* --- 考試成就解鎖進度條 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-4 z-10 shadow-sm mt-2 mb-2">
                                      <div className="flex justify-between items-center mb-3">
                                         <p className="text-sm text-gray-800 font-bold flex items-center">
                                           <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                         </p>
                                         <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                                          已解鎖 {displayCompleted} / {currentCatTotalSteps}
+                                          已解鎖 {displayCategories.filter(cat => {
+                                            const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                            const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                            return cs.length > 0 && cc >= cs.length;
+                                          }).length} / {displayCategories.length}
                                         </span>
                                      </div>
-                                     
-                                     {/* 選擇分類 */}
-                                     <div className="flex overflow-x-auto gap-2 pb-2 mb-4 hide-scrollbar">
-                                       {displayCategories.map(cat => (
-                                         <button 
-                                           key={cat.id} 
-                                           onClick={() => setActiveCategoryId(cat.id)}
-                                           className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                                         >
-                                           {String(cat.name)}
-                                         </button>
-                                       ))}
-                                     </div>
 
-                                     {/* 動態進度條橫向顯示 (鎖頭風格) */}
+                                     {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
                                      <div className="bg-gray-100 rounded-2xl px-4 py-4 flex items-center overflow-x-auto hide-scrollbar min-h-[90px]">
-                                         {currentCatTotalSteps === 0 ? (
-                                             <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
+                                         {displayCategories.length === 0 ? (
+                                             <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                          ) : (
-                                             <>
-                                               {Array.from({ length: currentCatTotalSteps }).map((_, index) => {
-                                                 const step = filteredSteps[index];
-                                                 const isUnlocked = index < displayCompleted;
-                                                 const isNextUnlocked = index + 1 < displayCompleted;
-                                                 const stepCompletedBlocks = step ? getStepBlocks(step).filter((b: any) => emp.completedBlocks?.[`${step.id}_${b.id}`]).length : 0;
-                                                 const stepTotalBlocks = step ? getStepBlocks(step).length : 0;
-                                                 return (
-                                                     <React.Fragment key={index}>
-                                                         <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
-                                                             <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isUnlocked ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
-                                                                 {isUnlocked ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
-                                                             </div>
-                                                             <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
-                                                                 {step ? String(step.title) : `項目 ${index + 1}`}
-                                                             </span>
-                                                             <span className="text-[9px] text-gray-400 font-bold mt-0.5">
-                                                                 {stepCompletedBlocks}/{stepTotalBlocks}
-                                                             </span>
-                                                         </div>
-                                                         {index < currentCatTotalSteps - 1 && (
-                                                             <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
-                                                         )}
-                                                     </React.Fragment>
-                                                 );
-                                               })}
-                                               {/* 完成獎勵標籤 */}
-                                               <div className="shrink-0 ml-3 flex items-center gap-1 bg-gray-200 text-gray-500 px-3 py-2 rounded-full font-black text-sm shadow-inner">
-                                                 <span>★</span>
-                                                 <span>+100</span>
-                                               </div>
-                                             </>
+                                             displayCategories.map((cat, catIndex) => {
+                                               const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                               const catTotalSteps = catSteps.length;
+                                               const catCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
+                                                 ? (emp.completedLearning[cat.id] || 0)
+                                                 : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                               const isCatPassed = catTotalSteps > 0 && catCompleted >= catTotalSteps;
+                                               const isNextPassed = (() => {
+                                                 if (catIndex + 1 >= displayCategories.length) return false;
+                                                 const nextCat = displayCategories[catIndex + 1];
+                                                 const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === displayCategories[0]?.id));
+                                                 const nextCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
+                                                   ? (emp.completedLearning[nextCat.id] || 0)
+                                                   : 0;
+                                                 return nextSteps.length > 0 && nextCompleted >= nextSteps.length;
+                                               })();
+                                               return (
+                                                 <React.Fragment key={cat.id}>
+                                                   <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
+                                                     <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
+                                                       {isCatPassed ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
+                                                     </div>
+                                                     <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                       {String(cat.name)}
+                                                     </span>
+                                                   </div>
+                                                   {catIndex < displayCategories.length - 1 && (
+                                                     <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
+                                                   )}
+                                                 </React.Fragment>
+                                               );
+                                             })
                                          )}
                                      </div>
                                  </div>
@@ -1781,67 +1772,58 @@ export default function App() {
                                   </div>
                                 </div>
 
-                                {/* --- 新增：分類選擇器與考試成就解鎖進度條 --- */}
+                                {/* --- 考試成就解鎖進度條 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-4 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-3">
                                        <p className="text-sm text-gray-800 font-bold flex items-center">
                                          <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                        </p>
                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                                         已解鎖 {displayCompleted} / {currentCatTotalSteps}
+                                         已解鎖 {displayCategories.filter(cat => {
+                                           const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                           const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                           return cs.length > 0 && cc >= cs.length;
+                                         }).length} / {displayCategories.length}
                                        </span>
                                     </div>
-                                    
-                                    {/* 選擇分類 */}
-                                    <div className="flex overflow-x-auto gap-2 pb-2 mb-4 hide-scrollbar">
-                                      {displayCategories.map(cat => (
-                                        <button 
-                                          key={cat.id} 
-                                          onClick={() => setActiveCategoryId(cat.id)}
-                                          className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
-                                        >
-                                          {String(cat.name)}
-                                        </button>
-                                      ))}
-                                    </div>
 
-                                    {/* 動態進度條橫向顯示 (鎖頭風格) */}
+                                    {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
                                     <div className="bg-gray-100 rounded-2xl px-4 py-4 flex items-center overflow-x-auto hide-scrollbar min-h-[90px]">
-                                        {currentCatTotalSteps === 0 ? (
-                                            <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
+                                        {displayCategories.length === 0 ? (
+                                            <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                         ) : (
-                                            <>
-                                              {Array.from({ length: currentCatTotalSteps }).map((_, index) => {
-                                                const step = filteredSteps[index];
-                                                const isUnlocked = index < displayCompleted;
-                                                const isNextUnlocked = index + 1 < displayCompleted;
-                                                const stepCompletedBlocks = step ? getStepBlocks(step).filter((b: any) => emp.completedBlocks?.[`${step.id}_${b.id}`]).length : 0;
-                                                const stepTotalBlocks = step ? getStepBlocks(step).length : 0;
-                                                return (
-                                                    <React.Fragment key={index}>
-                                                        <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
-                                                            <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isUnlocked ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
-                                                                {isUnlocked ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
-                                                            </div>
-                                                            <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
-                                                                {step ? String(step.title) : `項目 ${index + 1}`}
-                                                            </span>
-                                                            <span className="text-[9px] text-gray-400 font-bold mt-0.5">
-                                                                {stepCompletedBlocks}/{stepTotalBlocks}
-                                                            </span>
-                                                        </div>
-                                                        {index < currentCatTotalSteps - 1 && (
-                                                            <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                              })}
-                                              {/* 完成獎勵標籤 */}
-                                              <div className="shrink-0 ml-3 flex items-center gap-1 bg-gray-200 text-gray-500 px-3 py-2 rounded-full font-black text-sm shadow-inner">
-                                                <span>★</span>
-                                                <span>+100</span>
-                                              </div>
-                                            </>
+                                            displayCategories.map((cat, catIndex) => {
+                                              const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                              const catTotalSteps = catSteps.length;
+                                              const catCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
+                                                ? (emp.completedLearning[cat.id] || 0)
+                                                : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                              const isCatPassed = catTotalSteps > 0 && catCompleted >= catTotalSteps;
+                                              const isNextPassed = (() => {
+                                                if (catIndex + 1 >= displayCategories.length) return false;
+                                                const nextCat = displayCategories[catIndex + 1];
+                                                const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === displayCategories[0]?.id));
+                                                const nextCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
+                                                  ? (emp.completedLearning[nextCat.id] || 0)
+                                                  : 0;
+                                                return nextSteps.length > 0 && nextCompleted >= nextSteps.length;
+                                              })();
+                                              return (
+                                                <React.Fragment key={cat.id}>
+                                                  <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
+                                                    <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
+                                                      {isCatPassed ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
+                                                    </div>
+                                                    <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                      {String(cat.name)}
+                                                    </span>
+                                                  </div>
+                                                  {catIndex < displayCategories.length - 1 && (
+                                                    <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
+                                                  )}
+                                                </React.Fragment>
+                                              );
+                                            })
                                         )}
                                     </div>
                                 </div>
