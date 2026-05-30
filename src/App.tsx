@@ -1550,7 +1550,8 @@ export default function App() {
                                      </div>
 
                                      {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
-                                     <div className="bg-gray-100 rounded-2xl px-4 py-4 flex items-center overflow-x-auto hide-scrollbar min-h-[90px]">
+                                     <div className="bg-gray-100 rounded-2xl p-4 overflow-x-auto hide-scrollbar">
+                                       <div className="flex items-center justify-start min-w-max mx-auto px-2">
                                          {displayCategories.length === 0 ? (
                                              <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                          ) : (
@@ -1572,21 +1573,22 @@ export default function App() {
                                                })();
                                                return (
                                                  <React.Fragment key={cat.id}>
-                                                   <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
-                                                     <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
+                                                   <div className="flex flex-col items-center" style={{minWidth: '72px'}}>
+                                                     <div className={`w-[54px] h-[54px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400'}`}>
                                                        {isCatPassed ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
                                                      </div>
-                                                     <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                     <span className={`text-[10px] mt-2 font-bold text-center leading-tight px-1 max-w-[72px] truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
                                                        {String(cat.name)}
                                                      </span>
                                                    </div>
                                                    {catIndex < displayCategories.length - 1 && (
-                                                     <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
+                                                     <div className={`h-[3px] w-8 mx-1 shrink-0 rounded-full self-start mt-[27px] transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
                                                    )}
                                                  </React.Fragment>
                                                );
                                              })
                                          )}
+                                       </div>
                                      </div>
                                  </div>
 
@@ -1788,7 +1790,8 @@ export default function App() {
                                     </div>
 
                                     {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
-                                    <div className="bg-gray-100 rounded-2xl px-4 py-4 flex items-center overflow-x-auto hide-scrollbar min-h-[90px]">
+                                    <div className="bg-gray-100 rounded-2xl p-4 overflow-x-auto hide-scrollbar">
+                                      <div className="flex items-center justify-start min-w-max mx-auto px-2">
                                         {displayCategories.length === 0 ? (
                                             <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                         ) : (
@@ -1810,21 +1813,22 @@ export default function App() {
                                               })();
                                               return (
                                                 <React.Fragment key={cat.id}>
-                                                  <div className="flex flex-col items-center shrink-0 w-[4.5rem]">
-                                                    <div className={`w-[50px] h-[50px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400 shadow-inner'}`}>
+                                                  <div className="flex flex-col items-center" style={{minWidth: '72px'}}>
+                                                    <div className={`w-[54px] h-[54px] rounded-full flex items-center justify-center z-10 transition-all ${isCatPassed ? 'bg-white border-[3px] border-blue-500 text-blue-500 shadow-md' : 'bg-gray-200 text-gray-400'}`}>
                                                       {isCatPassed ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
                                                     </div>
-                                                    <span className={`text-[10px] mt-1.5 font-bold text-center leading-tight w-[4.5rem] px-1 truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                    <span className={`text-[10px] mt-2 font-bold text-center leading-tight px-1 max-w-[72px] truncate ${isCatPassed ? 'text-blue-600' : 'text-gray-400'}`}>
                                                       {String(cat.name)}
                                                     </span>
                                                   </div>
                                                   {catIndex < displayCategories.length - 1 && (
-                                                    <div className={`h-[3px] flex-1 min-w-[16px] max-w-[36px] -mx-2 z-0 shrink-0 rounded-full transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
+                                                    <div className={`h-[3px] w-8 mx-1 shrink-0 rounded-full self-start mt-[27px] transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
                                                   )}
                                                 </React.Fragment>
                                               );
                                             })
                                         )}
+                                      </div>
                                     </div>
                                 </div>
 
@@ -2022,7 +2026,3 @@ export default function App() {
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg z-[100] text-xs font-bold shadow-xl animate-in fade-in slide-in-from-bottom-2">
           {String(toast)}
         </div>
-      )}
-    </div>
-  );
-}
