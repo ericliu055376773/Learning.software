@@ -5,7 +5,6 @@ import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // === Firebase 連線設定 ===
-// 強制綁定使用者的專案，不使用 Canvas 預設測試環境
 const firebaseConfig = {
   apiKey: "AIzaSyD4fOYP3yVyZ4NxXZdSWYZr5Z6Oc_lX8fQ",
   authDomain: "dailytasks-4d281.firebaseapp.com",
@@ -21,7 +20,7 @@ const storage = getStorage(app);
 
 // === 計算兩個 GPS 座標距離 (公尺) - Haversine Formula ===
 function getDistanceFromLatLonInM(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371e3; // 地球半徑 (公尺)
+  const R = 6371e3;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a = 
@@ -55,7 +54,6 @@ const Search = ({ c }: any) => <I c={c}><circle cx="11" cy="11" r="8"/><path d="
 const GripVertical = ({ c }: any) => <I c={c}><circle cx="9" cy="12" r="1"/><circle cx="9" cy="5" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="19" r="1"/></I>;
 const Award = ({ c }: any) => <I c={c}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></I>;
 
-// 擴充至 24 種中性文青主題色
 const extendedThemeColors = [
   { id: 'indigo', name: '靛藍', main: '#4f46e5', light: '#eef2ff' },
   { id: 'slate', name: '石板', main: '#475569', light: '#f8fafc' },
@@ -83,37 +81,13 @@ const extendedThemeColors = [
   { id: 'navy', name: '海軍藍', main: '#000080', light: '#f0f0fa' },
 ];
 
-// 預設頭貼選項 (Emoji 代替圖片)
 const defaultAvatars = ['🧑🏻‍💻', '👩🏻‍💻', '👨🏽‍🏫', '👩🏼‍🏫', '👨🏻‍🍳', '👩🏻‍🍳', '🧑🏼‍🔧', '👩🏽‍🔧'];
 
 const customStyles = `
-  /* 等級大卡片顏色 - 移除動畫與光暈 */
-  .bg-role-manager { background: linear-gradient(135deg, #ef4444, #eab308, #22c55e); }
-  .bg-role-deputy { background: linear-gradient(135deg, #fbbf24, #f59e0b, #b45309); }
-  .bg-role-leader { background: linear-gradient(135deg, #cbd5e1, #94a3b8, #64748b); }
-  .bg-role-reserve { background: linear-gradient(135deg, #d97706, #b45309, #78350f); }
-  .bg-role-staff { background: linear-gradient(135deg, #4b5563, #1f2937, #030712); }
-  .bg-role-intern { background: linear-gradient(135deg, #4ade80, #22c55e, #15803d); }
-  .bg-role-default { background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899); }
-
-  /* 風琴夾樣式與滾動條隱藏 */
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
   select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
 `;
-
-// 依據職位決定等級大卡片的顏色
-const getRoleCardStyle = (role: any) => {
-  let baseStyle = "relative overflow-hidden rounded-xl p-5 text-white mb-5 shadow-sm ";
-  if (role === '店長') return baseStyle + "bg-role-manager";
-  if (role === '副店長') return baseStyle + "bg-role-deputy";
-  if (role === '組長') return baseStyle + "bg-role-leader";
-  if (role === '儲備') return baseStyle + "bg-role-reserve";
-  if (role === '正職' || role === '兼職') return baseStyle + "bg-role-staff";
-  if (role?.includes('實習')) return baseStyle + "bg-role-intern";
-  return baseStyle + "bg-role-default";
-};
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -121,10 +95,10 @@ export default function App() {
   const [currentUserRole, setCurrentUserRole] = useState<any>(null); 
   const [currentUserName, setCurrentUserName] = useState<string>('');
   const [showSecretModal, setShowSecretModal] = useState<boolean>(false);
-  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false); // 整合系統設定與 GPS 設定的視窗
-  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false); // 通知中心模態框
-  const [hasShownLoginNotice, setHasShownLoginNotice] = useState<boolean>(false); // 控制登入自動彈窗
-  const [isCheckingGPS, setIsCheckingGPS] = useState<boolean>(false); // GPS 驗證中的狀態
+  const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
+  const [showNotificationModal, setShowNotificationModal] = useState<boolean>(false);
+  const [hasShownLoginNotice, setHasShownLoginNotice] = useState<boolean>(false);
+  const [isCheckingGPS, setIsCheckingGPS] = useState<boolean>(false);
   const [secretPwd, setSecretPwd] = useState<string>('');
   const [authPassword, setAuthPassword] = useState<string>(''); 
   const [authError, setAuthError] = useState<string>(''); 
@@ -142,15 +116,16 @@ export default function App() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
   
-  // 學習設定相關狀態
   const [categories, setCategories] = useState<any[]>([{id: 'default', name: '綜合學習'}]);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
+  const [draggedCatIndex, setDraggedCatIndex] = useState<number | null>(null);
+  const [dragOverCatIndex, setDragOverCatIndex] = useState<number | null>(null);
+
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
   
-  // 系統自訂標題
   const [customTitles, setCustomTitles] = useState({
     hqTitle: '總部學習系統',
     storeTitle: '門店學習系統',
@@ -159,24 +134,19 @@ export default function App() {
     learningContentTitle: '學習內容設定'
   });
 
-  // 人員名單搜尋與篩選狀態
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [activeStoreFilter, setActiveStoreFilter] = useState<string>('all');
 
-  // 圖片點擊放大相關狀態
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
 
-  // 拖曳狀態
   const [draggedStoreIndex, setDraggedStoreIndex] = useState<number | null>(null);
   const [dragOverStoreIndex, setDragOverStoreIndex] = useState<number | null>(null);
 
-  // 選擇教學人員的 Modal 相關狀態
   const [showTrainerModal, setShowTrainerModal] = useState<boolean>(false);
-  const [trainerModalStep, setTrainerModalStep] = useState<any>(null); // 正在提交的關卡
+  const [trainerModalStep, setTrainerModalStep] = useState<any>(null);
   const [selectedTrainerStore, setSelectedTrainerStore] = useState<string>('');
   const [selectedTrainerName, setSelectedTrainerName] = useState<string>('');
 
-  // 解決手機版輸入框點擊後自動放大的問題
   useEffect(() => {
     let viewportMeta = document.querySelector('meta[name="viewport"]');
     if (!viewportMeta) {
@@ -187,7 +157,6 @@ export default function App() {
     viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
   }, []);
 
-  // 取消原本的 Authentication 攔截，直接存取資料
   useEffect(() => {
     const unsubStores = onSnapshot(collection(db, 'stores'), 
       (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any, b: any) => (a.order ?? a.createdAt ?? 0) - (b.order ?? b.createdAt ?? 0))),
@@ -228,10 +197,8 @@ export default function App() {
   const canEdit = currentUserRole === 'super_admin';
   const currentUserData = employees.find(e => e.name === currentUserName);
   
-  // 計算總部的通知數量 (現僅計算註冊申請)
   const totalAdminNotifications = pendingAccounts.length;
 
-  // 登入後自動彈出通知中心的邏輯
   useEffect(() => {
     if (isAuthenticated && canEdit && totalAdminNotifications > 0 && !hasShownLoginNotice) {
       setShowNotificationModal(true);
@@ -239,23 +206,9 @@ export default function App() {
     }
   }, [isAuthenticated, canEdit, totalAdminNotifications, hasShownLoginNotice]);
 
-  // 改用常規 function 宣告，避免 TDZ (暫時性死區) 問題
   function showToast(msg: string) { 
     setToast(msg); 
     setTimeout(() => setToast(null), 3000); 
-  }
-
-  function getTotalProgress(completedLearning: any) {
-    if (typeof completedLearning === 'number') return completedLearning;
-    if (typeof completedLearning === 'object' && completedLearning !== null) {
-        return Object.values(completedLearning).reduce((a: any, b: any) => Number(a) + Number(b), 0);
-    }
-    return 0;
-  }
-
-  function getLevelDisplay(completedCount: any) {
-    const totalCount = getTotalProgress(completedCount);
-    return `Lv. ${totalCount}`;
   }
 
   function getStepBlocks(step: any) {
@@ -290,7 +243,6 @@ export default function App() {
         return; 
       }
 
-      // 新增員工時，確保加入 learningHistory 與 completedBlocks 以儲存歷史紀錄與打勾狀態
       await addDoc(collection(db, 'pendingAccounts'), {
         name, store, requestedRole: role, password, birthdate, hireDate, phone, mbti,
         date: new Date().toISOString().split('T')[0], createdAt: Date.now()
@@ -462,7 +414,6 @@ export default function App() {
     } catch(e) { showToast('分類儲存失敗！'); }
   }
 
-  // === 提交學習核准 (附帶教學人員) - 現已改為直接紀錄 ===
   async function submitLearningRequest() {
     if (!selectedTrainerName) {
       showToast('請選擇教學人員！');
@@ -479,8 +430,8 @@ export default function App() {
       newHistory.push({
         stepId: trainerModalStep.id,
         stepName: trainerModalStep.title,
-        firstApprover: '直接通關紀錄', // 保留欄位相容性
-        trainerName: selectedTrainerName, // 寫入教學人員紀錄
+        firstApprover: '直接通關紀錄',
+        trainerName: selectedTrainerName,
         approvedAt: Date.now(),
         categoryId: targetCatId
       });
@@ -495,7 +446,6 @@ export default function App() {
     showToast('已完成學習，紀錄已保存！');
   }
 
-  // 修改學習紀錄的教學人員
   async function updateLearningRecordTrainer(emp: any, historyIndex: number, newTrainerName: string) {
       const newHistory = [...emp.learningHistory];
       newHistory[historyIndex].trainerName = newTrainerName;
@@ -507,7 +457,6 @@ export default function App() {
       }
   }
 
-  // 刪除學習紀錄與重置進度
   async function handleDeleteLearningRecord(emp: any, historyIndex: number) {
       if (!window.confirm('確定要刪除這筆學習紀錄嗎？該人員將需要重新學習此項目。')) return;
 
@@ -520,7 +469,6 @@ export default function App() {
       let newCompletedLearning = emp.completedLearning;
       const step = learningSteps.find(s => s.id === recordToDelete.stepId);
       
-      // 扣除該分類的學習進度
       if (typeof newCompletedLearning === 'object' && newCompletedLearning !== null) {
           newCompletedLearning = { ...newCompletedLearning };
           let catId = 'default';
@@ -537,7 +485,6 @@ export default function App() {
           newCompletedLearning -= 1;
       }
 
-      // 清除該課程對應的「教學完畢」打勾紀錄
       const newCompletedBlocks = { ...(emp.completedBlocks || {}) };
       Object.keys(newCompletedBlocks).forEach(key => {
           if (key.startsWith(recordToDelete.stepId + '_')) {
@@ -560,7 +507,6 @@ export default function App() {
   const isProfileTabAdmin = canEdit;
   const baseEmployees = isProfileTabAdmin ? employees : employees.filter(e => e.name === currentUserName);
   
-  // 後台人員名單搜尋與篩選邏輯
   const filteredDisplayEmployees = baseEmployees.filter(emp => {
       if (!isProfileTabAdmin) return true;
       const matchStore = activeStoreFilter === 'all' || emp.store === activeStoreFilter;
@@ -575,7 +521,6 @@ export default function App() {
                            ? (currentUserData?.completedLearning[currentActiveCatId] || 0) 
                            : (currentActiveCatId === displayCategories[0].id ? currentUserData?.completedLearning || 0 : 0);
 
-  // 主題樣式配置提取
   const currentThemeObj = extendedThemeColors.find(t => t.id === globalTheme) || extendedThemeColors[0];
 
   if (!isAuthenticated) {
@@ -946,7 +891,6 @@ export default function App() {
               </button>
             )}
             
-            {/* 系統通知中心按鈕 */}
             {canEdit && (
               <button onClick={() => setShowNotificationModal(true)} className="relative bg-gray-100 p-1.5 rounded-lg hover:bg-indigo-50 transition-colors group cursor-pointer" title="系統通知">
                 <Bell c={`w-5 h-5 text-gray-500 group-hover:text-indigo-600 ${totalAdminNotifications > 0 ? 'text-indigo-500' : ''}`} />
@@ -962,7 +906,6 @@ export default function App() {
 
         <main className="flex-1 overflow-y-auto p-4 pb-6 relative z-0 hide-scrollbar">
           
-          {/* TAB 1.5: 待審核名單 (僅後台可見) */}
           {activeTab === 'pending' && canEdit && (
             <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
               <div className="flex items-center gap-3 mb-2">
@@ -1006,11 +949,9 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB 1: 學習地圖 */}
           {activeTab === 'learning' && (
             <div className="space-y-6 animate-in fade-in duration-300">
 
-              {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 <div className="flex justify-between items-center mb-2 px-1">
                   <div>
@@ -1024,28 +965,49 @@ export default function App() {
                   )}
                 </div>
 
-                {/* 分類管理介面 (僅後台) */}
                 {canEdit && showCategoryManager && (
                   <div className="mb-4 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
                      <h3 className="font-bold mb-3 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類</h3>
-                     <p className="text-[10px] text-gray-400 mb-3">新增或編輯類似「語文」、「數學」等學習頁籤：</p>
+                     <p className="text-[10px] text-gray-400 mb-3">拖曳排序或編輯名稱：</p>
                      <div className="space-y-2 mb-4">
-                       {editingCategories.map(cat => (
-                         <div key={cat.id} className="flex gap-2 items-center">
-                           <input type="text" value={cat.name} onChange={e => setEditingCategories(editingCategories.map(c => c.id === cat.id ? {...c, name: e.target.value} : c))} className="flex-1 p-2 rounded bg-slate-700 border border-slate-600 text-sm font-bold outline-none focus:border-indigo-400" placeholder="分類名稱" />
-                           <button onClick={() => setEditingCategories(editingCategories.filter(c => c.id !== cat.id))} className="p-2 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition-colors"><Trash2 c="w-4 h-4"/></button>
+                       {editingCategories.map((cat, index) => (
+                         <div 
+                           key={cat.id} 
+                           className={`flex gap-2 items-center bg-slate-700/50 p-2 rounded border transition-colors cursor-grab active:cursor-grabbing ${draggedCatIndex === index ? 'border-indigo-400 opacity-50' : dragOverCatIndex === index ? 'border-indigo-500' : 'border-slate-600'}`}
+                           draggable
+                           onDragStart={(e) => {
+                             setDraggedCatIndex(index);
+                             e.dataTransfer.effectAllowed = "move";
+                             e.dataTransfer.setData("text/html", cat.id);
+                           }}
+                           onDragEnter={() => setDragOverCatIndex(index)}
+                           onDragOver={(e) => e.preventDefault()}
+                           onDragEnd={() => { setDraggedCatIndex(null); setDragOverCatIndex(null); }}
+                           onDrop={(e) => {
+                             e.preventDefault();
+                             if (draggedCatIndex === null || draggedCatIndex === index) return;
+                             const newCats = [...editingCategories];
+                             const draggedItem = newCats[draggedCatIndex];
+                             newCats.splice(draggedCatIndex, 1);
+                             newCats.splice(index, 0, draggedItem);
+                             setEditingCategories(newCats);
+                             setDraggedCatIndex(null); setDragOverCatIndex(null);
+                           }}
+                         >
+                           <GripVertical c="w-4 h-4 text-slate-400"/>
+                           <input type="text" value={cat.name} onChange={e => setEditingCategories(editingCategories.map(c => c.id === cat.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300" placeholder="分類名稱" />
+                           <button onClick={() => setEditingCategories(editingCategories.filter(c => c.id !== cat.id))} className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition-colors"><Trash2 c="w-4 h-4"/></button>
                          </div>
                        ))}
-                       <button onClick={() => setEditingCategories([...editingCategories, {id: Date.now().toString(), name: ''}])} className="w-full p-2 mt-1 border border-dashed border-slate-600 rounded text-slate-400 font-bold hover:text-white hover:border-slate-400 text-xs transition-colors"> + 新增頁籤分類</button>
+                       <button onClick={() => setEditingCategories([...editingCategories, {id: Date.now().toString(), name: ''}])} className="w-full p-2 mt-2 border border-dashed border-slate-600 rounded text-slate-400 font-bold hover:text-white hover:border-slate-400 text-xs transition-colors"> + 新增頁籤分類</button>
                      </div>
                      <div className="flex gap-2 pt-2 border-t border-slate-700">
                        <button onClick={() => setShowCategoryManager(false)} className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold transition-colors">取消</button>
-                       <button onClick={saveCategoriesConfig} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md shadow-indigo-500/30 transition-colors">儲存分類</button>
+                       <button onClick={saveCategoriesConfig} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md shadow-indigo-500/30 transition-colors">儲存分類排序</button>
                      </div>
                   </div>
                 )}
 
-                {/* 風琴夾頁籤 UI (Folder Tabs) */}
                 <div className="flex overflow-x-auto pl-2 pt-2 -mb-[1px] hide-scrollbar z-10 relative">
                   {displayCategories.map((cat, i) => {
                     const isActive = currentActiveCatId === cat.id;
@@ -1066,13 +1028,11 @@ export default function App() {
                   })}
                 </div>
 
-                {/* 學習內容列表區域 */}
                 <div className="bg-white border border-gray-200 rounded-xl rounded-tl-none shadow-sm relative z-10">
                   
-                  {/* 後台專屬：新增當前分類的按鈕 */}
                   {canEdit && (
                     <div className="p-4 border-b border-gray-100 bg-white rounded-tr-xl">
-                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-2 border border-gray-200 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
+                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-2.5 border border-gray-200 rounded-lg text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm">
                         <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(displayCategories.find(c=>c.id === currentActiveCatId)?.name || '')}」新增內容
                       </button>
                     </div>
@@ -1086,31 +1046,30 @@ export default function App() {
                   ) : (
                     <div className="p-4 space-y-4">
                       {canEdit ? (
-                        /* 後台編輯視角：顯示所有可編輯的卡片 (移除左側虛線) */
                         filteredSteps.map((step, index) => (
-                          <div key={step.id} className="flex flex-col gap-3 p-4 rounded-xl border border-gray-200 bg-white shadow-sm relative">
-                            <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-2 right-2 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
+                          <div key={step.id} className="flex flex-col gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-sm relative">
+                            <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-3 right-3 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
                             
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 border-b border-gray-100 pb-2">
                               <div className="font-black text-gray-300 text-lg w-5">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
-                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border-b border-gray-300 rounded-none font-bold text-gray-800 bg-transparent text-lg outline-none focus:border-indigo-500" placeholder="請輸入大標題"/>
+                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border-none rounded bg-transparent font-black text-gray-800 text-lg outline-none focus:ring-2 focus:ring-indigo-100" placeholder="請輸入大標題"/>
                               </div>
                             </div>
                             
-                            <div className="mt-3 space-y-4 pb-2">
+                            <div className="mt-2 space-y-4">
                               {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                <div key={block.id} className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm relative">
-                                  <div className="flex justify-between items-center mb-2">
+                                <div key={block.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
+                                  <div className="flex justify-between items-center mb-3">
                                     <span className="text-xs font-bold text-indigo-400">區塊 {bIndex + 1}</span>
-                                    <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
+                                    <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
                                   
-                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-gray-700 bg-gray-50 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-2" placeholder="請輸入子標題（選填）"/>
+                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} className="w-full p-2 border border-gray-200 rounded-lg font-bold text-gray-700 bg-gray-50 text-xs outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3" placeholder="請輸入子標題（選填）"/>
                                   
                                   <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} className="w-full p-3 border border-gray-200 rounded-lg text-xs text-gray-700 bg-white outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]" placeholder="請輸入學習內容..." />
                                 
-                                  <div className="flex items-center space-x-3 mt-2">
+                                  <div className="flex items-center space-x-3 mt-3">
                                     <label className={`flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg cursor-pointer transition-colors text-xs font-bold shadow-sm ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
                                       <UploadCloud c="w-4 h-4 mr-1.5 text-indigo-500" />{isUploading ? '上傳中...' : '上傳附件'}
                                       <input type="file" accept="image/*,video/*" className="hidden" disabled={isUploading} onChange={(e) => handleBlockFileUpload(step, block.id, e)} />
@@ -1135,9 +1094,8 @@ export default function App() {
                                 <PlusCircle c="w-4 h-4 mr-1.5"/> 新增內容區塊
                               </button>
                               
-                              {/* 儲存按鈕 - 安撫使用者情緒，其實上述操作都已經即時寫入 */}
-                              <div className="flex justify-end pt-2 mt-2">
-                                 <button onClick={() => showToast("所有內容已安全儲存！")} className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
+                              <div className="flex justify-end pt-3 mt-3 border-t border-gray-100">
+                                 <button onClick={() => showToast("所有內容已安全儲存！")} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
                                    <CheckCircle2 c="w-3.5 h-3.5 mr-1" /> 儲存學習項目
                                  </button>
                               </div>
@@ -1145,7 +1103,6 @@ export default function App() {
                           </div>
                         ))
                       ) : (
-                        /* 員工視角：遊戲化的一關一關解鎖地圖 (依據分類進度) */
                         <div className="space-y-4 my-2">
                           {filteredSteps.map((step, index) => {
                             const isCompleted = index < categoryProgress;
@@ -1163,8 +1120,7 @@ export default function App() {
                                      <span className="ml-auto text-[10px] font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">尚未解鎖</span>
                                    </div>
                                    
-                                   {/* 未解鎖可預覽的內容 (無灰底透明層) */}
-                                   <div className="space-y-4 pointer-events-none select-none opacity-50">
+                                   <div className="space-y-4 pointer-events-none select-none opacity-50 filter grayscale">
                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
                                        <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                          <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
@@ -1217,14 +1173,13 @@ export default function App() {
                                   <div className="space-y-4 mb-4">
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-2 border-b border-gray-200/60 pb-2">
+                                        <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
                                           {block.subtitle ? (
                                             <h4 className="font-bold text-indigo-800 text-base">{String(block.subtitle)}</h4>
                                           ) : (
                                             <h4 className="font-bold text-indigo-800 text-base">內容區塊</h4>
                                           )}
                                           
-                                          {/* --- 前台專用：教學完畢打勾儲存 --- */}
                                           <label className="flex items-center space-x-2 cursor-pointer bg-white px-2 py-1 rounded shadow-sm border border-gray-200 hover:bg-gray-50 transition-colors">
                                             <input 
                                               type="checkbox" 
@@ -1257,7 +1212,6 @@ export default function App() {
 
                                   <div className="mt-4 pt-4 border-t border-gray-100">
                                     <button onClick={() => {
-                                        // 開啟選擇教學人員 Modal，改為直接紀錄
                                         setTrainerModalStep(step);
                                         setSelectedTrainerStore(currentUserData?.store || '');
                                         setSelectedTrainerName('');
@@ -1361,7 +1315,6 @@ export default function App() {
 
               {isProfileTabAdmin ? (
                 <div className="bg-transparent">
-                  {/* 後台專用：搜尋欄與門店風琴夾分類 */}
                   <div className="mb-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex items-center">
                     <Search c="w-5 h-5 text-gray-400 mr-2" />
                     <input 
@@ -1402,18 +1355,15 @@ export default function App() {
                     
                     <div className="space-y-4">
                        {filteredDisplayEmployees.map(emp => {
-                         // 針對當前分類，計算總項目與已完成項目
                          const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id)).length;
                          const currentCatCompletedSteps = typeof emp.completedLearning === 'object' 
                             ? (emp.completedLearning[currentActiveCatId] || 0) 
                             : (currentActiveCatId === displayCategories[0].id ? emp.completedLearning || 0 : 0);
-                         // 防呆，不超過總數
                          const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
 
                          return (
                            <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
                              
-                             {/* 編輯模式表單 */}
                              {editingEmployeeId === emp.id ? (
                                <div className="flex flex-col space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
                                   <div>
@@ -1435,7 +1385,6 @@ export default function App() {
                                     </div>
                                   </div>
                                   
-                                  {/* 大頭貼選擇 (Emoji 代替圖片上傳) */}
                                   <div>
                                     <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
                                     <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
@@ -1472,15 +1421,12 @@ export default function App() {
                                   </div>
                                </div>
                              ) : (
-                               /* 一般顯示模式 (前後台佈局統一) */
                                <>
                                  <div className="flex justify-between items-start mb-5">
                                    <div className="flex items-center space-x-4">
                                      <div className="relative">
                                        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                         {emp.avatarUrl ? (
-                                           emp.avatarUrl.startsWith('http') ? <img src={emp.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-4xl">{emp.avatarUrl}</span>
-                                         ) : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                         {emp.avatarUrl ? <span className="text-4xl">{emp.avatarUrl}</span> : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                        </div>
                                      </div>
                                      <div>
@@ -1489,7 +1435,6 @@ export default function App() {
                                      </div>
                                    </div>
                                    
-                                   {/* 後台專屬：保留編輯及刪除按鈕 */}
                                    {canEdit && (
                                      <div className="flex items-center space-x-1 mt-2">
                                        <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
@@ -1498,7 +1443,6 @@ export default function App() {
                                    )}
                                  </div>
 
-                                 {/* 實色等級卡片 */}
                                  <div className={getRoleCardStyle(emp.role)}>
                                    <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
                                    <div className="flex justify-between items-end relative z-10">
@@ -1513,31 +1457,28 @@ export default function App() {
                                    </div>
                                  </div>
 
-                                 {/* --- 新增：分類選擇器與考試成就解鎖進度條 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-4 z-10 shadow-sm mt-2 mb-2">
-                                     <div className="flex justify-between items-center mb-3">
+                                     <div className="flex justify-between items-center mb-4">
                                         <p className="text-sm text-gray-800 font-bold flex items-center">
                                           <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                         </p>
-                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                                           已解鎖 {displayCompleted} / {currentCatTotalSteps}
                                         </span>
                                      </div>
                                      
-                                     {/* 選擇分類 - 更新為膠囊按鈕風格 */}
-                                     <div className="flex overflow-x-auto gap-2 pb-2 mb-2 hide-scrollbar">
+                                     <div className="flex flex-wrap gap-2 pb-2 mb-4">
                                        {displayCategories.map(cat => (
                                          <button 
                                            key={cat.id} 
                                            onClick={() => setActiveCategoryId(cat.id)}
-                                           className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                                           className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                                          >
                                            {String(cat.name)}
                                          </button>
                                        ))}
                                      </div>
 
-                                     {/* 動態進度條橫向顯示 - 更新連線與鎖頭風格 */}
                                      <div className="flex items-start overflow-x-auto hide-scrollbar py-4 px-2 relative min-h-[90px]">
                                          {currentCatTotalSteps === 0 ? (
                                              <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
@@ -1548,16 +1489,14 @@ export default function App() {
                                                  const isNextUnlocked = index + 1 < displayCompleted;
                                                  return (
                                                      <React.Fragment key={index}>
-                                                         {/* 圓點與文字 */}
                                                          <div className="flex flex-col items-center shrink-0 relative w-[4.5rem]">
-                                                             <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center border-[3px] bg-white z-10 transition-colors ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-100 text-gray-300'}`}>
+                                                             <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center border-[3px] bg-white z-10 transition-colors ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-200 text-gray-300'}`}>
                                                                  {isUnlocked ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
                                                              </div>
                                                              <span className={`text-[10px] mt-2 font-bold text-center line-clamp-2 leading-tight w-[5rem] px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
                                                                  {step ? String(step.title) : `項目 ${index + 1}`}
                                                              </span>
                                                          </div>
-                                                         {/* 連接線 (最後一項不顯示) */}
                                                          {index < currentCatTotalSteps - 1 && (
                                                              <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
                                                          )}
@@ -1568,7 +1507,6 @@ export default function App() {
                                      </div>
                                  </div>
 
-                                 {/* --- 學習通過紀錄卡片 --- */}
                                  <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                     <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                        <p className="text-xs text-gray-700 font-bold flex items-center">
@@ -1586,7 +1524,6 @@ export default function App() {
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
                                                   
-                                                  {/* 後台可編輯教學人員，前台僅顯示 */}
                                                   {canEdit ? (
                                                     <div className="flex items-center text-[10px] text-red-500 font-bold">
                                                       <UserIcon c="w-3 h-3 mr-0.5" />教學:
@@ -1640,17 +1577,14 @@ export default function App() {
                    </h2>
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
-                        // 針對當前分類，計算總項目與已完成項目
                         const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0].id)).length;
                         const currentCatCompletedSteps = typeof emp.completedLearning === 'object' 
                            ? (emp.completedLearning[currentActiveCatId] || 0) 
                            : (currentActiveCatId === displayCategories[0].id ? emp.completedLearning || 0 : 0);
-                        // 防呆，不超過總數
                         const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
 
                         return (
                           <div key={emp.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 relative flex flex-col">
-                            {/* 編輯模式表單 */}
                             {editingEmployeeId === emp.id ? (
                               <div className="flex flex-col space-y-3 bg-blue-50 p-4 rounded-xl border border-blue-100 shadow-inner">
                                  <div>
@@ -1672,14 +1606,12 @@ export default function App() {
                                    </div>
                                  </div>
                                  
-                                 {/* 大頭貼選擇 (Emoji 代替圖片上傳) */}
                                  <div>
                                    <label className="text-[10px] font-bold text-blue-600 mb-1 block">選擇頭貼</label>
                                    <div className="grid grid-cols-4 gap-2 bg-white p-2 rounded-lg border border-blue-200">
                                      {defaultAvatars.map(avatar => (
                                        <button 
-                                         key={avatar}
-                                         type="button" 
+                                         key={avatar} 
                                          onClick={() => setEditEmployeeData({...editEmployeeData, avatarUrl: avatar})}
                                          className={`text-2xl p-1 rounded-lg transition-transform ${editEmployeeData.avatarUrl === avatar ? 'bg-blue-100 scale-110' : 'hover:bg-gray-100'}`}
                                        >
@@ -1709,15 +1641,12 @@ export default function App() {
                                  </div>
                               </div>
                             ) : (
-                              /* 一般顯示模式 (前後台佈局統一) */
                               <>
                                 <div className="flex justify-between items-start mb-5">
                                   <div className="flex items-center space-x-4">
                                     <div className="relative">
                                       <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-indigo-50 shadow-sm overflow-hidden bg-gray-100 flex items-center justify-center text-4xl">
-                                        {emp.avatarUrl ? (
-                                          emp.avatarUrl.startsWith('http') ? <img src={emp.avatarUrl} className="w-full h-full object-cover" /> : <span className="text-4xl">{emp.avatarUrl}</span>
-                                        ) : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
+                                        {emp.avatarUrl ? <span className="text-4xl">{emp.avatarUrl}</span> : <UserIcon c="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />}
                                       </div>
                                     </div>
                                     <div>
@@ -1726,7 +1655,6 @@ export default function App() {
                                     </div>
                                   </div>
                                   
-                                  {/* 後台專屬：保留編輯及刪除按鈕 */}
                                   {canEdit && (
                                     <div className="flex items-center space-x-1 mt-2">
                                       <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
@@ -1735,7 +1663,6 @@ export default function App() {
                                   )}
                                 </div>
 
-                                {/* 實色等級卡片 */}
                                 <div className={getRoleCardStyle(emp.role)}>
                                   <div className="absolute inset-0 bg-white/10 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMiIgY3k9IjIiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4yKSIvPjwvc3ZnPg==')] z-0 pointer-events-none"></div>
                                   <div className="flex justify-between items-end relative z-10">
@@ -1750,59 +1677,56 @@ export default function App() {
                                   </div>
                                 </div>
 
-                                {/* --- 新增：分類選擇器與考試成就解鎖進度條 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-4 z-10 shadow-sm mt-2 mb-2">
-                                    <div className="flex justify-between items-center mb-3">
+                                    <div className="flex justify-between items-center mb-4">
                                        <p className="text-sm text-gray-800 font-bold flex items-center">
                                          <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                        </p>
-                                       <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                                       <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
                                          已解鎖 {displayCompleted} / {currentCatTotalSteps}
                                        </span>
                                     </div>
                                     
-                                    {/* 選擇分類 */}
-                                    <div className="flex overflow-x-auto gap-2 pb-2 mb-2 hide-scrollbar">
+                                    <div className="flex flex-wrap gap-2 pb-2 mb-4">
                                       {displayCategories.map(cat => (
                                         <button 
                                           key={cat.id} 
                                           onClick={() => setActiveCategoryId(cat.id)}
-                                          className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}
+                                          className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-colors border ${activeCategoryId === cat.id ? 'bg-blue-50 text-blue-600 border-blue-200 shadow-sm' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                                         >
                                           {String(cat.name)}
                                         </button>
                                       ))}
                                     </div>
 
-                                    {/* 動態進度條橫向顯示 */}
-                                    <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-2 px-1 relative">
+                                    <div className="flex items-start overflow-x-auto hide-scrollbar py-4 px-2 relative min-h-[90px]">
                                         {currentCatTotalSteps === 0 ? (
                                             <p className="text-xs text-gray-400 w-full text-center py-2">此分類尚無學習項目</p>
                                         ) : (
                                             Array.from({ length: currentCatTotalSteps }).map((_, index) => {
                                                 const step = filteredSteps[index];
                                                 const isUnlocked = index < displayCompleted;
+                                                const isNextUnlocked = index + 1 < displayCompleted;
                                                 return (
-                                                    <div key={index} className="flex flex-col items-center shrink-0 w-[4.5rem] relative">
-                                                        {/* 連接線 */}
-                                                        {index > 0 && (
-                                                            <div className={`absolute top-[18px] -left-[calc(50%+10px)] w-full h-[2px] -z-10 ${isUnlocked ? 'bg-blue-500' : 'bg-gray-200'}`}></div>
-                                                        )}
-                                                        {/* 圖示 */}
-                                                        <div className={`w-9 h-9 rounded-full flex items-center justify-center border-2 transition-all bg-white z-10 ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-200 text-gray-300'}`}>
-                                                            {isUnlocked ? <CheckCircle2 c="w-5 h-5" /> : <Lock c="w-4 h-4" />}
+                                                    <React.Fragment key={index}>
+                                                        <div className="flex flex-col items-center shrink-0 relative w-[4.5rem]">
+                                                            <div className={`w-[46px] h-[46px] rounded-full flex items-center justify-center border-[3px] bg-white z-10 transition-colors ${isUnlocked ? 'border-blue-500 text-blue-500 shadow-sm' : 'border-gray-200 text-gray-300'}`}>
+                                                                {isUnlocked ? <CheckCircle2 c="w-6 h-6" /> : <Lock c="w-5 h-5" />}
+                                                            </div>
+                                                            <span className={`text-[10px] mt-2 font-bold text-center line-clamp-2 leading-tight w-[5rem] px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
+                                                                {step ? String(step.title) : `項目 ${index + 1}`}
+                                                            </span>
                                                         </div>
-                                                        <span className={`text-[9px] mt-2 font-bold text-center truncate w-full px-1 ${isUnlocked ? 'text-blue-600' : 'text-gray-400'}`}>
-                                                            {step ? String(step.title) : index + 1}
-                                                        </span>
-                                                    </div>
+                                                        {index < currentCatTotalSteps - 1 && (
+                                                            <div className={`h-[4px] flex-1 min-w-[20px] max-w-[40px] mt-[21px] -mx-3 z-0 shrink-0 transition-colors ${isUnlocked && isNextUnlocked ? 'bg-blue-500' : 'bg-gray-100'}`}></div>
+                                                        )}
+                                                    </React.Fragment>
                                                 );
                                             })
                                         )}
                                     </div>
                                 </div>
 
-                                {/* --- 學習通過紀錄卡片 --- */}
                                 <div className="bg-white rounded-xl border border-gray-100 p-3 z-10 shadow-sm mt-2 mb-2">
                                    <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-100/60">
                                       <p className="text-xs text-gray-700 font-bold flex items-center">
@@ -1820,7 +1744,6 @@ export default function App() {
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-[9px] text-gray-400">{new Date(h.approvedAt).toLocaleDateString()} 完成</span>
                                                   
-                                                  {/* 後台可編輯教學人員，前台僅顯示 */}
                                                   {canEdit ? (
                                                     <div className="flex items-center text-[10px] text-red-500 font-bold">
                                                       <UserIcon c="w-3 h-3 mr-0.5" />教學:
@@ -1848,7 +1771,7 @@ export default function App() {
                                                   </button>
                                                 )}
                                               </div>
-                                            </div>
+                                             </div>
                                          </div>
                                        ))}
                                      </div>
