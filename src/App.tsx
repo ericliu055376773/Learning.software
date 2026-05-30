@@ -2026,3 +2026,7 @@ export default function App() {
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg z-[100] text-xs font-bold shadow-xl animate-in fade-in slide-in-from-bottom-2">
           {String(toast)}
         </div>
+      )}
+    </div>
+  );
+}
