@@ -592,7 +592,7 @@ export default function App() {
   // 計算登入者自己的進度 (若為總部看總部人員可能不具代表性，但防呆)
   const categoryProgress = (currentUserData && typeof currentUserData.completedLearning === 'object' && currentUserData.completedLearning !== null) 
                            ? (currentUserData.completedLearning[currentActiveCatId] || 0) 
-                           : (currentActiveCatId === displayCategories[0]?.id ? (currentUserData?.completedLearning || 0) : 0);
+                           : (currentActiveCatId === effectiveCategories[0]?.id ? (currentUserData?.completedLearning || 0) : 0);
 
   const currentThemeObj = extendedThemeColors.find(t => t.id === globalTheme) || extendedThemeColors[0];
 
@@ -1556,10 +1556,10 @@ export default function App() {
                     <div className="space-y-4">
                        {filteredDisplayEmployees.map(emp => {
                          // 針對當前分類，計算總項目與已完成項目
-                         const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0]?.id)).length;
+                         const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id)).length;
                          const currentCatCompletedSteps = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) 
                             ? (emp.completedLearning[currentActiveCatId] || 0) 
-                            : (currentActiveCatId === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                            : (currentActiveCatId === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                          // 防呆，不超過總數
                          const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
 
@@ -1673,31 +1673,31 @@ export default function App() {
                                           <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                         </p>
                                         <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                                          已解鎖 {displayCategories.filter(cat => {
-                                            const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
-                                            const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                          已解鎖 {effectiveCategories.filter(cat => {
+                                            const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === effectiveCategories[0]?.id));
+                                            const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                                             return cs.length > 0 && cc >= cs.length;
-                                          }).length} / {displayCategories.length}
+                                          }).length} / {effectiveCategories.length}
                                         </span>
                                      </div>
 
                                      {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
                                      <div className="bg-gray-100 rounded-2xl p-4 overflow-x-auto hide-scrollbar">
                                        <div className="flex items-center justify-start min-w-max mx-auto px-2">
-                                         {displayCategories.length === 0 ? (
+                                         {effectiveCategories.length === 0 ? (
                                              <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                          ) : (
-                                             displayCategories.map((cat, catIndex) => {
-                                               const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                             effectiveCategories.map((cat, catIndex) => {
+                                               const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === effectiveCategories[0]?.id));
                                                const catTotalSteps = catSteps.length;
                                                const catCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                                                  ? (emp.completedLearning[cat.id] || 0)
-                                                 : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                                 : (cat.id === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                                                const isCatPassed = catTotalSteps > 0 && catCompleted >= catTotalSteps;
                                                const isNextPassed = (() => {
-                                                 if (catIndex + 1 >= displayCategories.length) return false;
-                                                 const nextCat = displayCategories[catIndex + 1];
-                                                 const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === displayCategories[0]?.id));
+                                                 if (catIndex + 1 >= effectiveCategories.length) return false;
+                                                 const nextCat = effectiveCategories[catIndex + 1];
+                                                 const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === effectiveCategories[0]?.id));
                                                  const nextCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                                                    ? (emp.completedLearning[nextCat.id] || 0)
                                                    : 0;
@@ -1713,7 +1713,7 @@ export default function App() {
                                                        {String(cat.name)}
                                                      </span>
                                                    </div>
-                                                   {catIndex < displayCategories.length - 1 && (
+                                                   {catIndex < effectiveCategories.length - 1 && (
                                                      <div className={`h-[3px] w-8 mx-1 shrink-0 rounded-full self-start mt-[27px] transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
                                                    )}
                                                  </React.Fragment>
@@ -1797,10 +1797,10 @@ export default function App() {
                    <div className="space-y-4">
                       {filteredDisplayEmployees.map(emp => {
                         // 針對當前分類，計算總項目與已完成項目
-                        const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0]?.id)).length;
+                        const currentCatTotalSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id)).length;
                         const currentCatCompletedSteps = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) 
                            ? (emp.completedLearning[currentActiveCatId] || 0) 
-                           : (currentActiveCatId === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                           : (currentActiveCatId === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                         // 防呆，不超過總數
                         const displayCompleted = Math.min(currentCatCompletedSteps, currentCatTotalSteps);
 
@@ -1913,31 +1913,31 @@ export default function App() {
                                          <Award c="w-4 h-4 mr-1.5 text-blue-500" />考試成就解鎖
                                        </p>
                                        <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                                         已解鎖 {displayCategories.filter(cat => {
-                                           const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
-                                           const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                         已解鎖 {effectiveCategories.filter(cat => {
+                                           const cs = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === effectiveCategories[0]?.id));
+                                           const cc = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null) ? (emp.completedLearning[cat.id] || 0) : (cat.id === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                                            return cs.length > 0 && cc >= cs.length;
-                                         }).length} / {displayCategories.length}
+                                         }).length} / {effectiveCategories.length}
                                        </span>
                                     </div>
 
                                     {/* 動態進度條橫向顯示 (分類鎖頭風格) */}
                                     <div className="bg-gray-100 rounded-2xl p-4 overflow-x-auto hide-scrollbar">
                                       <div className="flex items-center justify-start min-w-max mx-auto px-2">
-                                        {displayCategories.length === 0 ? (
+                                        {effectiveCategories.length === 0 ? (
                                             <p className="text-xs text-gray-400 w-full text-center py-2">尚無學習分類</p>
                                         ) : (
-                                            displayCategories.map((cat, catIndex) => {
-                                              const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === displayCategories[0]?.id));
+                                            effectiveCategories.map((cat, catIndex) => {
+                                              const catSteps = learningSteps.filter(s => s.categoryId === cat.id || (!s.categoryId && cat.id === effectiveCategories[0]?.id));
                                               const catTotalSteps = catSteps.length;
                                               const catCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                                                 ? (emp.completedLearning[cat.id] || 0)
-                                                : (cat.id === displayCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
+                                                : (cat.id === effectiveCategories[0]?.id ? (emp?.completedLearning || 0) : 0);
                                               const isCatPassed = catTotalSteps > 0 && catCompleted >= catTotalSteps;
                                               const isNextPassed = (() => {
-                                                if (catIndex + 1 >= displayCategories.length) return false;
-                                                const nextCat = displayCategories[catIndex + 1];
-                                                const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === displayCategories[0]?.id));
+                                                if (catIndex + 1 >= effectiveCategories.length) return false;
+                                                const nextCat = effectiveCategories[catIndex + 1];
+                                                const nextSteps = learningSteps.filter(s => s.categoryId === nextCat.id || (!s.categoryId && nextCat.id === effectiveCategories[0]?.id));
                                                 const nextCompleted = (emp && typeof emp.completedLearning === 'object' && emp.completedLearning !== null)
                                                   ? (emp.completedLearning[nextCat.id] || 0)
                                                   : 0;
@@ -1953,7 +1953,7 @@ export default function App() {
                                                       {String(cat.name)}
                                                     </span>
                                                   </div>
-                                                  {catIndex < displayCategories.length - 1 && (
+                                                  {catIndex < effectiveCategories.length - 1 && (
                                                     <div className={`h-[3px] w-8 mx-1 shrink-0 rounded-full self-start mt-[27px] transition-colors ${isCatPassed && isNextPassed ? 'bg-blue-400' : 'bg-gray-300'}`}></div>
                                                   )}
                                                 </React.Fragment>
