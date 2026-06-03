@@ -1293,28 +1293,34 @@ export default function App() {
                                       <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                                         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
                                           {block.subtitle ? (
-                                            <h4 className="font-bold text-indigo-900 text-lg">{String(block.subtitle)}</h4>
+                                            <h4 className="font-bold text-indigo-900 text-lg" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif', WebkitTextFillColor: 'initial'}}>{String(block.subtitle)}</h4>
                                           ) : (
                                             <h4 className="font-bold text-indigo-900 text-lg">內容區塊</h4>
                                           )}
                                           
                                           {/* --- 前台專用：教學完畢打勾儲存 --- */}
-                                          <label className="flex items-center space-x-2 cursor-pointer bg-gray-50 px-3 py-1.5 rounded-lg border border-gray-200 hover:bg-indigo-50 hover:border-indigo-200 transition-colors shadow-sm">
-                                            <input 
-                                              type="checkbox" 
-                                              checked={currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] || false}
-                                              onChange={(e) => {
-                                                const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                                newCompletedBlocks[`${step.id}_${block.id}`] = e.target.checked;
-                                                updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
-                                                showToast(e.target.checked ? '已標記為教學完畢！' : '已取消標記！');
-                                              }}
-                                              className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-[11px] text-gray-700 font-bold">教學完畢</span>
-                                          </label>
+                                          <button
+                                            onClick={() => {
+                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
+                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
+                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                              showToast(!current ? '已標記為教學完畢！' : '已取消標記！');
+                                            }}
+                                            style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
+                                              currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]
+                                                ? 'bg-green-50 border-green-300 text-green-700'
+                                                : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'
+                                            }`}
+                                          >
+                                            <span className="text-base leading-none">
+                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '✅' : '⬜'}
+                                            </span>
+                                            教學完畢
+                                          </button>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text">{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif', WebkitTextFillColor: 'initial'}}>{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
