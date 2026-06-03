@@ -1293,7 +1293,7 @@ export default function App() {
                                       <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                                         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
                                           {block.subtitle ? (
-                                            <h4 className="font-bold text-indigo-900 text-lg" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif', WebkitTextFillColor: 'initial'}}>{String(block.subtitle)}</h4>
+                                            <h4 className="font-bold text-indigo-900 text-lg" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.subtitle)}</h4>
                                           ) : (
                                             <h4 className="font-bold text-indigo-900 text-lg">內容區塊</h4>
                                           )}
@@ -1308,19 +1308,29 @@ export default function App() {
                                               showToast(!current ? '已標記為教學完畢！' : '已取消標記！');
                                             }}
                                             style={{WebkitUserSelect:'none', userSelect:'none'}}
-                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
                                               currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]
                                                 ? 'bg-green-50 border-green-300 text-green-700'
                                                 : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'
                                             }`}
                                           >
-                                            <span className="text-base leading-none">
-                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '✅' : '⬜'}
+                                            <span style={{
+                                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                              width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+                                              backgroundColor: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '#16a34a' : 'white',
+                                              border: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '2px solid #16a34a' : '2px solid #d1d5db',
+                                              transition: 'all 0.2s',
+                                            }}>
+                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && (
+                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                </svg>
+                                              )}
                                             </span>
                                             教學完畢
                                           </button>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif', WebkitTextFillColor: 'initial'}}>{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
