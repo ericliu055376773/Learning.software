@@ -1293,7 +1293,7 @@ export default function App() {
                                       <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                                         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
                                           {block.subtitle ? (
-                                            <h4 className="font-bold text-indigo-900 text-lg" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.subtitle)}</h4>
+                                            <h4 className="font-bold text-lg" style={{color: '#1e3a5f', WebkitTextFillColor: 'currentColor', fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.subtitle)}</h4>
                                           ) : (
                                             <h4 className="font-bold text-indigo-900 text-lg">內容區塊</h4>
                                           )}
