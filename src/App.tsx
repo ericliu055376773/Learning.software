@@ -140,8 +140,9 @@ export default function App() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [pendingAccounts, setPendingAccounts] = useState<any[]>([]);
   
-  const [categories, setCategories] = useState<any[]>([{id: 'default', name: '綜合學習'}]);
+  const [categories, setCategories] = useState<any[]>([{id: 'default', name: '綜合學習', parentId: null}]);
   const [activeCategoryId, setActiveCategoryId] = useState<string>('');
+  const [activeParentId, setActiveParentId] = useState<string>('');
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
@@ -211,7 +212,14 @@ export default function App() {
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
-            if (!activeCategoryId) setActiveCategoryId(data.learningCategories[0].id);
+            const parents = data.learningCategories.filter((c: any) => !c.parentId);
+            const firstParent = parents[0];
+            if (firstParent && !activeParentId) {
+              setActiveParentId(firstParent.id);
+              const firstChild = data.learningCategories.find((c: any) => c.parentId === firstParent.id);
+              if (firstChild && !activeCategoryId) setActiveCategoryId(firstChild.id);
+              else if (!activeCategoryId) setActiveCategoryId(firstParent.id);
+            }
           }
         }
       },
@@ -555,9 +563,15 @@ export default function App() {
       return matchStore && matchSearch;
   });
 
-  const displayCategories = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習'}];
-  const currentActiveCatId = activeCategoryId || displayCategories[0]?.id;
-  const filteredSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === displayCategories[0]?.id));
+  const allCats = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習', parentId: null}];
+  const parentCategories = allCats.filter((c: any) => !c.parentId);
+  const currentParentId = activeParentId || parentCategories[0]?.id || '';
+  const displayCategories = allCats.filter((c: any) => c.parentId === currentParentId);
+  // 如果沒有子分類，就把母分類本身當作分類顯示
+  const hasChildren = displayCategories.length > 0;
+  const effectiveCategories = hasChildren ? displayCategories : (currentParentId ? [{...allCats.find((c:any) => c.id === currentParentId), parentId: null}] : allCats.filter((c:any)=>!c.parentId));
+  const currentActiveCatId = activeCategoryId || effectiveCategories[0]?.id || '';
+  const filteredSteps = learningSteps.filter(s => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id));
   
   // 計算登入者自己的進度 (若為總部看總部人員可能不具代表性，但防呆)
   const categoryProgress = (currentUserData && typeof currentUserData.completedLearning === 'object' && currentUserData.completedLearning !== null) 
@@ -1041,50 +1055,52 @@ export default function App() {
                 {/* 分類管理介面 (僅後台) - 包含拖曳排序 */}
                 {canEdit && showCategoryManager && (
                   <div className="mb-4 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
-                     <h3 className="font-bold mb-3 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類</h3>
-                     <p className="text-[10px] text-gray-400 mb-3">新增或編輯類似「外場」、「內場」等學習頁籤：</p>
-                     <div className="space-y-2 mb-4">
-                       {editingCategories.map((cat, index) => (
-                         <div 
-                           key={cat.id} 
-                           draggable
-                           onDragStart={(e) => {
-                             setDraggedCatIndex(index);
-                             e.dataTransfer.effectAllowed = "move";
-                             e.dataTransfer.setData("text/html", cat.id);
-                           }}
-                           onDragEnter={() => setDragOverCatIndex(index)}
-                           onDragOver={(e) => e.preventDefault()}
-                           onDragEnd={() => {
-                             setDraggedCatIndex(null);
-                             setDragOverCatIndex(null);
-                           }}
-                           onDrop={(e) => {
-                             e.preventDefault();
-                             if (draggedCatIndex === null || draggedCatIndex === index) return;
-                             
-                             const newCats = [...editingCategories];
-                             const draggedItem = newCats[draggedCatIndex];
-                             newCats.splice(draggedCatIndex, 1);
-                             newCats.splice(index, 0, draggedItem);
-                             
-                             setEditingCategories(newCats);
-                             setDraggedCatIndex(null);
-                             setDragOverCatIndex(null);
-                           }}
-                           className={`flex gap-2 items-center bg-slate-700 p-2 rounded border transition-colors cursor-grab active:cursor-grabbing ${
-                             draggedCatIndex === index ? 'opacity-40 border-indigo-400 scale-95' : 'border-slate-600'
-                           } ${
-                             dragOverCatIndex === index && draggedCatIndex !== index ? 'border-indigo-500 ring-2 ring-indigo-500/50' : ''
-                           }`}
-                         >
-                           <GripVertical c="w-4 h-4 text-slate-400 group-hover:text-indigo-400 transition-colors" />
-                           <input type="text" value={cat.name} onChange={e => setEditingCategories(editingCategories.map(c => c.id === cat.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300" placeholder="分類名稱" />
-                           <button onClick={() => setEditingCategories(editingCategories.filter(c => c.id !== cat.id))} className="p-1.5 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 transition-colors"><Trash2 c="w-4 h-4"/></button>
+                     <h3 className="font-bold mb-1 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類（兩層結構）</h3>
+                     <p className="text-[10px] text-gray-400 mb-3">母分類＝外場/內場，子分類＝收桌/送餐…</p>
+                     
+                     <div className="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1">
+                       {editingCategories.filter((c:any) => !c.parentId).map((parent: any, pi: number) => (
+                         <div key={parent.id} className="border border-slate-600 rounded-lg overflow-hidden">
+                           {/* 母分類 */}
+                           <div className="flex gap-2 items-center bg-slate-600 p-2.5">
+                             <span className="text-[10px] text-indigo-300 font-bold whitespace-nowrap">母分類</span>
+                             <input
+                               type="text"
+                               value={parent.name}
+                               onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === parent.id ? {...c, name: e.target.value} : c))}
+                               className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300"
+                               placeholder="母分類名稱（例：外場）"
+                             />
+                             <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== parent.id && c.parentId !== parent.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40"><Trash2 c="w-3.5 h-3.5"/></button>
+                           </div>
+                           {/* 子分類 */}
+                           <div className="bg-slate-700 p-2 space-y-1.5">
+                             {editingCategories.filter((c:any) => c.parentId === parent.id).map((child: any) => (
+                               <div key={child.id} className="flex gap-2 items-center bg-slate-600/50 p-2 rounded">
+                                 <span className="w-1 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
+                                 <input
+                                   type="text"
+                                   value={child.name}
+                                   onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, name: e.target.value} : c))}
+                                   className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white"
+                                   placeholder="子分類名稱（例：收桌）"
+                                 />
+                                 <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== child.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40"><Trash2 c="w-3 h-3"/></button>
+                               </div>
+                             ))}
+                             <button
+                               onClick={() => setEditingCategories([...editingCategories, {id: Date.now().toString(), name: '', parentId: parent.id}])}
+                               className="w-full p-1.5 border border-dashed border-slate-500 rounded text-slate-400 hover:text-white text-[11px] transition-colors"
+                             >＋ 新增子分類</button>
+                           </div>
                          </div>
                        ))}
-                       <button onClick={() => setEditingCategories([...editingCategories, {id: Date.now().toString(), name: ''}])} className="w-full p-2 mt-1 border border-dashed border-slate-600 rounded text-slate-400 font-bold hover:text-white hover:border-slate-400 text-xs transition-colors"> + 新增頁籤分類</button>
+                       <button
+                         onClick={() => setEditingCategories([...editingCategories, {id: 'parent_' + Date.now().toString(), name: '', parentId: null}])}
+                         className="w-full p-2 border border-dashed border-slate-500 rounded text-slate-300 font-bold hover:text-white text-xs transition-colors"
+                       >＋ 新增母分類（外場／內場）</button>
                      </div>
+                     
                      <div className="flex gap-2 pt-2 border-t border-slate-700">
                        <button onClick={() => setShowCategoryManager(false)} className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold transition-colors">取消</button>
                        <button onClick={saveCategoriesConfig} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md shadow-indigo-500/30 transition-colors">儲存分類</button>
@@ -1092,24 +1108,48 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 風琴夾頁籤 UI (Folder Tabs) */}
-                <div className="flex overflow-x-auto gap-2 pb-3 mb-4 hide-scrollbar z-10 relative">
-                  {displayCategories.map((cat, i) => {
-                    const isActive = currentActiveCatId === cat.id;
-                    return (
-                      <button 
-                        key={cat.id} 
-                        onClick={() => setActiveCategoryId(cat.id)}
-                        className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-colors border shadow-sm ${
-                          isActive 
-                            ? 'bg-blue-50 text-blue-600 border-blue-200' 
-                            : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                        }`}
-                      >
-                        {String(cat.name)}
-                      </button>
-                    )
-                  })}
+                {/* 兩排頁籤：第一排母分類，第二排子分類 */}
+                <div className="mb-4">
+                  {/* 第一排：母分類 */}
+                  <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
+                    {parentCategories.map((parent: any) => {
+                      const isActive = currentParentId === parent.id;
+                      return (
+                        <button
+                          key={parent.id}
+                          onClick={() => {
+                            setActiveParentId(parent.id);
+                            const firstChild = allCats.find((c: any) => c.parentId === parent.id);
+                            setActiveCategoryId(firstChild ? firstChild.id : parent.id);
+                          }}
+                          className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${
+                            isActive
+                              ? 'bg-indigo-600 text-white border-indigo-600'
+                              : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                          }`}
+                        >{String(parent.name)}</button>
+                      );
+                    })}
+                  </div>
+                  {/* 第二排：子分類 */}
+                  {hasChildren && (
+                    <div className="flex overflow-x-auto gap-2 pt-2 hide-scrollbar">
+                      {effectiveCategories.map((cat: any) => {
+                        const isActive = currentActiveCatId === cat.id;
+                        return (
+                          <button
+                            key={cat.id}
+                            onClick={() => setActiveCategoryId(cat.id)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
+                              isActive
+                                ? 'bg-blue-50 text-blue-600 border-blue-300'
+                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                            }`}
+                          >{String(cat.name)}</button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* 學習內容列表區域 */}
@@ -1119,7 +1159,7 @@ export default function App() {
                   {canEdit && (
                     <div className="mb-4">
                       <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-3 border border-gray-200 rounded-xl text-sm text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
-                        <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(displayCategories.find(c=>c.id === currentActiveCatId)?.name || '')}」新增內容
+                        <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(effectiveCategories.find((c:any)=>c.id === currentActiveCatId)?.name || '')}」新增內容
                       </button>
                     </div>
                   )}
