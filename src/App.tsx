@@ -1063,7 +1063,7 @@ export default function App() {
                   </div>
                   {canEdit && (
                     <div className="flex gap-2">
-                      <button onClick={() => { setEditingCategories([...displayCategories]); setShowCategoryManager(true); }} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"><Settings c="w-3.5 h-3.5 mr-1" /><span>管理分類</span></button>
+                      <button onClick={() => { setEditingCategories([...allCats]); setShowCategoryManager(true); }} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"><Settings c="w-3.5 h-3.5 mr-1" /><span>管理分類</span></button>
                     </div>
                   )}
                 </div>
