@@ -1109,11 +1109,11 @@ export default function App() {
                           <div key={step.id} className="flex flex-col gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-sm relative">
                             <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-4 right-4 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
                             
-                            <div className="flex items-center space-x-2 border-b border-gray-100 pb-3">
+                            <div className="flex items-center space-x-2 border-b border-gray-100 pb-3 bg-white rounded-lg">
                               <div className="font-black text-gray-300 text-xl w-6">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
                                 {/* 移除虛線框，直接融入白底 */}
-                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
+                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
                               </div>
                             </div>
                             
