@@ -166,6 +166,8 @@ export default function App() {
   // 分類拖曳 (新增)
   const [draggedCatIndex, setDraggedCatIndex] = useState<number | null>(null);
   const [dragOverCatIndex, setDragOverCatIndex] = useState<number | null>(null);
+  const [draggedBlockInfo, setDraggedBlockInfo] = useState<{stepId: string, blockIndex: number} | null>(null);
+  const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
 
   const [showTrainerModal, setShowTrainerModal] = useState<boolean>(false);
   const [trainerModalStep, setTrainerModalStep] = useState<any>(null);
@@ -753,7 +755,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-auto">
+    <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-y-auto">
       <style>{`
           :root {
             --theme-main: ${currentThemeObj.main};
@@ -795,6 +797,14 @@ export default function App() {
             user-select: text !important;
             cursor: text !important;
           }
+          /* 修正 emoji 顏色在 Chrome 顯示偏差 */
+          p, span, div, textarea {
+            font-variant-emoji: emoji;
+            -webkit-font-feature-settings: normal;
+          }
+          /* 學習內容區塊間距加大 */
+          .learning-block { margin-bottom: 1.5rem !important; }
+          .learning-step { margin-bottom: 2rem !important; }
           ${customStyles}
       `}</style>
       
@@ -932,9 +942,9 @@ export default function App() {
         </div>
       )}
 
-      <div className="w-full max-w-md bg-slate-50 relative h-full shadow-xl flex flex-col overflow-y-auto sm:border-x border-gray-200">
+      <div className="w-full max-w-md bg-slate-50 relative min-h-screen shadow-xl flex flex-col sm:border-x border-gray-200">
         
-        <header className="bg-white p-4 border-b border-gray-200 flex justify-between items-center z-20 shrink-0">
+        <header className="bg-white p-4 border-b border-gray-200 flex justify-between items-center z-20 shrink-0 sticky top-0">
           <div className="flex items-center gap-2">
             {systemLogoUrl ? (
               <img src={systemLogoUrl} className="h-8 max-w-[120px] object-contain" alt="Logo" />
@@ -964,7 +974,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 pb-6 relative z-0 hide-scrollbar" style={{WebkitOverflowScrolling:'touch'}}>
+        <main className="flex-1 p-4 pb-6 relative z-0">
           
           {/* TAB 1.5: 待審核名單 (僅後台可見) */}
           {activeTab === 'pending' && canEdit && (
@@ -1083,7 +1093,7 @@ export default function App() {
                 )}
 
                 {/* 風琴夾頁籤 UI (Folder Tabs) */}
-                <div className="flex overflow-x-auto gap-2 pb-2 mb-2 hide-scrollbar z-10 relative">
+                <div className="flex overflow-x-auto gap-2 pb-3 mb-4 hide-scrollbar z-10 relative">
                   {displayCategories.map((cat, i) => {
                     const isActive = currentActiveCatId === cat.id;
                     return (
@@ -1137,9 +1147,34 @@ export default function App() {
                             
                             <div className="mt-2 space-y-4 pb-2">
                               {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                <div key={block.id} className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative">
+                                <div
+                                  key={block.id}
+                                  draggable
+                                  onDragStart={() => setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex })}
+                                  onDragEnter={() => setDragOverBlockIndex(bIndex)}
+                                  onDragOver={e => e.preventDefault()}
+                                  onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
+                                  onDrop={e => {
+                                    e.preventDefault();
+                                    if (!draggedBlockInfo || draggedBlockInfo.stepId !== step.id || draggedBlockInfo.blockIndex === bIndex) return;
+                                    const blocks = [...getStepBlocks(step)];
+                                    const [moved] = blocks.splice(draggedBlockInfo.blockIndex, 1);
+                                    blocks.splice(bIndex, 0, moved);
+                                    updateDoc(doc(db, 'learningSteps', step.id), { blocks });
+                                    setDraggedBlockInfo(null);
+                                    setDragOverBlockIndex(null);
+                                  }}
+                                  className={`bg-white p-4 rounded-xl border shadow-sm relative transition-all ${
+                                    draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex ? 'opacity-40 scale-95 border-indigo-300' :
+                                    dragOverBlockIndex === bIndex && draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex !== bIndex ? 'border-indigo-500 ring-2 ring-indigo-300' :
+                                    'border-gray-200'
+                                  }`}
+                                >
                                   <div className="flex justify-between items-center mb-3">
-                                    <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
+                                    <div className="flex items-center gap-2">
+                                      <GripVertical c="w-4 h-4 text-gray-300 cursor-grab active:cursor-grabbing" />
+                                      <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
+                                    </div>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
                                   
@@ -1183,7 +1218,7 @@ export default function App() {
                         ))
                       ) : (
                         /* 員工視角：純白底層闖關地圖 */
-                        <div className="space-y-4 my-2">
+                        <div className="space-y-6 my-3">
                           {filteredSteps.map((step, index) => {
                             const isCompleted = index < categoryProgress;
                             const isCurrent = index === categoryProgress;
@@ -1253,9 +1288,9 @@ export default function App() {
                                   </div>
                                   
                                   {/* 純白底層內容區塊 */}
-                                  <div className="space-y-4 mb-4 select-text">
+                                  <div className="space-y-5 mb-5 select-text">
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                      <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                                      <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                                         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
                                           {block.subtitle ? (
                                             <h4 className="font-bold text-indigo-900 text-lg">{String(block.subtitle)}</h4>
@@ -1279,7 +1314,7 @@ export default function App() {
                                             <span className="text-[11px] text-gray-700 font-bold">教學完畢</span>
                                           </label>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-relaxed select-text cursor-text">{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text">{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
@@ -1918,7 +1953,7 @@ export default function App() {
           )}
         </main>
 
-        <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0">
+        <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0 sticky bottom-0">
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
           </button>
