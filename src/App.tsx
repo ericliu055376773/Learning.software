@@ -593,6 +593,9 @@ export default function App() {
           .shadow-indigo-100 { --tw-shadow-color: var(--theme-light) !important; }
           .shadow-indigo-200 { --tw-shadow-color: var(--theme-light) !important; filter: brightness(0.85); }
           .fill-indigo-50 { fill: var(--theme-light) !important; }
+          *, *::before, *::after { -webkit-user-select: text !important; user-select: text !important; }
+          button, [draggable="true"] { -webkit-user-select: none !important; user-select: none !important; }
+          input, textarea { -webkit-user-select: text !important; user-select: text !important; }
           ${customStyles}
         `}</style>
         
@@ -777,22 +780,22 @@ export default function App() {
           .shadow-indigo-100 { --tw-shadow-color: var(--theme-light) !important; }
           .shadow-indigo-200 { --tw-shadow-color: var(--theme-light) !important; filter: brightness(0.85); }
           .fill-indigo-50 { fill: var(--theme-light) !important; }
-          ${customStyles}
-          /* 強制允許文字選取複製 — 最高優先級 */
-          p, span, h1, h2, h3, h4, h5, h6, li, td, th, label,
-          textarea, input[type="text"], input[type="email"], input[type="number"],
-          div[class*="description"], div[class*="content"], div[class*="block"],
-          .select-text, [data-selectable] {
+          /* 強制允許文字選取複製 — 放在 customStyles 之前確保不被覆蓋 */
+          *, *::before, *::after {
             -webkit-user-select: text !important;
             -moz-user-select: text !important;
-            -ms-user-select: text !important;
             user-select: text !important;
           }
-          textarea, input {
+          button, [draggable="true"] {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+          }
+          input, textarea {
             -webkit-user-select: text !important;
             user-select: text !important;
             cursor: text !important;
           }
+          ${customStyles}
       `}</style>
       
       {/* 總部專屬設定彈出視窗：整合 主題設定 與 GPS 定位 */}
