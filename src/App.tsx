@@ -750,7 +750,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-hidden">
+    <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-auto">
       <style>{`
           :root {
             --theme-main: ${currentThemeObj.main};
@@ -914,7 +914,7 @@ export default function App() {
         </div>
       )}
 
-      <div className="w-full max-w-md bg-slate-50 relative h-full shadow-xl flex flex-col overflow-hidden sm:border-x border-gray-200">
+      <div className="w-full max-w-md bg-slate-50 relative h-full shadow-xl flex flex-col overflow-y-auto sm:border-x border-gray-200">
         
         <header className="bg-white p-4 border-b border-gray-200 flex justify-between items-center z-20 shrink-0">
           <div className="flex items-center gap-2">
@@ -1173,7 +1173,7 @@ export default function App() {
 
                             if (isLocked) {
                               return (
-                                <div key={step.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative overflow-hidden">
+                                <div key={step.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
                                    {/* 未解鎖的鎖頭與標題 */}
                                    <div className="flex items-center gap-2 mb-4 opacity-50">
                                      <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
@@ -1225,7 +1225,7 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} className="bg-white border-[3px] border-indigo-500 rounded-xl p-5 shadow-lg relative overflow-hidden">
+                                <div key={step.id} className="bg-white border-[3px] border-indigo-500 rounded-xl p-5 shadow-lg relative">
                                   <div className="flex items-center gap-3 mb-4">
                                     <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-md animate-pulse">
                                       <BookOpen c="w-5 h-5" />
