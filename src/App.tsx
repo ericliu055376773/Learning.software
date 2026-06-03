@@ -1149,8 +1149,8 @@ export default function App() {
                               {getStepBlocks(step).map((block: any, bIndex: number) => (
                                 <div
                                   key={block.id}
-                                  draggable
-                                  onDragStart={() => setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex })}
+                                  draggable={draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex}
+                                  onDragStart={e => { if (draggedBlockInfo?.stepId !== step.id || draggedBlockInfo?.blockIndex !== bIndex) e.preventDefault(); }}
                                   onDragEnter={() => setDragOverBlockIndex(bIndex)}
                                   onDragOver={e => e.preventDefault()}
                                   onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
@@ -1172,7 +1172,14 @@ export default function App() {
                                 >
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
-                                      <GripVertical c="w-4 h-4 text-gray-300 cursor-grab active:cursor-grabbing" />
+                                      <span
+                                        onMouseDown={() => setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex })}
+                                        onMouseUp={() => { if (!draggedBlockInfo) return; }}
+                                        style={{cursor: 'grab', WebkitUserSelect: 'none', userSelect: 'none'}}
+                                        title="拖曳排序"
+                                      >
+                                        <GripVertical c="w-4 h-4 text-gray-300 hover:text-gray-500 transition-colors" />
+                                      </span>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
                                     </div>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
