@@ -1235,7 +1235,7 @@ export default function App() {
                                   </div>
                                   
                                   {/* 純白底層內容區塊 */}
-                                  <div className="space-y-4 mb-4">
+                                  <div className="space-y-4 mb-4 select-text">
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
                                         <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
@@ -1261,7 +1261,7 @@ export default function App() {
                                             <span className="text-[11px] text-gray-700 font-bold">教學完畢</span>
                                           </label>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-relaxed select-text cursor-text">{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
