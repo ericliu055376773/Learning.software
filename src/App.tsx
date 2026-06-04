@@ -593,9 +593,14 @@ export default function App() {
   const filteredSteps = learningSteps.filter((s: any) => {
     if (s.categoryId === currentActiveCatId) return true;
     if (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id) return true;
-    // 用分類名稱比對（舊資料相容）
+    // 用分類名稱比對（舊資料相容）：「外場-收桌」包含「收桌」或反之
     const matchedCat = allCats.find((c:any) => c.id === s.categoryId);
-    if (matchedCat && currentActiveCat && matchedCat.name === currentActiveCat.name) return true;
+    if (matchedCat && currentActiveCat) {
+      const oldName = String(matchedCat.name).toLowerCase();
+      const newName = String(currentActiveCat.name).toLowerCase();
+      if (oldName === newName) return true;
+      if (oldName.includes(newName) || newName.includes(oldName)) return true;
+    }
     return false;
   });
   
@@ -1135,10 +1140,10 @@ export default function App() {
                 )}
 
                 {/* 頁籤 UI */}
-                <div className="mb-4">
+                <div className="mb-4 w-full overflow-hidden">
                   {/* 第一排：母分類（有兩層結構才顯示） */}
                   {hasTwoLevel && (
-                    <div className="flex gap-2 pb-2 hide-scrollbar" style={{overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap'}}>
+                    <div style={{display:'flex', gap:'8px', paddingBottom:'8px', overflowX:'scroll', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', width:'100%', scrollbarWidth:'none', msOverflowStyle:'none'}}>
                       {parentCategories.map((parent: any) => {
                         const isActive = currentParentId === parent.id;
                         return (
@@ -1148,21 +1153,23 @@ export default function App() {
                               const firstChild = allCats.find((c: any) => c.parentId === parent.id);
                               setActiveCategoryId(firstChild ? firstChild.id : parent.id);
                             }}
-                            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                            style={{flexShrink:0, whiteSpace:'nowrap'}}
+                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
                           >{String(parent.name)}</button>
                         );
                       })}
                     </div>
                   )}
                   {/* 第二排（或唯一一排） */}
-                  <div className={`flex gap-2 hide-scrollbar ${hasTwoLevel ? 'pt-2' : ''}`} style={{overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap'}}>
+                  <div style={{display:'flex', gap:'8px', paddingTop: hasTwoLevel ? '8px' : '0', overflowX:'scroll', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', width:'100%', scrollbarWidth:'none', msOverflowStyle:'none'}}>
                     {effectiveCategories.map((cat: any) => {
                       if (!cat || !cat.id) return null;
                       const isActive = currentActiveCatId === cat.id;
                       return (
                         <button key={cat.id}
                           onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
-                          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                          style={{flexShrink:0, whiteSpace:'nowrap'}}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
                         >{String(cat.name)}</button>
                       );
                     })}
