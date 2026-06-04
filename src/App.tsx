@@ -1160,44 +1160,69 @@ export default function App() {
                 <div className="mb-4" style={{width:'100%', minWidth:0}}>
                   {/* 第一排：母分類（有兩層結構才顯示） */}
                   {hasTwoLevel && (
-                    <div style={{display:'flex', gap:'8px', paddingBottom:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, maxWidth:'100%', scrollbarWidth:'none'}}>
-                      {parentCategories.map((parent: any) => {
-                        const isActive = currentParentId === parent.id;
+                    <div style={{display:'flex', alignItems:'center', gap:'4px', paddingBottom:'8px', minWidth:0}}>
+                      <div id="parent-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
+                        {parentCategories.map((parent: any) => {
+                          const isActive = currentParentId === parent.id;
+                          return (
+                            <button key={parent.id}
+                              onClick={() => {
+                                setActiveParentId(parent.id);
+                                const firstChild = allCats.find((c: any) => c.parentId === parent.id);
+                                setActiveCategoryId(firstChild ? firstChild.id : parent.id);
+                              }}
+                              style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
+                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
+                            >{String(parent.name)}</button>
+                          );
+                        })}
+                      </div>
+                      {/* 右箭頭：跳到下一個母分類 */}
+                      {parentCategories.length > 1 && (() => {
+                        const idx = parentCategories.findIndex((c:any) => c.id === currentParentId);
+                        const next = parentCategories[idx + 1];
+                        if (!next) return null;
                         return (
-                          <button key={parent.id}
-                            onClick={() => {
-                              setActiveParentId(parent.id);
-                              const firstChild = allCats.find((c: any) => c.parentId === parent.id);
-                              setActiveCategoryId(firstChild ? firstChild.id : parent.id);
-                            }}
-                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
-                          >{String(parent.name)}</button>
+                          <button onClick={() => { setActiveParentId(next.id); const fc = allCats.find((c:any) => c.parentId === next.id); setActiveCategoryId(fc ? fc.id : next.id); }}
+                            style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                            className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-xs font-bold">›</button>
                         );
-                      })}
+                      })()}
                     </div>
                   )}
                   {/* 第二排（或唯一一排）＋未分類 */}
-                  <div style={{display:'flex', gap:'8px', paddingTop: hasTwoLevel ? '8px' : '0', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, maxWidth:'100%', scrollbarWidth:'none'}}>
-                    {effectiveCategories.map((cat: any) => {
-                      if (!cat || !cat.id) return null;
-                      const isActive = currentActiveCatId === cat.id;
-                      return (
-                        <button key={cat.id}
-                          onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
+                  <div style={{display:'flex', alignItems:'center', gap:'4px', paddingTop: hasTwoLevel ? '8px' : '0', minWidth:0}}>
+                    <div id="child-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
+                      {effectiveCategories.map((cat: any) => {
+                        if (!cat || !cat.id) return null;
+                        const isActive = currentActiveCatId === cat.id;
+                        return (
+                          <button key={cat.id}
+                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
+                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
+                          >{String(cat.name)}</button>
+                        );
+                      })}
+                      {hasOrphans && (
+                        <button onClick={() => setActiveCategoryId(ORPHAN_CAT_ID)}
                           style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
-                        >{String(cat.name)}</button>
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${currentActiveCatId === ORPHAN_CAT_ID ? 'bg-orange-50 text-orange-600 border-orange-300' : 'bg-white text-gray-400 border-gray-200 border-dashed'}`}
+                        >⚠️ 未分類 ({orphanSteps.length})</button>
+                      )}
+                    </div>
+                    {/* 右箭頭：跳到下一個子分類 */}
+                    {(() => {
+                      const allTabCats = [...effectiveCategories.filter((c:any) => c && c.id), ...(hasOrphans ? [{id: ORPHAN_CAT_ID}] : [])];
+                      const idx = allTabCats.findIndex((c:any) => c.id === currentActiveCatId);
+                      const next = allTabCats[idx + 1];
+                      if (!next) return null;
+                      return (
+                        <button onClick={() => { setActiveCategoryId(next.id); if (!hasTwoLevel) setActiveParentId(next.id); }}
+                          style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                          className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-sm font-bold">›</button>
                       );
-                    })}
-                    {/* 孤兒分類按鈕（有找不到對應分類的內容才顯示） */}
-                    {hasOrphans && (
-                      <button
-                        onClick={() => setActiveCategoryId(ORPHAN_CAT_ID)}
-                        style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${currentActiveCatId === ORPHAN_CAT_ID ? 'bg-orange-50 text-orange-600 border-orange-300' : 'bg-white text-gray-400 border-gray-200 border-dashed'}`}
-                      >⚠️ 未分類 ({orphanSteps.length})</button>
-                    )}
+                    })()}
                   </div>
                 </div>
 
@@ -1426,7 +1451,7 @@ export default function App() {
                                             教學完畢
                                           </button>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: 'system-ui, -apple-system, sans-serif'}}>{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
