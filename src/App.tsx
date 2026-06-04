@@ -588,7 +588,16 @@ export default function App() {
     : allCats;
   
   const currentActiveCatId = activeCategoryId || effectiveCategories[0]?.id || '';
-  const filteredSteps = learningSteps.filter((s: any) => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id));
+  const currentActiveCat = effectiveCategories.find((c:any) => c.id === currentActiveCatId);
+  // 同時比對 id 和 name，解決舊分類ID對不上的問題
+  const filteredSteps = learningSteps.filter((s: any) => {
+    if (s.categoryId === currentActiveCatId) return true;
+    if (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id) return true;
+    // 用分類名稱比對（舊資料相容）
+    const matchedCat = allCats.find((c:any) => c.id === s.categoryId);
+    if (matchedCat && currentActiveCat && matchedCat.name === currentActiveCat.name) return true;
+    return false;
+  });
   
   // 計算登入者自己的進度 (若為總部看總部人員可能不具代表性，但防呆)
   const categoryProgress = (currentUserData && typeof currentUserData.completedLearning === 'object' && currentUserData.completedLearning !== null) 
@@ -1129,7 +1138,7 @@ export default function App() {
                 <div className="mb-4">
                   {/* 第一排：母分類（有兩層結構才顯示） */}
                   {hasTwoLevel && (
-                    <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
+                    <div className="flex gap-2 pb-2 hide-scrollbar" style={{overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap'}}>
                       {parentCategories.map((parent: any) => {
                         const isActive = currentParentId === parent.id;
                         return (
@@ -1139,21 +1148,21 @@ export default function App() {
                               const firstChild = allCats.find((c: any) => c.parentId === parent.id);
                               setActiveCategoryId(firstChild ? firstChild.id : parent.id);
                             }}
-                            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
+                            className={`flex-shrink-0 px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                           >{String(parent.name)}</button>
                         );
                       })}
                     </div>
                   )}
-                  {/* 第二排（或唯一一排）：子分類 or 舊資料全部分類 */}
-                  <div className={`flex overflow-x-auto gap-2 hide-scrollbar ${hasTwoLevel ? 'pt-2' : ''}`}>
+                  {/* 第二排（或唯一一排） */}
+                  <div className={`flex gap-2 hide-scrollbar ${hasTwoLevel ? 'pt-2' : ''}`} style={{overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap'}}>
                     {effectiveCategories.map((cat: any) => {
                       if (!cat || !cat.id) return null;
                       const isActive = currentActiveCatId === cat.id;
                       return (
                         <button key={cat.id}
                           onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
+                          className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                         >{String(cat.name)}</button>
                       );
                     })}
