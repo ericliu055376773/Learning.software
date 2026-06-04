@@ -566,25 +566,26 @@ export default function App() {
   // 向下相容：舊資料沒有 parentId，視為母分類直接顯示
   const allCats = categories.length > 0 ? categories : [{id: 'default', name: '綜合學習', parentId: null}];
   
-  // 判斷是否有兩層結構（任何一個分類有 parentId）
-  const hasTwoLevel = allCats.some((c: any) => c.parentId);
+  // 判斷是否有兩層結構（有分類明確設了 parentId）
+  const hasTwoLevel = allCats.some((c: any) => c.parentId != null && c.parentId !== '');
   
   const parentCategories = hasTwoLevel
-    ? allCats.filter((c: any) => !c.parentId)
-    : allCats; // 舊資料全部當母分類
+    ? allCats.filter((c: any) => !c.parentId || c.parentId === '')
+    : allCats; // 舊資料全部當母分類顯示在第一排
   
   const currentParentId = activeParentId || parentCategories[0]?.id || '';
   
   const childCategories = hasTwoLevel
     ? allCats.filter((c: any) => c.parentId === currentParentId)
-    : []; // 舊資料沒有子分類
+    : [];
   
   const hasChildren = childCategories.length > 0;
   
-  // effectiveCategories = 實際顯示在第二排（子分類），若無子分類就用母分類本身
-  const effectiveCategories = hasChildren
-    ? childCategories
-    : parentCategories;
+  // 舊資料：第一排就是全部，沒有第二排
+  // 新資料：第一排母分類，第二排子分類
+  const effectiveCategories = hasTwoLevel
+    ? (hasChildren ? childCategories : [{...allCats.find((c:any) => c.id === currentParentId)}])
+    : allCats;
   
   const currentActiveCatId = activeCategoryId || effectiveCategories[0]?.id || '';
   const filteredSteps = learningSteps.filter((s: any) => s.categoryId === currentActiveCatId || (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id));
@@ -1124,44 +1125,35 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 頁籤 UI：有兩層結構顯示兩排，舊資料顯示一排 */}
+                {/* 頁籤 UI */}
                 <div className="mb-4">
-                  {/* 第一排：母分類（僅兩層結構時顯示） */}
+                  {/* 第一排：母分類（有兩層結構才顯示） */}
                   {hasTwoLevel && (
                     <div className="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
                       {parentCategories.map((parent: any) => {
                         const isActive = currentParentId === parent.id;
                         return (
-                          <button
-                            key={parent.id}
+                          <button key={parent.id}
                             onClick={() => {
                               setActiveParentId(parent.id);
                               const firstChild = allCats.find((c: any) => c.parentId === parent.id);
                               setActiveCategoryId(firstChild ? firstChild.id : parent.id);
                             }}
-                            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${
-                              isActive
-                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                            }`}
+                            className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                           >{String(parent.name)}</button>
                         );
                       })}
                     </div>
                   )}
-                  {/* 第二排（或唯一一排）：子分類或舊資料分類 */}
+                  {/* 第二排（或唯一一排）：子分類 or 舊資料全部分類 */}
                   <div className={`flex overflow-x-auto gap-2 hide-scrollbar ${hasTwoLevel ? 'pt-2' : ''}`}>
                     {effectiveCategories.map((cat: any) => {
+                      if (!cat || !cat.id) return null;
                       const isActive = currentActiveCatId === cat.id;
                       return (
-                        <button
-                          key={cat.id}
-                          onClick={() => setActiveCategoryId(cat.id)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${
-                            isActive
-                              ? 'bg-blue-50 text-blue-600 border-blue-300'
-                              : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
-                          }`}
+                        <button key={cat.id}
+                          onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'}`}
                         >{String(cat.name)}</button>
                       );
                     })}
