@@ -146,6 +146,7 @@ export default function App() {
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
+  const [isConfigLoaded, setIsConfigLoaded] = useState<boolean>(false);
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
   
   const [customTitles, setCustomTitles] = useState({
@@ -169,6 +170,8 @@ export default function App() {
   const [dragOverCatIndex, setDragOverCatIndex] = useState<number | null>(null);
   const [draggedBlockInfo, setDraggedBlockInfo] = useState<{stepId: string, blockIndex: number} | null>(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
+  const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
+  const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
 
   const [showTrainerModal, setShowTrainerModal] = useState<boolean>(false);
   const [trainerModalStep, setTrainerModalStep] = useState<any>(null);
@@ -222,8 +225,9 @@ export default function App() {
             }
           }
         }
+        setIsConfigLoaded(true);
       },
-      (err: any) => console.error("Config fetch error:", err)
+      (err: any) => { console.error("Config fetch error:", err); setIsConfigLoaded(true); }
     );
 
     return () => { unsubStores(); unsubSteps(); unsubEmp(); unsubPending(); unsubConfig(); };
@@ -818,6 +822,15 @@ export default function App() {
 
   return (
     <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-y-auto">
+      {/* 等待 Firebase config 載入，避免主題色閃爍 */}
+      {!isConfigLoaded && (
+        <div className="fixed inset-0 bg-white z-[999] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-600 rounded-full animate-spin"></div>
+            <p className="text-xs text-gray-400 font-bold">載入中...</p>
+          </div>
+        </div>
+      )}
       <style>{`
           :root {
             --theme-main: ${currentThemeObj.main};
@@ -1246,15 +1259,48 @@ export default function App() {
                   ) : (
                     <div className="space-y-4">
                       {canEdit ? (
-                        /* 後台編輯視角：顯示所有可編輯的卡片 (移除灰色底與左側線條) */
+                        /* 後台編輯視角：顯示所有可編輯的卡片 */
                         filteredSteps.map((step, index) => (
-                          <div key={step.id} className="flex flex-col gap-3 p-5 rounded-xl border border-gray-200 bg-white shadow-sm relative">
+                          <div
+                            key={step.id}
+                            draggable={draggedStepIndex === index}
+                            onDragStart={e => { if (draggedStepIndex !== index) { e.preventDefault(); return; } e.dataTransfer.effectAllowed = 'move'; }}
+                            onDragEnter={() => setDragOverStepIndex(index)}
+                            onDragOver={e => e.preventDefault()}
+                            onDragEnd={() => { setDraggedStepIndex(null); setDragOverStepIndex(null); }}
+                            onDrop={async e => {
+                              e.preventDefault();
+                              if (draggedStepIndex === null || draggedStepIndex === index) return;
+                              const newSteps = [...filteredSteps];
+                              const [moved] = newSteps.splice(draggedStepIndex, 1);
+                              newSteps.splice(index, 0, moved);
+                              setDraggedStepIndex(null);
+                              setDragOverStepIndex(null);
+                              // 更新 Firebase 排序
+                              for (let i = 0; i < newSteps.length; i++) {
+                                await updateDoc(doc(db, 'learningSteps', newSteps[i].id), { createdAt: Date.now() + i });
+                              }
+                            }}
+                            className={`flex flex-col gap-3 p-5 rounded-xl border bg-white shadow-sm relative transition-all ${
+                              draggedStepIndex === index ? 'opacity-40 scale-95 border-indigo-300' :
+                              dragOverStepIndex === index && draggedStepIndex !== index ? 'border-indigo-500 ring-2 ring-indigo-200' :
+                              'border-gray-200'
+                            }`}
+                          >
                             <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-4 right-4 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
                             
                             <div className="flex items-center space-x-2 border-b border-gray-100 pb-3 bg-white rounded-lg">
+                              {/* 學習項目拖曳把手 */}
+                              <span
+                                onMouseDown={() => setDraggedStepIndex(index)}
+                                onMouseUp={() => setDraggedStepIndex(null)}
+                                style={{cursor:'grab', WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
+                                title="拖曳排序學習項目"
+                              >
+                                <GripVertical c="w-5 h-5 text-gray-300 hover:text-gray-500 transition-colors" />
+                              </span>
                               <div className="font-black text-gray-300 text-xl w-6">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
-                                {/* 移除虛線框，直接融入白底 */}
                                 <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
                               </div>
                             </div>
