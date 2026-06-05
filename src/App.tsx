@@ -1400,13 +1400,16 @@ export default function App() {
                               <button onClick={() => addBlock(step)} className="w-full py-3 bg-white border border-gray-200 border-dashed rounded-xl text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
                                 <PlusCircle c="w-4 h-4 mr-1.5"/> 新增內容區塊
                               </button>
-                              
-                              {/* 儲存按鈕 */}
-                              <div className="flex justify-end pt-3 mt-3 border-t border-gray-100">
-                                 <button onClick={() => showToast("所有內容已安全儲存！")} className="bg-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center">
-                                   <CheckCircle2 c="w-4 h-4 mr-1.5" /> 儲存學習項目
-                                 </button>
-                              </div>
+                            </div>
+
+                            {/* 固定底部操作列 */}
+                            <div className="sticky bottom-16 z-30 -mx-5 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex gap-2 items-center rounded-b-xl">
+                              <button onClick={() => addBlock(step)} className="flex-1 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
+                                <PlusCircle c="w-4 h-4 mr-1.5"/> 新增區塊
+                              </button>
+                              <button onClick={() => showToast("所有內容已安全儲存！")} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center">
+                                <CheckCircle2 c="w-4 h-4 mr-1.5" /> 儲存項目
+                              </button>
                             </div>
                           </div>
                         ))
