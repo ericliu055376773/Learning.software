@@ -1868,9 +1868,19 @@ export default function App() {
                                     </div>
                                     {emp.learningHistory && Array.isArray(emp.learningHistory) && emp.learningHistory.length > 0 ? (
                                       <div className="space-y-2 mt-2">
-                                        {emp.learningHistory.map((h: any, i: number) => (
+                                        {emp.learningHistory.map((h: any, i: number) => {
+                                          // 找出這筆紀錄的分類名稱
+                                          const histStep = learningSteps.find((s:any) => s.id === h.stepId);
+                                          const histCatId = h.categoryId || histStep?.categoryId;
+                                          const histCat = allCats.find((c:any) => c.id === histCatId);
+                                          const histParent = histCat?.parentId ? allCats.find((c:any) => c.id === histCat.parentId) : null;
+                                          const catLabel = histParent ? `${histParent.name} › ${histCat?.name}` : (histCat?.name || '');
+                                          return (
                                           <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                             <div className="flex flex-col w-full">
+                                              {catLabel && (
+                                                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-1">{catLabel}</span>
+                                              )}
                                               <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
                                               <div className="flex items-center mt-2 justify-between">
                                                 <div className="flex items-center gap-2">
@@ -1906,7 +1916,7 @@ export default function App() {
                                               </div>
                                              </div>
                                           </div>
-                                        ))}
+                                        );})}
                                       </div>
                                     ) : (
                                       <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
@@ -2108,9 +2118,18 @@ export default function App() {
                                    </div>
                                    {emp.learningHistory && Array.isArray(emp.learningHistory) && emp.learningHistory.length > 0 ? (
                                      <div className="space-y-2 mt-2">
-                                       {emp.learningHistory.map((h: any, i: number) => (
+                                       {emp.learningHistory.map((h: any, i: number) => {
+                                         const histStep = learningSteps.find((s:any) => s.id === h.stepId);
+                                         const histCatId = h.categoryId || histStep?.categoryId;
+                                         const histCat = allCats.find((c:any) => c.id === histCatId);
+                                         const histParent = histCat?.parentId ? allCats.find((c:any) => c.id === histCat.parentId) : null;
+                                         const catLabel = histParent ? `${histParent.name} › ${histCat?.name}` : (histCat?.name || '');
+                                         return (
                                          <div key={i} className="bg-gray-50 border border-gray-100 rounded-lg p-2.5 flex justify-between items-center group">
                                            <div className="flex flex-col w-full">
+                                             {catLabel && (
+                                               <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-1">{catLabel}</span>
+                                             )}
                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
                                              <div className="flex items-center mt-2 justify-between">
                                                 <div className="flex items-center gap-2">
@@ -2146,7 +2165,7 @@ export default function App() {
                                               </div>
                                             </div>
                                          </div>
-                                       ))}
+                                       );})}
                                      </div>
                                    ) : (
                                      <div className="text-center py-4 text-xs text-gray-400 font-bold bg-gray-50/50 rounded-lg border border-gray-100/50 border-dashed">
