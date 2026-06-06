@@ -1102,8 +1102,8 @@ export default function App() {
               {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 {/* Sticky 標題列 + 分類頁籤 */}
-                <div className="sticky top-0 z-20 bg-slate-50 pt-4 pb-2 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
-                  <div className="flex justify-between items-center mb-2 px-1">
+                <div className="sticky top-0 z-20 bg-slate-50 pt-4 pb-3 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
+                  <div className="flex justify-between items-center mb-4 px-1">
                     <div>
                        <h2 className="font-bold text-gray-800 text-lg">{customTitles.learningContentTitle}</h2>
                        {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 完成後請點擊紀錄進度並選擇教學人員</p>}
