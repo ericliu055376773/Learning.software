@@ -1049,7 +1049,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="flex-1 p-4 pb-6 relative z-0">
+        <main className="flex-1 p-4 pb-24 relative z-0">
           
           {/* TAB 1.5: 待審核名單 (僅後台可見) */}
           {activeTab === 'pending' && canEdit && (
@@ -1405,10 +1405,25 @@ export default function App() {
                             {/* 固定底部操作列 */}
                             <div className="sticky bottom-16 z-30 -mx-5 px-4 py-3 bg-white/95 backdrop-blur-sm border-t border-gray-100 shadow-[0_-4px_12px_rgba(0,0,0,0.06)] flex gap-2 items-center rounded-b-xl">
                               <button onClick={() => addBlock(step)} className="flex-1 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
-                                <PlusCircle c="w-4 h-4 mr-1.5"/> 新增區塊
+                                <PlusCircle c="w-4 h-4 mr-1"/> 新增區塊
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  await addDoc(collection(db, 'learningSteps'), {
+                                    title: '新學習項目',
+                                    blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }],
+                                    categoryId: currentActiveCatId,
+                                    status: 'locked',
+                                    createdAt: Date.now()
+                                  });
+                                  showToast(`已在「${effectiveCategories.find((c:any) => c.id === currentActiveCatId)?.name || ''}」新增項目！`);
+                                }}
+                                className="flex-1 py-2.5 bg-green-50 border border-green-200 text-green-700 rounded-xl text-xs font-bold flex justify-center items-center hover:bg-green-100 transition-colors"
+                              >
+                                <PlusCircle c="w-4 h-4 mr-1"/> 新增項目
                               </button>
                               <button onClick={() => showToast("所有內容已安全儲存！")} className="flex-1 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm hover:bg-indigo-700 transition-colors flex items-center justify-center">
-                                <CheckCircle2 c="w-4 h-4 mr-1.5" /> 儲存項目
+                                <CheckCircle2 c="w-4 h-4 mr-1" /> 儲存
                               </button>
                             </div>
                           </div>
@@ -1527,7 +1542,7 @@ export default function App() {
                                             教學完畢
                                           </button>
                                         </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap leading-8 select-text cursor-text" style={{fontFamily: 'system-ui, -apple-system, sans-serif'}}>{String(block.description)}</p>
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: '2.4', letterSpacing: '0.02em'}}>{String(block.description)}</p>
                                         
                                         {block.mediaUrl && (
                                           <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
@@ -1542,9 +1557,8 @@ export default function App() {
                                     ))}
                                   </div>
 
-                                  <div className="mt-5 pt-5 border-t border-gray-100">
+                                  <div className="mt-5 pt-5 border-t border-gray-100 pb-24">
                                     <button onClick={() => {
-                                        // 開啟選擇教學人員 Modal，改為直接紀錄
                                         setTrainerModalStep(step);
                                         setSelectedTrainerStore(currentUserData?.store || '');
                                         setSelectedTrainerName('');
