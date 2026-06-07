@@ -1292,9 +1292,13 @@ export default function App() {
                               {getStepBlocks(step).map((block: any, bIndex: number) => (
                                 <div
                                   key={block.id}
-                                  draggable={draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex}
-                                  onDragStart={e => { if (draggedBlockInfo?.stepId !== step.id || draggedBlockInfo?.blockIndex !== bIndex) e.preventDefault(); }}
-                                  onDragEnter={() => setDragOverBlockIndex(bIndex)}
+                                  draggable
+                                  onDragStart={e => {
+                                    setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex });
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`);
+                                  }}
+                                  onDragEnter={e => { e.preventDefault(); setDragOverBlockIndex(bIndex); }}
                                   onDragOver={e => e.preventDefault()}
                                   onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
                                   onDrop={async e => {
@@ -1304,13 +1308,11 @@ export default function App() {
                                     if (isSameStep && draggedBlockInfo.blockIndex === bIndex) return;
 
                                     if (isSameStep) {
-                                      // 同項目內排序
                                       const blocks = [...getStepBlocks(step)];
                                       const [moved] = blocks.splice(draggedBlockInfo.blockIndex, 1);
                                       blocks.splice(bIndex, 0, moved);
                                       await updateDoc(doc(db, 'learningSteps', step.id), { blocks });
                                     } else {
-                                      // 跨項目移動
                                       const srcStep = filteredSteps.find((s:any) => s.id === draggedBlockInfo.stepId);
                                       if (!srcStep) return;
                                       const srcBlocks = [...getStepBlocks(srcStep)];
@@ -1333,12 +1335,10 @@ export default function App() {
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
                                       <span
-                                        onMouseDown={() => setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex })}
-                                        onMouseUp={() => { if (!draggedBlockInfo) return; }}
-                                        style={{cursor: 'grab', WebkitUserSelect: 'none', userSelect: 'none'}}
+                                        style={{cursor: 'grab', WebkitUserSelect: 'none', userSelect: 'none', flexShrink: 0}}
                                         title="拖曳排序"
                                       >
-                                        <GripVertical c="w-4 h-4 text-gray-300 hover:text-gray-500 transition-colors" />
+                                        <GripVertical c="w-4 h-4 text-gray-400 hover:text-indigo-500 transition-colors" />
                                       </span>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
                                     </div>
