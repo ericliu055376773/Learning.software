@@ -168,6 +168,8 @@ export default function App() {
   // 分類拖曳 (新增)
   const [draggedCatIndex, setDraggedCatIndex] = useState<number | null>(null);
   const [dragOverCatIndex, setDragOverCatIndex] = useState<number | null>(null);
+  const [draggedChildIndex, setDraggedChildIndex] = useState<{parentId:string, index:number} | null>(null);
+  const [dragOverChildIndex, setDragOverChildIndex] = useState<number | null>(null);
   const [draggedBlockInfo, setDraggedBlockInfo] = useState<{stepId: string, blockIndex: number} | null>(null);
   const [dragOverBlockIndex, setDragOverBlockIndex] = useState<number | null>(null);
   const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
@@ -664,6 +666,7 @@ export default function App() {
           *, *::before, *::after { -webkit-user-select: text !important; user-select: text !important; }
           button, [draggable="true"] { -webkit-user-select: none !important; user-select: none !important; }
           input, textarea { -webkit-user-select: text !important; user-select: text !important; }
+          [draggable="true"] { -webkit-user-drag: element !important; cursor: grab !important; }
           ${customStyles}
         `}</style>
         
@@ -871,6 +874,15 @@ export default function App() {
             -webkit-user-select: text !important;
             user-select: text !important;
             cursor: text !important;
+          }
+          [draggable="true"] {
+            -webkit-user-select: none !important;
+            user-select: none !important;
+            -webkit-user-drag: element !important;
+            cursor: grab !important;
+          }
+          [draggable="true"]:active {
+            cursor: grabbing !important;
           }
           /* 修正 emoji 顏色在 Chrome 顯示偏差 */
           p, span, div, textarea {
@@ -1192,27 +1204,75 @@ export default function App() {
                 {canEdit && showCategoryManager && (
                   <div className="mb-4 mt-2 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
                      <h3 className="font-bold mb-1 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類（兩層結構）</h3>
-                     <p className="text-[10px] text-gray-400 mb-3">母分類＝外場/內場，子分類＝收桌/送餐…</p>
-                     <div className="space-y-3 mb-4 max-h-[50vh] overflow-y-auto pr-1">
-                       {editingCategories.filter((c:any) => !c.parentId).map((parent: any) => (
-                         <div key={parent.id} className="border border-slate-600 rounded-lg overflow-hidden">
+                     <p className="text-[10px] text-gray-400 mb-3">拖曳 ⠿ 可調整順序，母分類＝外場/內場，子分類＝收桌/送餐…</p>
+                     <div className="space-y-3 mb-4 max-h-[60vh] overflow-y-auto pr-1">
+                       {editingCategories.filter((c:any) => !c.parentId).map((parent: any, pi: number) => {
+                         const parentIndex = editingCategories.filter((c:any) => !c.parentId).indexOf(parent);
+                         return (
+                         <div
+                           key={parent.id}
+                           draggable
+                           onDragStart={e => { setDraggedCatIndex(parentIndex); e.dataTransfer.effectAllowed = 'move'; }}
+                           onDragEnter={() => setDragOverCatIndex(parentIndex)}
+                           onDragOver={e => e.preventDefault()}
+                           onDragEnd={() => { setDraggedCatIndex(null); setDragOverCatIndex(null); }}
+                           onDrop={e => {
+                             e.preventDefault();
+                             if (draggedCatIndex === null || draggedCatIndex === parentIndex) return;
+                             const parents = editingCategories.filter((c:any) => !c.parentId);
+                             const children = editingCategories.filter((c:any) => c.parentId);
+                             const [moved] = parents.splice(draggedCatIndex, 1);
+                             parents.splice(parentIndex, 0, moved);
+                             setEditingCategories([...parents, ...children]);
+                             setDraggedCatIndex(null); setDragOverCatIndex(null);
+                           }}
+                           style={{WebkitUserDrag:'element'} as any}
+                           className={`border rounded-lg overflow-hidden transition-all ${draggedCatIndex === parentIndex ? 'opacity-40 scale-95 border-indigo-400' : dragOverCatIndex === parentIndex && draggedCatIndex !== parentIndex ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-slate-600'}`}
+                         >
+                           {/* 母分類列 */}
                            <div className="flex gap-2 items-center bg-slate-600 p-2.5">
+                             <span style={{cursor:'grab', WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}>
+                               <GripVertical c="w-4 h-4 text-slate-400 hover:text-white" />
+                             </span>
                              <span className="text-[10px] text-indigo-300 font-bold whitespace-nowrap">母分類</span>
-                             <input type="text" value={parent.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === parent.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300" placeholder="母分類名稱（例：外場）"/>
-                             <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== parent.id && c.parentId !== parent.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40"><Trash2 c="w-3.5 h-3.5"/></button>
+                             <input type="text" value={parent.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === parent.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300" placeholder="母分類名稱（例：外場）" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
+                             <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== parent.id && c.parentId !== parent.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3.5 h-3.5"/></button>
                            </div>
+                           {/* 子分類列 */}
                            <div className="bg-slate-700 p-2 space-y-1.5">
-                             {editingCategories.filter((c:any) => c.parentId === parent.id).map((child: any) => (
-                               <div key={child.id} className="flex gap-2 items-center bg-slate-600/50 p-2 rounded">
+                             {editingCategories.filter((c:any) => c.parentId === parent.id).map((child: any, ci: number) => (
+                               <div
+                                 key={child.id}
+                                 draggable
+                                 onDragStart={e => { e.stopPropagation(); setDraggedChildIndex({parentId: parent.id, index: ci}); e.dataTransfer.effectAllowed = 'move'; }}
+                                 onDragEnter={e => { e.stopPropagation(); setDragOverChildIndex(ci); }}
+                                 onDragOver={e => { e.stopPropagation(); e.preventDefault(); }}
+                                 onDragEnd={() => { setDraggedChildIndex(null); setDragOverChildIndex(null); }}
+                                 onDrop={e => {
+                                   e.stopPropagation(); e.preventDefault();
+                                   if (!draggedChildIndex || draggedChildIndex.parentId !== parent.id || draggedChildIndex.index === ci) return;
+                                   const others = editingCategories.filter((c:any) => c.parentId !== parent.id);
+                                   const kids = editingCategories.filter((c:any) => c.parentId === parent.id);
+                                   const [moved] = kids.splice(draggedChildIndex.index, 1);
+                                   kids.splice(ci, 0, moved);
+                                   setEditingCategories([...editingCategories.filter((c:any) => !c.parentId), ...others, ...kids]);
+                                   setDraggedChildIndex(null); setDragOverChildIndex(null);
+                                 }}
+                                 style={{WebkitUserDrag:'element'} as any}
+                                 className={`flex gap-2 items-center bg-slate-600/50 p-2 rounded transition-all ${draggedChildIndex?.parentId === parent.id && draggedChildIndex?.index === ci ? 'opacity-40 scale-95 border border-indigo-400' : dragOverChildIndex === ci && draggedChildIndex?.parentId === parent.id && draggedChildIndex?.index !== ci ? 'border border-indigo-500 ring-1 ring-indigo-500/50' : ''}`}
+                               >
+                                 <span style={{cursor:'grab', WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}>
+                                   <GripVertical c="w-3.5 h-3.5 text-slate-400 hover:text-white" />
+                                 </span>
                                  <span className="w-1 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
-                                 <input type="text" value={child.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white" placeholder="子分類名稱"/>
-                                 <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== child.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40"><Trash2 c="w-3 h-3"/></button>
+                                 <input type="text" value={child.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white" placeholder="子分類名稱" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
+                                 <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== child.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3 h-3"/></button>
                                </div>
                              ))}
                              <button onClick={() => setEditingCategories([...editingCategories, {id: Date.now().toString(), name: '', parentId: parent.id}])} className="w-full p-1.5 border border-dashed border-slate-500 rounded text-slate-400 hover:text-white text-[11px] transition-colors">＋ 新增子分類</button>
                            </div>
                          </div>
-                       ))}
+                       );})}
                        <button onClick={() => setEditingCategories([...editingCategories, {id: 'parent_' + Date.now().toString(), name: '', parentId: null}])} className="w-full p-2 border border-dashed border-slate-500 rounded text-slate-300 font-bold hover:text-white text-xs transition-colors">＋ 新增母分類</button>
                      </div>
                      <div className="flex gap-2 pt-2 border-t border-slate-700">
@@ -1326,6 +1386,12 @@ export default function App() {
                                     setDraggedBlockInfo(null);
                                     setDragOverBlockIndex(null);
                                   }}
+                                  style={{
+                                    WebkitUserDrag: 'element',
+                                    WebkitUserSelect: 'none',
+                                    userSelect: 'none',
+                                    cursor: 'grab',
+                                  } as any}
                                   className={`bg-white p-4 rounded-xl border shadow-sm relative transition-all ${
                                     draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex ? 'opacity-40 scale-95 border-indigo-300' :
                                     dragOverBlockIndex === bIndex && draggedBlockInfo && (draggedBlockInfo.stepId !== step.id || draggedBlockInfo.blockIndex !== bIndex) ? 'border-indigo-500 ring-2 ring-indigo-300' :
