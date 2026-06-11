@@ -599,19 +599,20 @@ export default function App() {
     ? (hasChildren ? childCategories : [{...allCats.find((c:any) => c.id === currentParentId)}])
     : allCats;
 
-  // 找出孤兒 steps（categoryId 在所有現有分類裡完全找不到，且名稱也對不上）
+  // 找出孤兒 steps（categoryId 不存在、或找不到對應分類）
   const ORPHAN_CAT_ID = '__orphan__';
   const orphanSteps = learningSteps.filter((s: any) => {
-    if (!s.categoryId) return false; // 無 categoryId 歸第一個分類，不算孤兒
-    // 已有明確對應的分類 ID → 不是孤兒
+    // 沒有 categoryId → 孤兒
+    if (!s.categoryId) return true;
+    // categoryId 在現有分類找得到 → 不是孤兒
     if (allCats.some((c: any) => c.id === s.categoryId)) return false;
-    // categoryId 找不到對應分類，再試名稱比對
+    // 名稱比對
     const matched = allCats.some((c: any) => {
       const catName = String(c.name).toLowerCase();
       const stepCatId = String(s.categoryId).toLowerCase();
       return catName === stepCatId || catName.includes(stepCatId) || stepCatId.includes(catName);
     });
-    return !matched; // 名稱也對不上 → 才是孤兒
+    return !matched;
   });
   const hasOrphans = orphanSteps.length > 0;
 
@@ -621,22 +622,17 @@ export default function App() {
   const filteredSteps = currentActiveCatId === ORPHAN_CAT_ID
     ? orphanSteps
     : learningSteps.filter((s: any) => {
-        // 1. 直接 ID 比對（最優先）
+        // 直接 ID 比對
         if (s.categoryId === currentActiveCatId) return true;
-        // 2. 沒有 categoryId 的歸到第一個分類
-        if (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id) return true;
-        // 3. 名稱比對（舊資料相容）— 只在找不到直接 ID 時才用
-        if (s.categoryId) {
-          // 如果 step 的 categoryId 已經是現有分類的 ID，不要再做名稱比對（避免跨分類混入）
-          const stepCatExists = allCats.some((c:any) => c.id === s.categoryId);
-          if (stepCatExists) return false; // 有明確分類但不是目前這個，不顯示
-          // step 的 categoryId 在現有分類找不到，嘗試名稱比對
-          if (currentActiveCat) {
-            const newName = String(currentActiveCat.name).toLowerCase();
-            const stepCatId = String(s.categoryId).toLowerCase();
-            if (stepCatId === newName) return true;
-            if (stepCatId.includes(newName) || newName.includes(stepCatId)) return true;
-          }
+        // 沒有 categoryId 不顯示在任何正常分類（只在未分類頁出現）
+        if (!s.categoryId) return false;
+        // categoryId 在現有分類找得到但不是目前這個 → 不顯示
+        if (allCats.some((c:any) => c.id === s.categoryId)) return false;
+        // 名稱比對（舊資料相容）
+        if (currentActiveCat) {
+          const newName = String(currentActiveCat.name).toLowerCase();
+          const stepCatId = String(s.categoryId).toLowerCase();
+          if (stepCatId === newName || stepCatId.includes(newName) || newName.includes(stepCatId)) return true;
         }
         return false;
       });
@@ -1268,10 +1264,11 @@ export default function App() {
                            onDrop={e => {
                              e.preventDefault();
                              if (draggedCatIndex === null || draggedCatIndex === parentIndex) return;
-                             const parents = editingCategories.filter((c:any) => !c.parentId);
-                             const children = editingCategories.filter((c:any) => c.parentId);
+                             const parents = editingCategories.filter((c:any) => !c.parentId || c.parentId === '');
                              const [moved] = parents.splice(draggedCatIndex, 1);
                              parents.splice(parentIndex, 0, moved);
+                             // 重新組合：保留所有子分類，parentId 不變（母分類 ID 沒改，只是順序變）
+                             const children = editingCategories.filter((c:any) => c.parentId && c.parentId !== '');
                              setEditingCategories([...parents, ...children]);
                              setDraggedCatIndex(null); setDragOverCatIndex(null);
                            }}
@@ -1331,43 +1328,56 @@ export default function App() {
 
                      {/* 未分類內容快速指派 */}
                      {orphanSteps.length > 0 && (() => {
-                       // 收集孤兒的舊分類 ID 群組
-                       const orphanGroups: {[key: string]: {steps: any[], oldName: string}} = {};
+                       const allChildCats = editingCategories.filter((c:any) => c.parentId && c.name.trim());
+                       const allValidCats = allChildCats.length > 0 ? allChildCats : editingCategories.filter((c:any) => c.name.trim());
+                       if (allValidCats.length === 0) return null;
+
+                       // 依 categoryId 群組（null/undefined 也算一組）
+                       const orphanGroups: {[key: string]: {steps: any[], label: string}} = {};
                        orphanSteps.forEach((s: any) => {
                          const key = s.categoryId || '__no_cat__';
-                         if (!orphanGroups[key]) orphanGroups[key] = { steps: [], oldName: key === '__no_cat__' ? '（無分類）' : key };
+                         if (!orphanGroups[key]) {
+                           orphanGroups[key] = {
+                             steps: [],
+                             label: key === '__no_cat__' ? '（無分類欄位）' : `舊ID: ${String(key).slice(0, 16)}…`
+                           };
+                         }
                          orphanGroups[key].steps.push(s);
                        });
-                       const allChildCats = editingCategories.filter((c:any) => c.parentId && c.name.trim());
-                       if (allChildCats.length === 0) return null;
+
                        return (
                          <div className="mt-4 pt-3 border-t border-slate-600">
-                           <p className="text-[11px] text-orange-400 font-bold mb-2 flex items-center gap-1">⚠️ 有 {orphanSteps.length} 筆內容待分類，請指派到對應子分類：</p>
-                           <div className="space-y-2 max-h-[30vh] overflow-y-auto">
+                           <p className="text-[11px] text-orange-400 font-bold mb-2">⚠️ 共 {orphanSteps.length} 筆待分類，請指派：</p>
+                           <div className="space-y-2 max-h-[35vh] overflow-y-auto">
                              {Object.entries(orphanGroups).map(([key, group]: any) => (
-                               <div key={key} className="bg-slate-700/50 rounded-lg p-2.5 flex items-center gap-2">
-                                 <div className="flex-1 min-w-0">
-                                   <p className="text-[10px] text-gray-400 truncate">舊分類 ID: {String(group.oldName).slice(0, 20)}...</p>
-                                   <p className="text-xs text-white font-bold">{group.steps.map((s:any) => String(s.title)).join('、')}</p>
+                               <div key={key} className="bg-slate-700/60 rounded-lg p-2.5">
+                                 <div className="flex items-center justify-between gap-2 mb-1.5">
+                                   <span className="text-[10px] text-orange-300 font-bold">{group.label} ({group.steps.length} 筆)</span>
+                                   <select
+                                     defaultValue=""
+                                     onChange={async e => {
+                                       const newCatId = e.target.value;
+                                       if (!newCatId) return;
+                                       for (const s of group.steps) {
+                                         await updateDoc(doc(db, 'learningSteps', s.id), { categoryId: newCatId });
+                                       }
+                                       showToast(`✅ ${group.steps.length} 筆已移至新分類！`);
+                                     }}
+                                     className="text-[11px] bg-slate-600 text-white border border-slate-400 rounded px-2 py-1 outline-none"
+                                     style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                   >
+                                     <option value="">指派到分類…</option>
+                                     {allValidCats.map((c:any) => (
+                                       <option key={c.id} value={c.id}>{String(c.name)}</option>
+                                     ))}
+                                   </select>
                                  </div>
-                                 <select
-                                   defaultValue=""
-                                   onChange={async e => {
-                                     const newCatId = e.target.value;
-                                     if (!newCatId) return;
-                                     for (const s of group.steps) {
-                                       await updateDoc(doc(db, 'learningSteps', s.id), { categoryId: newCatId });
-                                     }
-                                     showToast(`${group.steps.length} 筆已移至新分類！`);
-                                   }}
-                                   className="text-[10px] bg-slate-600 text-white border border-slate-500 rounded px-1.5 py-1 outline-none flex-shrink-0"
-                                   style={{WebkitUserSelect:'none', userSelect:'none'}}
-                                 >
-                                   <option value="">指派到...</option>
-                                   {allChildCats.map((c:any) => (
-                                     <option key={c.id} value={c.id}>{String(c.name)}</option>
+                                 <div className="flex flex-wrap gap-1">
+                                   {group.steps.slice(0, 5).map((s:any) => (
+                                     <span key={s.id} className="text-[10px] bg-slate-600 text-gray-300 px-1.5 py-0.5 rounded">{String(s.title).slice(0, 12)}</span>
                                    ))}
-                                 </select>
+                                   {group.steps.length > 5 && <span className="text-[10px] text-gray-400">+{group.steps.length - 5} 筆</span>}
+                                 </div>
                                </div>
                              ))}
                            </div>
@@ -1441,6 +1451,30 @@ export default function App() {
                               <div className="flex flex-1 gap-2 pr-6">
                                 <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
                               </div>
+                            </div>
+
+                            {/* 移至其他分類 */}
+                            <div className="flex items-center gap-2 px-1 pb-2 border-b border-gray-100">
+                              <span className="text-[11px] text-gray-400 font-bold whitespace-nowrap">所屬分類：</span>
+                              <select
+                                value={step.categoryId || ''}
+                                onChange={async e => {
+                                  await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: e.target.value });
+                                  showToast('已移至新分類！');
+                                }}
+                                className="flex-1 text-[11px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 text-gray-700 font-bold"
+                                style={{WebkitUserSelect:'none', userSelect:'none'}}
+                              >
+                                <option value="">（未分類）</option>
+                                {allCats.filter((c:any) => c.name.trim()).map((c:any) => {
+                                  const parent = c.parentId ? allCats.find((p:any) => p.id === c.parentId) : null;
+                                  return (
+                                    <option key={c.id} value={c.id}>
+                                      {parent ? `${parent.name} › ${c.name}` : c.name}
+                                    </option>
+                                  );
+                                })}
+                              </select>
                             </div>
                             
                             <div className="mt-2 space-y-4 pb-2">
