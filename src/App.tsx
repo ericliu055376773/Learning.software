@@ -451,6 +451,14 @@ export default function App() {
   
   async function saveCategoriesConfig() {
     const validCategories = editingCategories.filter((c: any) => c.name.trim() !== '');
+    if (validCategories.length === 0) {
+      showToast('請至少保留一個分類！');
+      return;
+    }
+    // 確認防護：若有分類但存檔後比現有少很多，提示確認
+    if (categories.length > 2 && validCategories.length < categories.length / 2) {
+      if (!window.confirm(`即將從 ${categories.length} 個分類減少到 ${validCategories.length} 個，確定要儲存嗎？`)) return;
+    }
     try {
       await setDoc(doc(db, 'config', 'global'), { learningCategories: validCategories }, { merge: true });
       setCategories(validCategories);
@@ -1251,11 +1259,11 @@ export default function App() {
                                  onDrop={e => {
                                    e.stopPropagation(); e.preventDefault();
                                    if (!draggedChildIndex || draggedChildIndex.parentId !== parent.id || draggedChildIndex.index === ci) return;
-                                   const others = editingCategories.filter((c:any) => c.parentId !== parent.id);
                                    const kids = editingCategories.filter((c:any) => c.parentId === parent.id);
                                    const [moved] = kids.splice(draggedChildIndex.index, 1);
                                    kids.splice(ci, 0, moved);
-                                   setEditingCategories([...editingCategories.filter((c:any) => !c.parentId), ...others, ...kids]);
+                                   const rest = editingCategories.filter((c:any) => c.parentId !== parent.id);
+                                   setEditingCategories([...rest, ...kids]);
                                    setDraggedChildIndex(null); setDragOverChildIndex(null);
                                  }}
                                  style={{WebkitUserDrag:'element'} as any}
