@@ -473,23 +473,31 @@ export default function App() {
   async function createUntaggedAndAssignOrphans() {
     const untaggedId = 'untagged_' + Date.now();
     const untaggedCat = { id: untaggedId, name: '未標注', parentId: null };
-    const newCategories = [...categories, untaggedCat];
-    // 收集所有需要指派的：孤兒 + 沒有 categoryId 的
-    const stepsToAssign = learningSteps.filter((s: any) =>
-      !s.categoryId || (!allCats.some((c:any) => c.id === s.categoryId) && !allCats.some((c:any) => {
-        const cn = String(c.name).toLowerCase();
-        const si = String(s.categoryId).toLowerCase();
-        return cn === si || cn.includes(si) || si.includes(cn);
-      }))
+    const newCategories = [...categories.filter((c:any) => c.name !== '未標注'), untaggedCat];
+    // 現有所有有效分類 ID（排除 __orphan__ 等無效值）
+    const validCatIds = new Set(newCategories.map((c:any) => c.id));
+    // 所有 categoryId 不在有效分類中的 steps
+    const stepsToAssign = learningSteps.filter((s: any) => 
+      !s.categoryId || 
+      s.categoryId === '__orphan__' || 
+      s.categoryId === 'orphan' ||
+      !validCatIds.has(s.categoryId)
     );
     try {
       await setDoc(doc(db, 'config', 'global'), { learningCategories: newCategories }, { merge: true });
       setCategories(newCategories);
-      await Promise.all(stepsToAssign.map((s: any) =>
-        updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
-      ));
+      // 批次更新，每10筆一組避免超時
+      const chunks = [];
+      for (let i = 0; i < stepsToAssign.length; i += 10) {
+        chunks.push(stepsToAssign.slice(i, i + 10));
+      }
+      for (const chunk of chunks) {
+        await Promise.all(chunk.map((s: any) =>
+          updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
+        ));
+      }
       setActiveCategoryId(untaggedId);
-      showToast(`✅ 已建立「未標注」並將 ${stepsToAssign.length} 筆內容移入！`);
+      showToast(`✅ 已將 ${stepsToAssign.length} 筆內容移入「未標注」！`);
     } catch(e) { showToast('操作失敗，請重試！'); }
   }
 
@@ -1420,8 +1428,29 @@ export default function App() {
                   </div>
                 )}
 
-                <div className="bg-transparent relative z-10 mt-2">
-                  {/* 後台專屬：新增當前分類的按鈕 */}
+                {/* 後台專屬：掃描未分類內容按鈕 */}
+                {canEdit && (() => {
+                  const validCatIds = new Set(categories.map((c:any) => c.id));
+                  const total = learningSteps.filter((s:any) => 
+                    !s.categoryId || 
+                    s.categoryId === '__orphan__' ||
+                    !validCatIds.has(s.categoryId)
+                  ).length;
+                  if (total === 0) return null;
+                  return (
+                    <div className="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-xl flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-bold text-orange-700">⚠️ 有 {total} 筆內容尚未分類</p>
+                        <p className="text-[10px] text-orange-500 mt-0.5">點右側按鈕一鍵移入「未標注」，再逐一整理</p>
+                      </div>
+                      <button
+                        onClick={createUntaggedAndAssignOrphans}
+                        style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
+                        className="px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg transition-colors"
+                      >＋ 移入未標注</button>
+                    </div>
+                  );
+                })()}
                   {canEdit && (
                     <div className="mb-4">
                       <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-3 border border-gray-200 rounded-xl text-sm text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
@@ -1804,7 +1833,6 @@ export default function App() {
                   )}
                 </div>
               </div>
-            </div>
           )}
           
           {/* TAB 3: 個人資料 / 人員名單 */}
@@ -2555,4 +2583,3 @@ export default function App() {
     </div>
   );
 }
-
