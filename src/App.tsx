@@ -455,7 +455,6 @@ export default function App() {
       showToast('請至少保留一個分類！');
       return;
     }
-    // 確認防護：若有分類但存檔後比現有少很多，提示確認
     if (categories.length > 2 && validCategories.length < categories.length / 2) {
       if (!window.confirm(`即將從 ${categories.length} 個分類減少到 ${validCategories.length} 個，確定要儲存嗎？`)) return;
     }
@@ -468,6 +467,25 @@ export default function App() {
       setShowCategoryManager(false);
       showToast('分類已成功更新！');
     } catch(e) { showToast('分類儲存失敗！'); }
+  }
+
+  // 一鍵建立「未標注」分類並將所有孤兒內容指派進去
+  async function createUntaggedAndAssignOrphans() {
+    const untaggedId = 'untagged_' + Date.now();
+    const untaggedCat = { id: untaggedId, name: '未標注', parentId: null };
+    const newCategories = [...categories, untaggedCat];
+    try {
+      // 1. 存分類
+      await setDoc(doc(db, 'config', 'global'), { learningCategories: newCategories }, { merge: true });
+      setCategories(newCategories);
+      // 2. 批次把孤兒 steps 的 categoryId 設為 untaggedId
+      const updates = orphanSteps.map((s: any) =>
+        updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
+      );
+      await Promise.all(updates);
+      setActiveCategoryId(untaggedId);
+      showToast(`✅ 已建立「未標注」分類並將 ${orphanSteps.length} 筆內容移入！`);
+    } catch(e) { showToast('操作失敗，請重試！'); }
   }
 
   // === 提交學習核准 (附帶教學人員) - 現已改為直接紀錄 ===
@@ -1188,10 +1206,20 @@ export default function App() {
                         );
                       })}
                       {hasOrphans && (
-                        <button onClick={() => setActiveCategoryId(ORPHAN_CAT_ID)}
-                          style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${currentActiveCatId === ORPHAN_CAT_ID ? 'bg-orange-50 text-orange-600 border-orange-300' : 'bg-white text-gray-400 border-gray-200 border-dashed'}`}
-                        >⚠️ 未分類 ({orphanSteps.length})</button>
+                        <>
+                          <button onClick={() => setActiveCategoryId(ORPHAN_CAT_ID)}
+                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${currentActiveCatId === ORPHAN_CAT_ID ? 'bg-orange-50 text-orange-600 border-orange-300' : 'bg-white text-gray-400 border-gray-200 border-dashed'}`}
+                          >⚠️ 未分類 ({orphanSteps.length})</button>
+                          {canEdit && (
+                            <button
+                              onClick={createUntaggedAndAssignOrphans}
+                              style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
+                              className="px-3 py-1.5 rounded-full text-xs font-bold bg-orange-500 text-white border border-orange-500 hover:bg-orange-600 transition-all"
+                              title={`建立「未標注」分類並將 ${orphanSteps.length} 筆內容移入`}
+                            >＋ 移入未標注</button>
+                          )}
+                        </>
                       )}
                     </div>
                     {/* 右箭頭：跳到下一個子分類 */}
