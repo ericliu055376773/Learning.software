@@ -1213,6 +1213,41 @@ export default function App() {
                   <div className="mb-4 mt-2 bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
                      <h3 className="font-bold mb-1 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習分類（兩層結構）</h3>
                      <p className="text-[10px] text-gray-400 mb-3">拖曳 ⠿ 可調整順序，母分類＝外場/內場，子分類＝收桌/送餐…</p>
+
+                     {/* 孤兒分類救援區 */}
+                     {(() => {
+                       const orphanCatIds = [...new Set(learningSteps
+                         .filter((s:any) => s.categoryId && !editingCategories.some((c:any) => c.id === s.categoryId))
+                         .map((s:any) => s.categoryId)
+                       )];
+                       if (orphanCatIds.length === 0) return null;
+                       return (
+                         <div className="mb-3 bg-orange-500/20 border border-orange-500/40 rounded-lg p-3">
+                           <p className="text-[11px] text-orange-300 font-bold mb-2">⚠️ 發現 {orphanCatIds.length} 個遺失的舊分類，點擊可加回：</p>
+                           <div className="flex flex-wrap gap-2">
+                             {orphanCatIds.map((catId:string) => {
+                               const count = learningSteps.filter((s:any) => s.categoryId === catId).length;
+                               const oldName = catId.length > 20 ? catId.substring(0, 12) + '…' : catId;
+                               return (
+                                 <button
+                                   key={catId}
+                                   onClick={() => {
+                                     const newId = Date.now().toString();
+                                     // 新增一個子分類，id 用舊的 catId（保持對應關係）
+                                     setEditingCategories(prev => {
+                                       const firstParent = prev.find((c:any) => !c.parentId);
+                                       return [...prev, {id: catId, name: `救援-${count}筆`, parentId: firstParent?.id || null}];
+                                     });
+                                     showToast(`已加回，請修改名稱後儲存`);
+                                   }}
+                                   className="text-[11px] bg-orange-500/30 hover:bg-orange-500/50 text-orange-200 px-2.5 py-1.5 rounded-lg font-bold transition-colors"
+                                 >+ {count} 筆資料（點擊加回）</button>
+                               );
+                             })}
+                           </div>
+                         </div>
+                       );
+                     })()}
                      <div className="space-y-3 mb-4 max-h-[60vh] overflow-y-auto pr-1">
                        {editingCategories.filter((c:any) => !c.parentId).map((parent: any, pi: number) => {
                          const parentIndex = editingCategories.filter((c:any) => !c.parentId).indexOf(parent);
@@ -1287,6 +1322,52 @@ export default function App() {
                        <button onClick={() => setShowCategoryManager(false)} className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold">取消</button>
                        <button onClick={saveCategoriesConfig} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md">儲存分類</button>
                      </div>
+
+                     {/* 未分類內容快速指派 */}
+                     {orphanSteps.length > 0 && (() => {
+                       // 收集孤兒的舊分類 ID 群組
+                       const orphanGroups: {[key: string]: {steps: any[], oldName: string}} = {};
+                       orphanSteps.forEach((s: any) => {
+                         const key = s.categoryId || '__no_cat__';
+                         if (!orphanGroups[key]) orphanGroups[key] = { steps: [], oldName: key === '__no_cat__' ? '（無分類）' : key };
+                         orphanGroups[key].steps.push(s);
+                       });
+                       const allChildCats = editingCategories.filter((c:any) => c.parentId && c.name.trim());
+                       if (allChildCats.length === 0) return null;
+                       return (
+                         <div className="mt-4 pt-3 border-t border-slate-600">
+                           <p className="text-[11px] text-orange-400 font-bold mb-2 flex items-center gap-1">⚠️ 有 {orphanSteps.length} 筆內容待分類，請指派到對應子分類：</p>
+                           <div className="space-y-2 max-h-[30vh] overflow-y-auto">
+                             {Object.entries(orphanGroups).map(([key, group]: any) => (
+                               <div key={key} className="bg-slate-700/50 rounded-lg p-2.5 flex items-center gap-2">
+                                 <div className="flex-1 min-w-0">
+                                   <p className="text-[10px] text-gray-400 truncate">舊分類 ID: {String(group.oldName).slice(0, 20)}...</p>
+                                   <p className="text-xs text-white font-bold">{group.steps.map((s:any) => String(s.title)).join('、')}</p>
+                                 </div>
+                                 <select
+                                   defaultValue=""
+                                   onChange={async e => {
+                                     const newCatId = e.target.value;
+                                     if (!newCatId) return;
+                                     for (const s of group.steps) {
+                                       await updateDoc(doc(db, 'learningSteps', s.id), { categoryId: newCatId });
+                                     }
+                                     showToast(`${group.steps.length} 筆已移至新分類！`);
+                                   }}
+                                   className="text-[10px] bg-slate-600 text-white border border-slate-500 rounded px-1.5 py-1 outline-none flex-shrink-0"
+                                   style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                 >
+                                   <option value="">指派到...</option>
+                                   {allChildCats.map((c:any) => (
+                                     <option key={c.id} value={c.id}>{String(c.name)}</option>
+                                   ))}
+                                 </select>
+                               </div>
+                             ))}
+                           </div>
+                         </div>
+                       );
+                     })()}
                   </div>
                 )}
 
