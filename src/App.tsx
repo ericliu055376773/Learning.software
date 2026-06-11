@@ -599,21 +599,19 @@ export default function App() {
     ? (hasChildren ? childCategories : [{...allCats.find((c:any) => c.id === currentParentId)}])
     : allCats;
 
-  // 找出孤兒 steps（categoryId 在所有分類裡找不到且名稱也對不上）
+  // 找出孤兒 steps（categoryId 在所有現有分類裡完全找不到，且名稱也對不上）
   const ORPHAN_CAT_ID = '__orphan__';
   const orphanSteps = learningSteps.filter((s: any) => {
-    const matchById = allCats.some((c: any) => c.id === s.categoryId);
-    if (matchById) return false;
-    if (!s.categoryId) return false;
-    // 名稱比對：若任何分類名稱與 step 的 categoryId 對應的分類名稱相符也不算孤兒
-    const oldCat = allCats.find((c: any) => c.id === s.categoryId);
-    if (!oldCat) return true; // categoryId 完全找不到 → 孤兒
+    if (!s.categoryId) return false; // 無 categoryId 歸第一個分類，不算孤兒
+    // 已有明確對應的分類 ID → 不是孤兒
+    if (allCats.some((c: any) => c.id === s.categoryId)) return false;
+    // categoryId 找不到對應分類，再試名稱比對
     const matched = allCats.some((c: any) => {
-      const a = String(c.name).toLowerCase();
-      const b = String(oldCat.name).toLowerCase();
-      return a === b || a.includes(b) || b.includes(a);
+      const catName = String(c.name).toLowerCase();
+      const stepCatId = String(s.categoryId).toLowerCase();
+      return catName === stepCatId || catName.includes(stepCatId) || stepCatId.includes(catName);
     });
-    return !matched;
+    return !matched; // 名稱也對不上 → 才是孤兒
   });
   const hasOrphans = orphanSteps.length > 0;
 
@@ -623,14 +621,22 @@ export default function App() {
   const filteredSteps = currentActiveCatId === ORPHAN_CAT_ID
     ? orphanSteps
     : learningSteps.filter((s: any) => {
+        // 1. 直接 ID 比對（最優先）
         if (s.categoryId === currentActiveCatId) return true;
+        // 2. 沒有 categoryId 的歸到第一個分類
         if (!s.categoryId && currentActiveCatId === effectiveCategories[0]?.id) return true;
-        const matchedCat = allCats.find((c:any) => c.id === s.categoryId);
-        if (matchedCat && currentActiveCat) {
-          const oldName = String(matchedCat.name).toLowerCase();
-          const newName = String(currentActiveCat.name).toLowerCase();
-          if (oldName === newName) return true;
-          if (oldName.includes(newName) || newName.includes(oldName)) return true;
+        // 3. 名稱比對（舊資料相容）— 只在找不到直接 ID 時才用
+        if (s.categoryId) {
+          // 如果 step 的 categoryId 已經是現有分類的 ID，不要再做名稱比對（避免跨分類混入）
+          const stepCatExists = allCats.some((c:any) => c.id === s.categoryId);
+          if (stepCatExists) return false; // 有明確分類但不是目前這個，不顯示
+          // step 的 categoryId 在現有分類找不到，嘗試名稱比對
+          if (currentActiveCat) {
+            const newName = String(currentActiveCat.name).toLowerCase();
+            const stepCatId = String(s.categoryId).toLowerCase();
+            if (stepCatId === newName) return true;
+            if (stepCatId.includes(newName) || newName.includes(stepCatId)) return true;
+          }
         }
         return false;
       });
