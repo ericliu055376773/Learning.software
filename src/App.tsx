@@ -1420,14 +1420,7 @@ export default function App() {
                   </div>
                 )}
 
-                {/* 後台診斷：顯示目前分類的 ID 和符合筆數 */}
-                {canEdit && (
-                  <div className="mb-2 px-1 text-[10px] text-gray-400 font-mono flex gap-2 flex-wrap">
-                    <span>分類ID: <b className="text-indigo-500">{currentActiveCatId.slice(0,12)}</b></span>
-                    <span>符合: <b className="text-green-500">{filteredSteps.length}</b> 筆</span>
-                    <span>全部: <b className="text-gray-500">{learningSteps.length}</b> 筆</span>
-                  </div>
-                )}
+                {/* 後台診斷：已移除 */}
 
                 {/* 後台專屬：掃描未分類內容按鈕 */}
                 {canEdit && (() => {
@@ -1543,29 +1536,34 @@ export default function App() {
                               >
                                 <option value="">（未分類）</option>
                                 {(() => {
-                                  // 只顯示葉節點（子分類）或單層分類（無子分類的母分類）
-                                  const parentIds = new Set(allCats.filter((c:any) => c.parentId).map((c:any) => c.parentId));
-                                  return allCats
-                                    .filter((c:any) => c.name.trim())
-                                    .map((c:any) => {
-                                      const parent = c.parentId ? allCats.find((p:any) => p.id === c.parentId) : null;
-                                      const label = parent ? `${parent.name} › ${c.name}` : c.name;
-                                      return <option key={c.id} value={c.id}>{label}</option>;
-                                    });
+                                  const parents = allCats.filter((c:any) => !c.parentId && c.name.trim());
+                                  const result: any[] = [];
+                                  parents.forEach((parent:any) => {
+                                    const children = allCats.filter((c:any) => c.parentId === parent.id && c.name.trim());
+                                    if (children.length > 0) {
+                                      // 有子分類：顯示子分類（格式：外場-新人 › 新-收桌）
+                                      children.forEach((child:any) => {
+                                        result.push(<option key={child.id} value={child.id}>{`${parent.name} › ${child.name}`}</option>);
+                                      });
+                                    } else {
+                                      // 無子分類：直接顯示母分類
+                                      result.push(<option key={parent.id} value={parent.id}>{parent.name}</option>);
+                                    }
+                                  });
+                                  return result;
                                 })()}
                               </select>
                             </div>
                             
                             <div className="mt-2 space-y-4 pb-2">
-                              {getStepBlocks(step).map((block: any, bIndex: number) => (
+                              {getStepBlocks(step).map((block: any, bIndex: number) => {
+                                const isDraggingThis = draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex;
+                                const isOverThis = dragOverBlockIndex === bIndex && draggedBlockInfo && (draggedBlockInfo.stepId !== step.id || draggedBlockInfo.blockIndex !== bIndex);
+                                return (
                                 <div
                                   key={block.id}
-                                  draggable
-                                  onDragStart={e => {
-                                    setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex });
-                                    e.dataTransfer.effectAllowed = 'move';
-                                    e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`);
-                                  }}
+                                  draggable={isDraggingThis}
+                                  onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`); }}
                                   onDragEnter={e => { e.preventDefault(); setDragOverBlockIndex(bIndex); }}
                                   onDragOver={e => e.preventDefault()}
                                   onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
@@ -1574,7 +1572,6 @@ export default function App() {
                                     if (!draggedBlockInfo) return;
                                     const isSameStep = draggedBlockInfo.stepId === step.id;
                                     if (isSameStep && draggedBlockInfo.blockIndex === bIndex) return;
-
                                     if (isSameStep) {
                                       const blocks = [...getStepBlocks(step)];
                                       const [moved] = blocks.splice(draggedBlockInfo.blockIndex, 1);
@@ -1591,28 +1588,21 @@ export default function App() {
                                       await updateDoc(doc(db, 'learningSteps', step.id), { blocks: destBlocks });
                                       showToast(`區塊已移至「${step.title}」`);
                                     }
-                                    setDraggedBlockInfo(null);
-                                    setDragOverBlockIndex(null);
+                                    setDraggedBlockInfo(null); setDragOverBlockIndex(null);
                                   }}
-                                  style={{
-                                    WebkitUserDrag: 'element',
-                                    WebkitUserSelect: 'none',
-                                    userSelect: 'none',
-                                    cursor: 'grab',
-                                  } as any}
                                   className={`bg-white p-4 rounded-xl border shadow-sm relative transition-all ${
-                                    draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex ? 'opacity-40 scale-95 border-indigo-300' :
-                                    dragOverBlockIndex === bIndex && draggedBlockInfo && (draggedBlockInfo.stepId !== step.id || draggedBlockInfo.blockIndex !== bIndex) ? 'border-indigo-500 ring-2 ring-indigo-300' :
-                                    'border-gray-200'
+                                    isDraggingThis ? 'opacity-40 scale-95 border-indigo-300' :
+                                    isOverThis ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-gray-200'
                                   }`}
                                 >
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
                                       <span
-                                        style={{cursor: 'grab', WebkitUserSelect: 'none', userSelect: 'none', flexShrink: 0}}
-                                        title="拖曳排序"
+                                        onMouseDown={e => { e.preventDefault(); setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex }); }}
+                                        style={{cursor:'grab', flexShrink:0, WebkitUserSelect:'none', userSelect:'none', padding:'4px', display:'inline-flex'}}
+                                        title="按住拖曳排序"
                                       >
-                                        <GripVertical c="w-4 h-4 text-gray-400 hover:text-indigo-500 transition-colors" />
+                                        <GripVertical c="w-5 h-5 text-gray-400 hover:text-indigo-500 transition-colors" />
                                       </span>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
                                     </div>
@@ -1642,9 +1632,10 @@ export default function App() {
                                     </div>
                                   )}
                                 </div>
-                              ))}
+                                );
+                              })}
                               
-                              {/* 跨項目拖放接收區 - 拖曳其他項目的區塊時才顯示 */}
+                              {/* 跨項目拖放接收區 */}
                               {draggedBlockInfo && draggedBlockInfo.stepId !== step.id && (
                                 <div
                                   onDragEnter={() => setDragOverBlockIndex(-1)}
