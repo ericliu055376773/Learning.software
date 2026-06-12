@@ -1562,8 +1562,15 @@ export default function App() {
                                 return (
                                 <div
                                   key={block.id}
-                                  draggable={isDraggingThis}
-                                  onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`); }}
+                                  draggable
+                                  onDragStart={e => {
+                                    // 如果從 textarea/input 開始拖曳，取消
+                                    const tag = (e.target as HTMLElement).tagName;
+                                    if (tag === 'TEXTAREA' || tag === 'INPUT') { e.preventDefault(); return; }
+                                    setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex });
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`);
+                                  }}
                                   onDragEnter={e => { e.preventDefault(); setDragOverBlockIndex(bIndex); }}
                                   onDragOver={e => e.preventDefault()}
                                   onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
@@ -1590,6 +1597,7 @@ export default function App() {
                                     }
                                     setDraggedBlockInfo(null); setDragOverBlockIndex(null);
                                   }}
+                                  style={{WebkitUserDrag:'element', WebkitUserSelect:'none', userSelect:'none'} as any}
                                   className={`bg-white p-4 rounded-xl border shadow-sm relative transition-all ${
                                     isDraggingThis ? 'opacity-40 scale-95 border-indigo-300' :
                                     isOverThis ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-gray-200'
@@ -1597,11 +1605,7 @@ export default function App() {
                                 >
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span
-                                        onMouseDown={e => { e.preventDefault(); setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex }); }}
-                                        style={{cursor:'grab', flexShrink:0, WebkitUserSelect:'none', userSelect:'none', padding:'4px', display:'inline-flex'}}
-                                        title="按住拖曳排序"
-                                      >
+                                      <span style={{cursor:'grab', flexShrink:0, WebkitUserSelect:'none', userSelect:'none', display:'inline-flex', padding:'4px'}} title="拖曳排序">
                                         <GripVertical c="w-5 h-5 text-gray-400 hover:text-indigo-500 transition-colors" />
                                       </span>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
@@ -1609,9 +1613,9 @@ export default function App() {
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
                                   
-                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} className="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3 select-text" style={{userSelect:'text', WebkitUserSelect:'text'}} placeholder="請輸入子標題（選填）"/>
+                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3 select-text" style={{userSelect:'text', WebkitUserSelect:'text'}} placeholder="請輸入子標題（選填）"/>
                                   
-                                  <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[100px] select-text" style={{userSelect:'text', WebkitUserSelect:'text', resize:'vertical'}} placeholder="請輸入學習內容..." />
+                                  <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[100px] select-text" style={{userSelect:'text', WebkitUserSelect:'text', resize:'vertical'}} placeholder="請輸入學習內容..." />
                                 
                                   <div className="flex items-center space-x-3 mt-3">
                                     <label className={`flex items-center justify-center bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-3 py-2 rounded-lg cursor-pointer transition-colors text-xs font-bold shadow-sm ${isUploading ? 'opacity-50 pointer-events-none' : ''}`}>
