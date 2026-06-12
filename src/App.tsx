@@ -648,25 +648,11 @@ export default function App() {
   const hasOrphans = orphanSteps.length > 0;
 
   const currentActiveCatId = activeCategoryId || effectiveCategories[0]?.id || '';
-  const currentActiveCat = effectiveCategories.find((c:any) => c.id === currentActiveCatId);
+  const currentActiveCat = allCats.find((c:any) => c.id === currentActiveCatId);
   
   const filteredSteps = currentActiveCatId === ORPHAN_CAT_ID
     ? orphanSteps
-    : learningSteps.filter((s: any) => {
-        // 直接 ID 比對
-        if (s.categoryId === currentActiveCatId) return true;
-        // 沒有 categoryId 不顯示在任何正常分類（只在未分類頁出現）
-        if (!s.categoryId) return false;
-        // categoryId 在現有分類找得到但不是目前這個 → 不顯示
-        if (allCats.some((c:any) => c.id === s.categoryId)) return false;
-        // 名稱比對（舊資料相容）
-        if (currentActiveCat) {
-          const newName = String(currentActiveCat.name).toLowerCase();
-          const stepCatId = String(s.categoryId).toLowerCase();
-          if (stepCatId === newName || stepCatId.includes(newName) || newName.includes(stepCatId)) return true;
-        }
-        return false;
-      });
+    : learningSteps.filter((s: any) => s.categoryId === currentActiveCatId);
   
   // 計算登入者自己的進度 (若為總部看總部人員可能不具代表性，但防呆)
   const categoryProgress = (currentUserData && typeof currentUserData.completedLearning === 'object' && currentUserData.completedLearning !== null) 
