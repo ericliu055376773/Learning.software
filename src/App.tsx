@@ -1514,15 +1514,17 @@ export default function App() {
                             </div>
 
                             {/* 移至其他分類 */}
-                            <div className="flex items-center gap-2 px-1 pb-2 border-b border-gray-100">
-                              <span className="text-[11px] text-gray-400 font-bold whitespace-nowrap">所屬分類：</span>
+                            <div className="flex items-center gap-2 px-1 pb-3 border-b border-gray-100 mb-2">
+                              <span className="text-[11px] text-gray-500 font-bold whitespace-nowrap flex items-center gap-1">
+                                📂 分類：
+                              </span>
                               <select
                                 value={step.categoryId || ''}
                                 onChange={async e => {
                                   await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: e.target.value });
-                                  showToast('已移至新分類！');
+                                  showToast('✅ 已移至新分類！');
                                 }}
-                                className="flex-1 text-[11px] bg-gray-50 border border-gray-200 rounded-lg px-2 py-1.5 outline-none focus:border-indigo-400 text-gray-700 font-bold"
+                                className="flex-1 text-xs bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-2 outline-none focus:border-indigo-500 text-indigo-700 font-bold"
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
                               >
                                 <option value="">（未分類）</option>
