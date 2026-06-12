@@ -1612,6 +1612,31 @@ export default function App() {
                                         <button onClick={async () => { const b=[...getStepBlocks(step)]; if(bIndex===b.length-1) return; [b[bIndex],b[bIndex+1]]=[b[bIndex+1],b[bIndex]]; await updateDoc(doc(db,'learningSteps',step.id),{blocks:b}); }} disabled={bIndex===getStepBlocks(step).length-1} style={{WebkitUserSelect:'none',userSelect:'none'}} className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${bIndex===getStepBlocks(step).length-1?'text-gray-200 cursor-not-allowed':'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>▼</button>
                                       </div>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
+                                      {/* 移至同分類其他項目 */}
+                                      {filteredSteps.length > 1 && (
+                                        <select
+                                          value=""
+                                          onChange={async e => {
+                                            const targetStepId = e.target.value;
+                                            if (!targetStepId) return;
+                                            const targetStep = filteredSteps.find((s:any) => s.id === targetStepId);
+                                            if (!targetStep) return;
+                                            const srcBlocks = [...getStepBlocks(step)];
+                                            const [moved] = srcBlocks.splice(bIndex, 1);
+                                            const destBlocks = [...getStepBlocks(targetStep), moved];
+                                            await updateDoc(doc(db, 'learningSteps', step.id), { blocks: srcBlocks });
+                                            await updateDoc(doc(db, 'learningSteps', targetStepId), { blocks: destBlocks });
+                                            showToast(`✅ 區塊已移至「${targetStep.title}」`);
+                                          }}
+                                          style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                          className="text-[10px] bg-blue-50 border border-blue-200 rounded px-1.5 py-1 outline-none text-blue-600 max-w-[110px]"
+                                        >
+                                          <option value="">📦 移至項目...</option>
+                                          {filteredSteps.filter((s:any) => s.id !== step.id).map((s:any) => (
+                                            <option key={s.id} value={s.id}>{String(s.title).slice(0, 14)}</option>
+                                          ))}
+                                        </select>
+                                      )}
                                     </div>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
@@ -1641,7 +1666,7 @@ export default function App() {
                                 </div>
                               ))}
                               
-                              {/* 跨項目拖放接收區 */}
+                              {/* 跨項目移動區塊接收區 */}
                               {draggedBlockInfo && draggedBlockInfo.stepId !== step.id && (
                                 <div
                                   onDragEnter={() => setDragOverBlockIndex(-1)}
@@ -1657,15 +1682,10 @@ export default function App() {
                                     await updateDoc(doc(db, 'learningSteps', srcStep.id), { blocks: srcBlocks });
                                     await updateDoc(doc(db, 'learningSteps', step.id), { blocks: destBlocks });
                                     showToast(`區塊已移至「${step.title}」`);
-                                    setDraggedBlockInfo(null);
-                                    setDragOverBlockIndex(null);
+                                    setDraggedBlockInfo(null); setDragOverBlockIndex(null);
                                   }}
-                                  className={`w-full py-4 border-2 border-dashed rounded-xl text-xs font-bold flex justify-center items-center transition-all ${
-                                    dragOverBlockIndex === -1 ? 'border-indigo-400 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-gray-50 text-gray-400'
-                                  }`}
-                                >
-                                  ＋ 拖放區塊到「{step.title}」
-                                </div>
+                                  className={`w-full py-4 border-2 border-dashed rounded-xl text-xs font-bold flex justify-center items-center transition-all ${dragOverBlockIndex === -1 ? 'border-indigo-400 bg-indigo-50 text-indigo-600' : 'border-gray-300 bg-gray-50 text-gray-400'}`}
+                                >＋ 拖放區塊到「{step.title}」</div>
                               )}
 
                               <button onClick={() => addBlock(step)} className="w-full py-3 bg-white border border-gray-200 border-dashed rounded-xl text-xs text-indigo-600 font-bold flex justify-center items-center hover:bg-indigo-50 transition-colors">
