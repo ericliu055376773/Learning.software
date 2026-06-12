@@ -1431,10 +1431,12 @@ export default function App() {
                 {/* 後台專屬：掃描未分類內容按鈕 */}
                 {canEdit && (() => {
                   const validCatIds = new Set(categories.map((c:any) => c.id));
+                  // 排除已在「未標注」分類的，只顯示真正無效的
+                  const untaggedCat = categories.find((c:any) => c.name === '未標注');
                   const total = learningSteps.filter((s:any) => 
                     !s.categoryId || 
-                    s.categoryId === '__orphan__' ||
-                    !validCatIds.has(s.categoryId)
+                    (s.categoryId === '__orphan__') ||
+                    (!validCatIds.has(s.categoryId) && s.categoryId !== (untaggedCat?.id || ''))
                   ).length;
                   if (total === 0) return null;
                   return (
@@ -1521,14 +1523,21 @@ export default function App() {
                               <select
                                 value={step.categoryId || ''}
                                 onChange={async e => {
-                                  await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: e.target.value });
+                                  const newCatId = e.target.value;
+                                  await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: newCatId });
+                                  if (newCatId) {
+                                    setActiveCategoryId(newCatId);
+                                    // 若是子分類，也切換母分類
+                                    const targetCat = allCats.find((c:any) => c.id === newCatId);
+                                    if (targetCat?.parentId) setActiveParentId(targetCat.parentId);
+                                  }
                                   showToast('✅ 已移至新分類！');
                                 }}
                                 className="flex-1 text-xs bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-2 outline-none focus:border-indigo-500 text-indigo-700 font-bold"
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
                               >
                                 <option value="">（未分類）</option>
-                                {allCats.filter((c:any) => c.name.trim()).map((c:any) => {
+                                {allCats.filter((c:any) => c.name.trim() && c.id !== step.categoryId).map((c:any) => {
                                   const parent = c.parentId ? allCats.find((p:any) => p.id === c.parentId) : null;
                                   return (
                                     <option key={c.id} value={c.id}>
