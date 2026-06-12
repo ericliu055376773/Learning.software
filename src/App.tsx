@@ -1414,15 +1414,22 @@ export default function App() {
                   </div>
                 )}
 
+                {/* 後台診斷：顯示目前分類的 ID 和符合筆數 */}
+                {canEdit && (
+                  <div className="mb-2 px-1 text-[10px] text-gray-400 font-mono flex gap-2 flex-wrap">
+                    <span>分類ID: <b className="text-indigo-500">{currentActiveCatId.slice(0,12)}</b></span>
+                    <span>符合: <b className="text-green-500">{filteredSteps.length}</b> 筆</span>
+                    <span>全部: <b className="text-gray-500">{learningSteps.length}</b> 筆</span>
+                  </div>
+                )}
+
                 {/* 後台專屬：掃描未分類內容按鈕 */}
                 {canEdit && (() => {
-                  const validCatIds = new Set(categories.map((c:any) => c.id));
-                  // 排除已在「未標注」分類的，只顯示真正無效的
-                  const untaggedCat = categories.find((c:any) => c.name === '未標注');
+                  const validCatIds = new Set(allCats.map((c:any) => c.id));
                   const total = learningSteps.filter((s:any) => 
                     !s.categoryId || 
-                    (s.categoryId === '__orphan__') ||
-                    (!validCatIds.has(s.categoryId) && s.categoryId !== (untaggedCat?.id || ''))
+                    s.categoryId === '__orphan__' ||
+                    !validCatIds.has(s.categoryId)
                   ).length;
                   if (total === 0) return null;
                   return (
