@@ -647,7 +647,13 @@ export default function App() {
   });
   const hasOrphans = orphanSteps.length > 0;
 
-  const currentActiveCatId = activeCategoryId || effectiveCategories[0]?.id || '';
+  // 確認 activeCategoryId 在 allCats 或 ORPHAN 裡有效
+  const currentActiveCatId = (() => {
+    if (activeCategoryId === ORPHAN_CAT_ID) return ORPHAN_CAT_ID;
+    if (activeCategoryId && allCats.some((c:any) => c.id === activeCategoryId)) return activeCategoryId;
+    // fallback: 目前母分類的第一個子分類
+    return effectiveCategories[0]?.id || '';
+  })();
   const currentActiveCat = allCats.find((c:any) => c.id === currentActiveCatId);
   
   const filteredSteps = currentActiveCatId === ORPHAN_CAT_ID
@@ -1536,14 +1542,17 @@ export default function App() {
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
                               >
                                 <option value="">（未分類）</option>
-                                {allCats.filter((c:any) => c.name.trim() && c.id !== step.categoryId).map((c:any) => {
-                                  const parent = c.parentId ? allCats.find((p:any) => p.id === c.parentId) : null;
-                                  return (
-                                    <option key={c.id} value={c.id}>
-                                      {parent ? `${parent.name} › ${c.name}` : c.name}
-                                    </option>
-                                  );
-                                })}
+                                {(() => {
+                                  // 只顯示葉節點（子分類）或單層分類（無子分類的母分類）
+                                  const parentIds = new Set(allCats.filter((c:any) => c.parentId).map((c:any) => c.parentId));
+                                  return allCats
+                                    .filter((c:any) => c.name.trim())
+                                    .map((c:any) => {
+                                      const parent = c.parentId ? allCats.find((p:any) => p.id === c.parentId) : null;
+                                      const label = parent ? `${parent.name} › ${c.name}` : c.name;
+                                      return <option key={c.id} value={c.id}>{label}</option>;
+                                    });
+                                })()}
                               </select>
                             </div>
                             
