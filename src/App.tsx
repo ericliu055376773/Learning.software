@@ -1556,58 +1556,41 @@ export default function App() {
                             </div>
                             
                             <div className="mt-2 space-y-4 pb-2">
-                              {getStepBlocks(step).map((block: any, bIndex: number) => {
-                                const isDraggingThis = draggedBlockInfo?.stepId === step.id && draggedBlockInfo?.blockIndex === bIndex;
-                                const isOverThis = dragOverBlockIndex === bIndex && draggedBlockInfo && (draggedBlockInfo.stepId !== step.id || draggedBlockInfo.blockIndex !== bIndex);
-                                return (
+                              {getStepBlocks(step).map((block: any, bIndex: number) => (
                                 <div
                                   key={block.id}
-                                  draggable
-                                  onDragStart={e => {
-                                    // 如果從 textarea/input 開始拖曳，取消
-                                    const tag = (e.target as HTMLElement).tagName;
-                                    if (tag === 'TEXTAREA' || tag === 'INPUT') { e.preventDefault(); return; }
-                                    setDraggedBlockInfo({ stepId: step.id, blockIndex: bIndex });
-                                    e.dataTransfer.effectAllowed = 'move';
-                                    e.dataTransfer.setData('text/plain', `${step.id}::${bIndex}`);
-                                  }}
-                                  onDragEnter={e => { e.preventDefault(); setDragOverBlockIndex(bIndex); }}
-                                  onDragOver={e => e.preventDefault()}
-                                  onDragEnd={() => { setDraggedBlockInfo(null); setDragOverBlockIndex(null); }}
-                                  onDrop={async e => {
-                                    e.preventDefault();
-                                    if (!draggedBlockInfo) return;
-                                    const isSameStep = draggedBlockInfo.stepId === step.id;
-                                    if (isSameStep && draggedBlockInfo.blockIndex === bIndex) return;
-                                    if (isSameStep) {
-                                      const blocks = [...getStepBlocks(step)];
-                                      const [moved] = blocks.splice(draggedBlockInfo.blockIndex, 1);
-                                      blocks.splice(bIndex, 0, moved);
-                                      await updateDoc(doc(db, 'learningSteps', step.id), { blocks });
-                                    } else {
-                                      const srcStep = filteredSteps.find((s:any) => s.id === draggedBlockInfo.stepId);
-                                      if (!srcStep) return;
-                                      const srcBlocks = [...getStepBlocks(srcStep)];
-                                      const [moved] = srcBlocks.splice(draggedBlockInfo.blockIndex, 1);
-                                      const destBlocks = [...getStepBlocks(step)];
-                                      destBlocks.splice(bIndex, 0, moved);
-                                      await updateDoc(doc(db, 'learningSteps', srcStep.id), { blocks: srcBlocks });
-                                      await updateDoc(doc(db, 'learningSteps', step.id), { blocks: destBlocks });
-                                      showToast(`區塊已移至「${step.title}」`);
-                                    }
-                                    setDraggedBlockInfo(null); setDragOverBlockIndex(null);
-                                  }}
-                                  style={{WebkitUserDrag:'element', WebkitUserSelect:'none', userSelect:'none'} as any}
-                                  className={`bg-white p-4 rounded-xl border shadow-sm relative transition-all ${
-                                    isDraggingThis ? 'opacity-40 scale-95 border-indigo-300' :
-                                    isOverThis ? 'border-indigo-500 ring-2 ring-indigo-300' : 'border-gray-200'
-                                  }`}
+                                  className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative transition-all"
                                 >
                                   <div className="flex justify-between items-center mb-3">
                                     <div className="flex items-center gap-2">
-                                      <span style={{cursor:'grab', flexShrink:0, WebkitUserSelect:'none', userSelect:'none', display:'inline-flex', padding:'4px'}} title="拖曳排序">
-                                        <GripVertical c="w-5 h-5 text-gray-400 hover:text-indigo-500 transition-colors" />
-                                      </span>
+                                      {/* 上下移動按鈕 */}
+                                      <div className="flex flex-col gap-0.5">
+                                        <button
+                                          onClick={async () => {
+                                            if (bIndex === 0) return;
+                                            const blocks = [...getStepBlocks(step)];
+                                            [blocks[bIndex-1], blocks[bIndex]] = [blocks[bIndex], blocks[bIndex-1]];
+                                            await updateDoc(doc(db, 'learningSteps', step.id), { blocks });
+                                          }}
+                                          disabled={bIndex === 0}
+                                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${bIndex === 0 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+                                          title="向上移"
+                                          style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                        >▲</button>
+                                        <button
+                                          onClick={async () => {
+                                            const blocks = getStepBlocks(step);
+                                            if (bIndex === blocks.length - 1) return;
+                                            const newBlocks = [...blocks];
+                                            [newBlocks[bIndex], newBlocks[bIndex+1]] = [newBlocks[bIndex+1], newBlocks[bIndex]];
+                                            await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
+                                          }}
+                                          disabled={bIndex === getStepBlocks(step).length - 1}
+                                          className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition-colors ${bIndex === getStepBlocks(step).length - 1 ? 'text-gray-200 cursor-not-allowed' : 'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}
+                                          title="向下移"
+                                          style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                        >▼</button>
+                                      </div>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
                                     </div>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
@@ -1636,8 +1619,7 @@ export default function App() {
                                     </div>
                                   )}
                                 </div>
-                                );
-                              })}
+                              ))}
                               
                               {/* 跨項目拖放接收區 */}
                               {draggedBlockInfo && draggedBlockInfo.stepId !== step.id && (
