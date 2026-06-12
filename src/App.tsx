@@ -1513,10 +1513,17 @@ export default function App() {
                                   if (!newCatId) return;
                                   await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: newCatId });
                                   const targetCat = allCats.find((c:any) => c.id === newCatId);
-                                  const catName = targetCat?.parentId 
+                                  // 同時切換母分類和子分類頁籤
+                                  if (targetCat?.parentId) {
+                                    setActiveParentId(targetCat.parentId);
+                                  } else {
+                                    setActiveParentId(newCatId);
+                                  }
+                                  setActiveCategoryId(newCatId);
+                                  const catName = targetCat?.parentId
                                     ? `${allCats.find((p:any) => p.id === targetCat.parentId)?.name} › ${targetCat.name}`
                                     : targetCat?.name;
-                                  showToast(`✅ 已移至「${catName}」`);
+                                  showToast(`✅ 已移至「${catName}」，正在跳轉...`);
                                 }}
                                 className="flex-1 text-xs bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-2 outline-none focus:border-indigo-500 text-indigo-700 font-bold"
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
