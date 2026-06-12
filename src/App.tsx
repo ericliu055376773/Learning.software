@@ -1524,14 +1524,13 @@ export default function App() {
                                 value={step.categoryId || ''}
                                 onChange={async e => {
                                   const newCatId = e.target.value;
+                                  if (!newCatId) return;
                                   await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: newCatId });
-                                  if (newCatId) {
-                                    setActiveCategoryId(newCatId);
-                                    // 若是子分類，也切換母分類
-                                    const targetCat = allCats.find((c:any) => c.id === newCatId);
-                                    if (targetCat?.parentId) setActiveParentId(targetCat.parentId);
-                                  }
-                                  showToast('✅ 已移至新分類！');
+                                  const targetCat = allCats.find((c:any) => c.id === newCatId);
+                                  const catName = targetCat?.parentId 
+                                    ? `${allCats.find((p:any) => p.id === targetCat.parentId)?.name} › ${targetCat.name}`
+                                    : targetCat?.name;
+                                  showToast(`✅ 已移至「${catName}」`);
                                 }}
                                 className="flex-1 text-xs bg-indigo-50 border border-indigo-200 rounded-lg px-2 py-2 outline-none focus:border-indigo-500 text-indigo-700 font-bold"
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
