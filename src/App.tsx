@@ -1722,6 +1722,33 @@ export default function App() {
                       ) : (
                         /* 員工視角：純白底層闖關地圖 */
                         <div className="space-y-6 my-3">
+                          {/* 快速跳轉卡片列 */}
+                          {filteredSteps.length > 1 && (
+                            <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                              {filteredSteps.map((step, index) => {
+                                const isCompleted = index < categoryProgress;
+                                const isCurrent = index === categoryProgress;
+                                return (
+                                  <button
+                                    key={step.id}
+                                    onClick={() => {
+                                      const el = document.getElementById(`step-${step.id}`);
+                                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                    }}
+                                    style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                                    className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
+                                      isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' :
+                                      isCompleted ? 'bg-green-50 text-green-700 border-green-200' :
+                                      'bg-gray-50 text-gray-400 border-gray-200'
+                                    }`}
+                                  >
+                                    {isCompleted ? '✅' : isCurrent ? '📖' : '🔒'} {String(step.title).slice(0, 8)}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
                           {filteredSteps.map((step, index) => {
                             const isCompleted = index < categoryProgress;
                             const isCurrent = index === categoryProgress;
@@ -1729,7 +1756,7 @@ export default function App() {
 
                             if (isLocked) {
                               return (
-                                <div key={step.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
                                    {/* 未解鎖的鎖頭與標題 */}
                                    <div className="flex items-center gap-2 mb-4 opacity-50">
                                      <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
@@ -1758,22 +1785,41 @@ export default function App() {
                               const historyRecord = currentUserData?.learningHistory?.find((h: any) => h.stepId === step.id);
                               const trainerName = historyRecord?.trainerName;
                               return (
-                                <div key={step.id} className="bg-white border border-green-200 rounded-xl p-5 shadow-sm transition-opacity relative">
-                                  <div className="flex flex-col gap-2">
-                                    {trainerName && trainerName !== '無' && (
-                                      <div className="text-[11px] font-bold text-red-500 flex items-center mb-1">
-                                        <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
-                                      </div>
-                                    )}
-                                    <div className="flex flex-wrap items-center gap-3">
-                                      <div className="w-8 h-8 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center text-green-600 shadow-sm">
-                                        <CheckCircle2 c="w-5 h-5" />
-                                      </div>
-                                      <h3 className="font-bold text-gray-800 text-lg line-clamp-1">{String(step.title)}</h3>
-                                      <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm">
-                                        <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
-                                      </span>
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-green-200 rounded-xl p-5 shadow-sm relative">
+                                  {/* 已完成標題列 */}
+                                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center text-green-600 shadow-sm">
+                                      <CheckCircle2 c="w-5 h-5" />
                                     </div>
+                                    <h3 className="font-bold text-gray-800 text-lg">{String(step.title)}</h3>
+                                    <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm">
+                                      <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
+                                    </span>
+                                  </div>
+                                  {trainerName && trainerName !== '無' && (
+                                    <div className="text-[11px] font-bold text-red-500 flex items-center mb-3">
+                                      <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
+                                    </div>
+                                  )}
+                                  {/* 顯示完整內容區塊（與目前進度相同） */}
+                                  <div className="space-y-5 select-text">
+                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                      <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        {block.subtitle && (
+                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
+                                        )}
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
+                                        {block.mediaUrl && (
+                                          <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
+                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                              <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                            ) : (
+                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
                               );
@@ -1781,7 +1827,7 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} className="bg-white border-[3px] border-indigo-500 rounded-xl p-5 shadow-lg relative">
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border-[3px] border-indigo-500 rounded-xl p-5 shadow-lg relative">
                                   <div className="flex items-center gap-3 mb-4">
                                     <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-md animate-pulse">
                                       <BookOpen c="w-5 h-5" />
