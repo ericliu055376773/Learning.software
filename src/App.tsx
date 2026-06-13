@@ -1469,29 +1469,6 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* 快速跳轉卡片列（後台與前台都顯示） */}
-                      {filteredSteps.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
-                          {filteredSteps.map((step, index) => (
-                            <button
-                              key={step.id}
-                              onClick={() => {
-                                const el = document.getElementById(`step-admin-${step.id}`);
-                                const container = document.getElementById('app-scroll-container');
-                                if (el && container) {
-                                  const topOffset = el.getBoundingClientRect().top + container.scrollTop - 120;
-                                  container.scrollTo({ top: topOffset, behavior: 'smooth' });
-                                }
-                              }}
-                              style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
-                              className="px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-gray-600 border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all"
-                            >
-                              {index + 1}. {String(step.title).slice(0, 10)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-
                       {canEdit ? (
                         /* 後台編輯視角：顯示所有可編輯的卡片 */
                         filteredSteps.map((step, index) => (
@@ -2707,4 +2684,3 @@ export default function App() {
     </div>
   );
 }
-
