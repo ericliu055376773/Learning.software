@@ -1485,7 +1485,7 @@ export default function App() {
                                     const el = document.getElementById(`step-admin-${step.id}`);
                                     const container = document.getElementById('app-scroll-container');
                                     if (el && container) {
-                                      const topOffset = el.getBoundingClientRect().top + container.scrollTop - 120;
+                                      const stickyH = document.querySelector('.sticky.top-0')?.getBoundingClientRect().height || 0; const tabsH = 80; const topOffset = el.getBoundingClientRect().top + container.scrollTop - stickyH - tabsH - 8;
                                       container.scrollTo({ top: topOffset, behavior: 'smooth' });
                                     }
                                   }}
@@ -1773,7 +1773,7 @@ export default function App() {
                                       const el = document.getElementById(`step-${step.id}`);
                                       const container = document.getElementById('app-scroll-container');
                                       if (el && container) {
-                                        const topOffset = el.getBoundingClientRect().top + container.scrollTop - 120;
+                                        const stickyH = document.querySelector('.sticky.top-0')?.getBoundingClientRect().height || 0; const tabsH = 80; const topOffset = el.getBoundingClientRect().top + container.scrollTop - stickyH - tabsH - 8;
                                         container.scrollTo({ top: topOffset, behavior: 'smooth' });
                                       }
                                     }}
@@ -1824,6 +1824,11 @@ export default function App() {
                                       </div>
                                     ))}
                                   </div>
+                                  <div className="mt-5 pt-4 border-t border-gray-100 pb-24">
+                                    <button onClick={() => { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); }} className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
+                                      <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
+                                    </button>
+                                  </div>
                                 </div>
                               );
                             }
@@ -1867,6 +1872,11 @@ export default function App() {
                                         )}
                                       </div>
                                     ))}
+                                  </div>
+                                  <div className="mt-5 pt-4 border-t border-green-100 pb-24">
+                                    <button onClick={() => { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); }} className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
+                                      <CheckCircle2 c="w-6 h-6 mr-2" />再次紀錄進度
+                                    </button>
                                   </div>
                                 </div>
                               );
