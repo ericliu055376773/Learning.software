@@ -398,7 +398,7 @@ export default function App() {
 
   async function addBlock(step: any) {
      const blocks = getStepBlocks(step);
-     const newBlocks = [...blocks, { id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }];
+     const newBlocks = [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }, ...blocks];
      await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
      showToast("已新增內容區塊！");
   }
@@ -1456,7 +1456,10 @@ export default function App() {
                 })()}
                   {canEdit && (
                     <div className="mb-4">
-                      <button onClick={async () => await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: Date.now() })} className="w-full py-3 border border-gray-200 rounded-xl text-sm text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
+                      <button onClick={async () => {
+                        const minCreatedAt = filteredSteps.length > 0 ? Math.min(...filteredSteps.map((s:any) => s.createdAt || 0)) - 1 : Date.now();
+                        await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: minCreatedAt });
+                      }} className="w-full py-3 border border-gray-200 rounded-xl text-sm text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
                         <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(effectiveCategories.find((c:any)=>c.id === currentActiveCatId)?.name || '')}」新增內容
                       </button>
                     </div>
@@ -1733,12 +1736,13 @@ export default function App() {
                               </button>
                               <button
                                 onClick={async () => {
+                                  const minCreatedAt = filteredSteps.length > 0 ? Math.min(...filteredSteps.map((s:any) => s.createdAt || 0)) - 1 : Date.now();
                                   await addDoc(collection(db, 'learningSteps'), {
                                     title: '新學習項目',
                                     blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }],
                                     categoryId: currentActiveCatId,
                                     status: 'locked',
-                                    createdAt: Date.now()
+                                    createdAt: minCreatedAt
                                   });
                                   showToast(`已在「${effectiveCategories.find((c:any) => c.id === currentActiveCatId)?.name || ''}」新增項目！`);
                                 }}
@@ -2699,6 +2703,18 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* 返回頂部按鈕 */}
+      <button
+        onClick={() => document.getElementById('app-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' })}
+        style={{WebkitUserSelect:'none', userSelect:'none'}}
+        className="fixed bottom-20 right-4 w-12 h-12 bg-blue-400 hover:bg-blue-500 text-white rounded-2xl shadow-lg flex items-center justify-center z-40 transition-all active:scale-95"
+        title="回到頂部"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+          <path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>
+        </svg>
+      </button>
 
       {toast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg z-[100] text-xs font-bold shadow-xl animate-in fade-in slide-in-from-bottom-2">
