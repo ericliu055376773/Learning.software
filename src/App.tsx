@@ -838,6 +838,14 @@ export default function App() {
                 <input 
                   type="password" autoFocus value={secretPwd} 
                   onChange={e => setSecretPwd(e.target.value.replace(/\D/g, '').slice(0, 4))} 
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      if(secretPwd==='0204') { 
+                        setIsAuthenticated(true); setCurrentUserRole('super_admin'); setCurrentUserName('總部管理員'); 
+                        setShowSecretModal(false); setAuthMode('login'); setSecretPwd(''); 
+                      } else { showToast('密碼錯誤！'); setSecretPwd(''); }
+                    }
+                  }}
                   className="w-full p-3 border border-gray-200 bg-gray-50 rounded-xl mb-6 text-center tracking-widest outline-none focus:border-indigo-600 font-bold" placeholder="請輸入總部密碼" />
                 <div className="flex gap-2">
                   <button onClick={() => { setShowSecretModal(false); setSecretPwd(''); }} className="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button>
@@ -1461,10 +1469,34 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      {/* 快速跳轉卡片列（後台與前台都顯示） */}
+                      {filteredSteps.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                          {filteredSteps.map((step, index) => (
+                            <button
+                              key={step.id}
+                              onClick={() => {
+                                const el = document.getElementById(`step-admin-${step.id}`);
+                                const container = document.getElementById('app-scroll-container');
+                                if (el && container) {
+                                  const topOffset = el.getBoundingClientRect().top + container.scrollTop - 120;
+                                  container.scrollTo({ top: topOffset, behavior: 'smooth' });
+                                }
+                              }}
+                              style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                              className="px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border bg-white text-gray-600 border-gray-200 hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-600 transition-all"
+                            >
+                              {index + 1}. {String(step.title).slice(0, 10)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
                       {canEdit ? (
                         /* 後台編輯視角：顯示所有可編輯的卡片 */
                         filteredSteps.map((step, index) => (
                           <div
+                            id={`step-admin-${step.id}`}
                             key={step.id}
                             draggable={draggedStepIndex === index}
                             onDragStart={e => { if (draggedStepIndex !== index) { e.preventDefault(); return; } e.dataTransfer.effectAllowed = 'move'; }}
