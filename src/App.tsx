@@ -1176,6 +1176,7 @@ export default function App() {
                                 setActiveParentId(parent.id);
                                 const firstChild = allCats.find((c: any) => c.parentId === parent.id);
                                 setActiveCategoryId(firstChild ? firstChild.id : parent.id);
+                                window.scrollTo({top: 0, behavior: 'smooth'});
                               }}
                               style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
                               className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
@@ -1204,7 +1205,7 @@ export default function App() {
                         const isActive = currentActiveCatId === cat.id;
                         return (
                           <button key={cat.id}
-                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); }}
+                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); window.scrollTo({top:0, behavior:'smooth'}); }}
                             style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
                           >{String(cat.name)}</button>
@@ -1739,10 +1740,10 @@ export default function App() {
                                     className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
                                       isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' :
                                       isCompleted ? 'bg-green-50 text-green-700 border-green-200' :
-                                      'bg-gray-50 text-gray-400 border-gray-200'
+                                      'bg-gray-50 text-gray-500 border-gray-200'
                                     }`}
                                   >
-                                    {isCompleted ? '✅' : isCurrent ? '📖' : '🔒'} {String(step.title).slice(0, 8)}
+                                    {isCompleted ? '✅' : isCurrent ? '📖' : ''} {String(step.title).slice(0, 8)}
                                   </button>
                                 );
                               })}
@@ -1757,26 +1758,31 @@ export default function App() {
                             if (isLocked) {
                               return (
                                 <div key={step.id} id={`step-${step.id}`} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
-                                   {/* 未解鎖的鎖頭與標題 */}
-                                   <div className="flex items-center gap-2 mb-4 opacity-50">
-                                     <div className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center bg-gray-50 text-gray-400">
-                                       <Lock c="w-4 h-4" />
-                                     </div>
-                                     <h3 className="font-bold text-gray-500 text-lg">{String(step.title)}</h3>
-                                   </div>
-                                   
-                                   {/* 未解鎖可預覽的內容 (無灰底透明層，僅透視降低) */}
-                                   <div className="space-y-4 pointer-events-none select-none opacity-40">
-                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                       <div key={block.id} className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                                         <div className="flex items-center justify-between mb-2 border-b border-gray-100 pb-2">
-                                           <h4 className="font-bold text-gray-500 text-base">{String(block.subtitle || '內容區塊')}</h4>
-                                           <span className="text-[10px] text-gray-400 font-bold flex items-center"><Lock c="w-3 h-3 mr-1" />鎖定中</span>
-                                         </div>
-                                         <p className="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">{String(block.description)}</p>
-                                       </div>
-                                     ))}
-                                   </div>
+                                  <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-8 h-8 rounded-full border-2 border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400">
+                                      <BookOpen c="w-4 h-4" />
+                                    </div>
+                                    <h3 className="font-bold text-gray-700 text-lg">{String(step.title)}</h3>
+                                  </div>
+                                  <div className="space-y-4 select-text">
+                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                      <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        {block.subtitle && (
+                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
+                                        )}
+                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
+                                        {block.mediaUrl && (
+                                          <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
+                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                              <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                            ) : (
+                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
                                 </div>
                               );
                             }
