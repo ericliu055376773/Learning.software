@@ -857,7 +857,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-y-auto">
+    <div id="app-scroll-container" className="h-screen h-[100dvh] bg-gray-50 flex justify-center font-sans overflow-y-auto">
       {/* 等待 Firebase config 載入，避免主題色閃爍 */}
       {!isConfigLoaded && (
         <div className="fixed inset-0 bg-white z-[999] flex items-center justify-center">
@@ -1176,7 +1176,7 @@ export default function App() {
                                 setActiveParentId(parent.id);
                                 const firstChild = allCats.find((c: any) => c.parentId === parent.id);
                                 setActiveCategoryId(firstChild ? firstChild.id : parent.id);
-                                window.scrollTo({top: 0, behavior: 'smooth'});
+                                document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }}
                               style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
                               className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
@@ -1205,7 +1205,7 @@ export default function App() {
                         const isActive = currentActiveCatId === cat.id;
                         return (
                           <button key={cat.id}
-                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); window.scrollTo({top:0, behavior:'smooth'}); }}
+                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'}); }}
                             style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
                           >{String(cat.name)}</button>
@@ -1724,7 +1724,7 @@ export default function App() {
                         /* 員工視角：純白底層闖關地圖 */
                         <div className="space-y-6 my-3">
                           {/* 快速跳轉卡片列 */}
-                          {filteredSteps.length > 1 && (
+                          {filteredSteps.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                               {filteredSteps.map((step, index) => {
                                 const isCompleted = index < categoryProgress;
@@ -1734,7 +1734,11 @@ export default function App() {
                                     key={step.id}
                                     onClick={() => {
                                       const el = document.getElementById(`step-${step.id}`);
-                                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                      const container = document.getElementById('app-scroll-container');
+                                      if (el && container) {
+                                        const topOffset = el.getBoundingClientRect().top + container.scrollTop - 120;
+                                        container.scrollTo({ top: topOffset, behavior: 'smooth' });
+                                      }
                                     }}
                                     style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
                                     className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
