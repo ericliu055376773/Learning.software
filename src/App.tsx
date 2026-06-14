@@ -145,6 +145,11 @@ export default function App() {
   const [activeParentId, setActiveParentId] = useState<string>('');
   const [showCategoryManager, setShowCategoryManager] = useState<boolean>(false);
   const [editingCategories, setEditingCategories] = useState<any[]>([]);
+  // 分類密碼鎖
+  const [categoryPasswords, setCategoryPasswords] = useState<{[catId: string]: string}>({});
+  const [unlockedCategories, setUnlockedCategories] = useState<Set<string>>(new Set());
+  const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
+  const [catLockInput, setCatLockInput] = useState<string>('');
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [isConfigLoaded, setIsConfigLoaded] = useState<boolean>(false);
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
@@ -226,6 +231,7 @@ export default function App() {
               else if (!activeCategoryId) setActiveCategoryId(firstParent.id);
             }
           }
+          if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
         }
         setIsConfigLoaded(true);
       },
@@ -1009,6 +1015,40 @@ export default function App() {
                 </div>
               </div>
 
+              {/* 分類密碼鎖設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><Lock c="w-4 h-4 mr-1.5 text-indigo-500" />分類密碼鎖設定</h4>
+                <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，員工需輸入密碼才能查看該分類內容。留空則不鎖定。</p>
+                <div className="space-y-2">
+                  {allCats.filter((c:any) => c.name.trim()).map((cat:any) => {
+                    const parent = cat.parentId ? allCats.find((p:any) => p.id === cat.parentId) : null;
+                    const label = parent ? `${parent.name} › ${cat.name}` : cat.name;
+                    return (
+                      <div key={cat.id} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-gray-100">
+                        <span className="text-xs font-bold text-gray-700 flex-1 truncate">{label}</span>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          value={categoryPasswords[cat.id] || ''}
+                          onChange={async e => {
+                            const val = e.target.value.replace(/\D/g, '');
+                            const newPwds = {...categoryPasswords, [cat.id]: val};
+                            if (!val) delete newPwds[cat.id];
+                            setCategoryPasswords(newPwds);
+                            await setDoc(doc(db, 'config', 'global'), { categoryPasswords: newPwds }, { merge: true });
+                          }}
+                          placeholder="輸入密碼鎖（留空不鎖）"
+                          className="w-32 p-1.5 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 text-center tracking-widest"
+                        />
+                        {categoryPasswords[cat.id] && (
+                          <span className="text-[10px] text-orange-500 font-bold">🔒 已鎖</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* 各店 GPS 定位設定 */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />各店 GPS 定位設定</h4>
@@ -1213,10 +1253,21 @@ export default function App() {
                         const isActive = currentActiveCatId === cat.id;
                         return (
                           <button key={cat.id}
-                            onClick={() => { setActiveCategoryId(cat.id); if (!hasTwoLevel) setActiveParentId(cat.id); document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'}); }}
+                            onClick={() => {
+                              const pwd = categoryPasswords[cat.id];
+                              if (!canEdit && pwd && !unlockedCategories.has(cat.id)) {
+                                setShowCatLockModal(cat.id);
+                                setCatLockInput('');
+                              } else {
+                                setActiveCategoryId(cat.id);
+                                if (!hasTwoLevel) setActiveParentId(cat.id);
+                                document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                              }
+                            }}
                             style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
                             className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
-                          >{String(cat.name)}</button>
+                          >
+                            {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
                         );
                       })}
                       {hasOrphans && (
@@ -1792,9 +1843,10 @@ export default function App() {
                           )}
 
                           {filteredSteps.map((step, index) => {
-                            const isCompleted = index < categoryProgress;
-                            const isCurrent = index === categoryProgress;
-                            const isLocked = index > categoryProgress;
+                            const completedStepIds = new Set((currentUserData?.learningHistory || []).map((h:any) => h.stepId));
+                            const isCompleted = completedStepIds.has(step.id);
+                            const isCurrent = !isCompleted;
+                            const isLocked = false; // 取消鎖定，所有項目都可執行
 
                             if (isLocked) {
                               return (
@@ -1873,11 +1925,6 @@ export default function App() {
                                       </div>
                                     ))}
                                   </div>
-                                  <div className="mt-5 pt-4 border-t border-green-100 pb-24">
-                                    <button onClick={() => { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); }} className="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
-                                      <CheckCircle2 c="w-6 h-6 mr-2" />再次紀錄進度
-                                    </button>
-                                  </div>
                                 </div>
                               );
                             }
@@ -1897,11 +1944,11 @@ export default function App() {
                                   <div className="space-y-5 mb-5 select-text">
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                        <div className="flex items-center justify-between mb-3 border-b border-gray-100 pb-3">
+                                        <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3 gap-2">
                                           {block.subtitle ? (
-                                            <h4 className="font-bold text-lg" style={{color: '#1e3a5f', WebkitTextFillColor: 'currentColor', fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", system-ui, sans-serif'}}>{String(block.subtitle)}</h4>
+                                            <h4 className="font-bold text-lg flex-1" style={{color: '#1e3a5f', fontFamily: 'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
                                           ) : (
-                                            <h4 className="font-bold text-indigo-900 text-lg">內容區塊</h4>
+                                            <h4 className="font-bold text-indigo-900 text-lg flex-1">內容區塊</h4>
                                           )}
                                           
                                           {/* --- 前台專用：教學完畢打勾儲存 --- */}
@@ -2709,6 +2756,57 @@ export default function App() {
                   <CheckCircle2 c="w-4 h-4 mr-1.5" />儲存紀錄
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 分類密碼解鎖 Modal */}
+      {showCatLockModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4" onClick={() => setShowCatLockModal(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-xs shadow-2xl p-6 animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-5">
+              <div className="w-14 h-14 bg-orange-50 rounded-2xl mx-auto mb-3 flex items-center justify-center text-2xl">🔒</div>
+              <h3 className="font-black text-gray-800 text-lg">分類已鎖定</h3>
+              <p className="text-xs text-gray-400 mt-1">「{allCats.find((c:any) => c.id === showCatLockModal)?.name}」需要密碼才能查看</p>
+            </div>
+            <input
+              type="password"
+              autoFocus
+              value={catLockInput}
+              onChange={e => setCatLockInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  if (catLockInput === categoryPasswords[showCatLockModal]) {
+                    setUnlockedCategories(prev => new Set([...prev, showCatLockModal]));
+                    setActiveCategoryId(showCatLockModal);
+                    document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                    setShowCatLockModal(null);
+                    setCatLockInput('');
+                  } else {
+                    showToast('密碼錯誤！');
+                    setCatLockInput('');
+                  }
+                }
+              }}
+              inputMode="numeric"
+              placeholder="請輸入密碼"
+              className="w-full p-3 border border-gray-200 rounded-xl text-center tracking-widest outline-none focus:border-indigo-500 font-bold mb-4"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => { setShowCatLockModal(null); setCatLockInput(''); }} className="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-500 text-sm">取消</button>
+              <button onClick={() => {
+                if (catLockInput === categoryPasswords[showCatLockModal!]) {
+                  setUnlockedCategories(prev => new Set([...prev, showCatLockModal!]));
+                  setActiveCategoryId(showCatLockModal!);
+                  document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                  setShowCatLockModal(null);
+                  setCatLockInput('');
+                } else {
+                  showToast('密碼錯誤！');
+                  setCatLockInput('');
+                }
+              }} className="flex-1 py-3 bg-indigo-600 text-white rounded-xl font-bold text-sm">解鎖</button>
             </div>
           </div>
         </div>
