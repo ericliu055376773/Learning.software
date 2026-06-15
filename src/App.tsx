@@ -1815,8 +1815,8 @@ export default function App() {
                           {filteredSteps.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                               {filteredSteps.map((step, index) => {
-                                const isCompleted = index < categoryProgress;
-                                const isCurrent = index === categoryProgress;
+                                const completedIds = new Set((currentUserData?.learningHistory || []).map((h:any) => h.stepId));
+                                const isCompleted = completedIds.has(step.id);
                                 return (
                                   <button
                                     key={step.id}
@@ -1830,12 +1830,11 @@ export default function App() {
                                     }}
                                     style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
                                     className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap border transition-all ${
-                                      isCurrent ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' :
                                       isCompleted ? 'bg-green-50 text-green-700 border-green-200' :
                                       'bg-gray-50 text-gray-500 border-gray-200'
                                     }`}
                                   >
-                                    {isCompleted ? '✅' : isCurrent ? '📖' : ''} {String(step.title).slice(0, 8)}
+                                    {isCompleted ? '✅' : ''} {String(step.title).slice(0, 8)}
                                   </button>
                                 );
                               })}
@@ -1861,7 +1860,7 @@ export default function App() {
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                         {block.subtitle && (
-                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
+                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
                                         )}
                                         <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
                                         {block.mediaUrl && (
@@ -1910,7 +1909,7 @@ export default function App() {
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                                         {block.subtitle && (
-                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
+                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
                                         )}
                                         <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
                                         {block.mediaUrl && (
@@ -1946,7 +1945,7 @@ export default function App() {
                                       <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
                                         <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3 gap-2">
                                           {block.subtitle ? (
-                                            <h4 className="font-bold text-lg flex-1" style={{color: '#1e3a5f', fontFamily: 'system-ui,-apple-system,sans-serif'}}>{String(block.subtitle)}</h4>
+                                            <h4 className="font-bold text-lg flex-1" style={{color: '#1e3a5f', fontFamily: 'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
                                           ) : (
                                             <h4 className="font-bold text-indigo-900 text-lg flex-1">內容區塊</h4>
                                           )}
