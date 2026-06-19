@@ -1202,10 +1202,9 @@ export default function App() {
               {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 {/* Sticky 標題列 + 分類頁籤 */}
-                <div className="sticky top-0 z-20 bg-slate-50 pt-4 pb-3 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
+                <div className="sticky top-0 z-20 bg-slate-50 pt-3 pb-3 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
                   <div className="flex justify-between items-center mb-4 px-1">
                     <div>
-                       <h2 className="font-bold text-gray-800 text-lg">{customTitles.learningContentTitle}</h2>
                        {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 完成後請點擊紀錄進度並選擇教學人員</p>}
                     </div>
                     {canEdit && (
@@ -1234,7 +1233,8 @@ export default function App() {
                                 document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }}
                               style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200'}`}
+                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}
+                              style={isActive ? {backgroundColor: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {}}
                             >{String(parent.name)}</button>
                           );
                         })}
@@ -1272,7 +1272,8 @@ export default function App() {
                               }
                             }}
                             style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'bg-blue-50 text-blue-600 border-blue-300' : 'bg-white text-gray-500 border-gray-200'}`}
+                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'border-transparent' : 'bg-white text-gray-500 border-gray-200'}`}
+                            style={isActive ? {backgroundColor: 'var(--theme-light)', color: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {}}
                           >
                             {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
                         );
@@ -1928,9 +1929,26 @@ export default function App() {
                                   <div className="space-y-5 select-text">
                                     {getStepBlocks(step).map((block: any, bIndex: number) => (
                                       <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                        {block.subtitle && (
-                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
-                                        )}
+                                        <div className="flex items-start justify-between gap-2 mb-2">
+                                          {block.subtitle && (
+                                            <h4 className="font-bold text-base pb-2 border-b border-gray-200 flex-1" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
+                                          )}
+                                          <button
+                                            onClick={() => {
+                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
+                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
+                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                            }}
+                                            style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
+                                          >
+                                            <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'14px',height:'14px',borderRadius:'3px',flexShrink:0,backgroundColor:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'#16a34a':'white',border:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'2px solid #16a34a':'2px solid #d1d5db'}}>
+                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                            </span>
+                                            教學完畢
+                                          </button>
+                                        </div>
                                         <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
                                         {block.mediaUrl && (
                                           <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
