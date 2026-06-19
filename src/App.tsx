@@ -681,6 +681,17 @@ export default function App() {
   const currentThemeObj = extendedThemeColors.find(t => t.id === globalTheme) || extendedThemeColors[0];
 
   if (!isAuthenticated) {
+    // 等 Firebase config 載入完才顯示，避免主題色閃爍
+    if (!isConfigLoaded) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-8 h-8 border-2 border-gray-200 border-t-gray-500 rounded-full animate-spin"></div>
+            <p className="text-xs text-gray-400 font-bold">載入中...</p>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-4 py-10 font-sans relative">
         <style>{`
@@ -1204,9 +1215,7 @@ export default function App() {
                 {/* Sticky 標題列 + 分類頁籤 */}
                 <div className="sticky top-0 z-20 bg-slate-50 pt-3 pb-3 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
                   <div className="flex justify-between items-center mb-4 px-1">
-                    <div>
-                       {!canEdit && <p className="text-[10px] text-gray-500 font-bold mt-0.5">※ 完成後請點擊紀錄進度並選擇教學人員</p>}
-                    </div>
+                    <div></div>
                     {canEdit && (
                       <div className="flex gap-2">
                         <button onClick={() => { setEditingCategories([...allCats]); setShowCategoryManager(true); }} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm"><Settings c="w-3.5 h-3.5 mr-1" /><span>管理分類</span></button>
@@ -1271,9 +1280,8 @@ export default function App() {
                                 document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }
                             }}
-                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                            className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${isActive ? 'border-transparent' : 'bg-white text-gray-500 border-gray-200'}`}
-                            style={isActive ? {backgroundColor: 'var(--theme-light)', color: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {}}
+                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {backgroundColor:'var(--theme-light)', color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`} : {})}}
+                            className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-500 border-transparent hover:text-gray-700'}`}
                           >
                             {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
                         );
