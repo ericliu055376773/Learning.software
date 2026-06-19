@@ -150,6 +150,10 @@ export default function App() {
   const [unlockedCategories, setUnlockedCategories] = useState<Set<string>>(new Set());
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
+  // 簽名功能
+  const [showSignatureModal, setShowSignatureModal] = useState<any>(null); // step
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
+  const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [isConfigLoaded, setIsConfigLoaded] = useState<boolean>(false);
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
@@ -524,10 +528,12 @@ export default function App() {
       newHistory.push({
         stepId: trainerModalStep.id,
         stepName: trainerModalStep.title,
-        firstApprover: '直接通關紀錄', // 保留欄位相容性
-        trainerName: selectedTrainerName, // 寫入教學人員紀錄
+        firstApprover: '直接通關紀錄',
+        trainerName: selectedTrainerName,
         approvedAt: Date.now(),
-        categoryId: targetCatId
+        categoryId: targetCatId,
+        // 如果有簽名則儲存
+        ...(signatureDataUrl ? { signatureUrl: signatureDataUrl } : {})
       });
 
       await updateDoc(doc(db, 'employees', emp.id), { 
@@ -537,7 +543,8 @@ export default function App() {
     }
     
     setShowTrainerModal(false);
-    showToast('已完成學習，紀錄已保存！');
+    setSignatureDataUrl('');
+    showToast(signatureDataUrl ? '✅ 已簽名並完成學習！' : '已完成學習，紀錄已保存！');
   }
 
   async function updateLearningRecordTrainer(emp: any, historyIndex: number, newTrainerName: string) {
@@ -1594,7 +1601,7 @@ export default function App() {
                               </div>
                             </div>
 
-                            {/* 移至其他分類 */}
+                            {/* 移至其他分類 + 簽名開關 */}
                             <div className="flex items-center gap-2 px-1 pb-3 border-b border-gray-100 mb-2">
                               <span className="text-[11px] text-gray-500 font-bold whitespace-nowrap flex items-center gap-1">
                                 📂 分類：
@@ -1628,18 +1635,31 @@ export default function App() {
                                   parents.forEach((parent:any) => {
                                     const children = allCats.filter((c:any) => c.parentId === parent.id && c.name.trim());
                                     if (children.length > 0) {
-                                      // 有子分類：顯示子分類（格式：外場-新人 › 新-收桌）
                                       children.forEach((child:any) => {
                                         result.push(<option key={child.id} value={child.id}>{`${parent.name} › ${child.name}`}</option>);
                                       });
                                     } else {
-                                      // 無子分類：直接顯示母分類
                                       result.push(<option key={parent.id} value={parent.id}>{parent.name}</option>);
                                     }
                                   });
                                   return result;
                                 })()}
                               </select>
+                            </div>
+
+                            {/* 簽名功能開關 */}
+                            <div className="flex items-center justify-between px-1 pb-3 border-b border-gray-100 mb-2">
+                              <span className="text-[11px] text-gray-500 font-bold flex items-center gap-1">✍️ 完成時需要本人簽名</span>
+                              <button
+                                onClick={async () => {
+                                  await updateDoc(doc(db, 'learningSteps', step.id), { requireSignature: !step.requireSignature });
+                                  showToast(step.requireSignature ? '已關閉簽名功能' : '已開啟簽名功能');
+                                }}
+                                style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${step.requireSignature ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                              >
+                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${step.requireSignature ? 'translate-x-6' : 'translate-x-1'}`} />
+                              </button>
                             </div>
                             
                             <div className="mt-2 space-y-4 pb-2">
@@ -1876,7 +1896,7 @@ export default function App() {
                                     ))}
                                   </div>
                                   <div className="mt-5 pt-4 border-t border-gray-100 pb-24">
-                                    <button onClick={() => { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); }} className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
+                                    <button onClick={() => { if (step.requireSignature) { setShowSignatureModal(step); setSignatureDataUrl(''); } else { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); } }} className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
                                       <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
                                     </button>
                                   </div>
@@ -1999,12 +2019,17 @@ export default function App() {
 
                                   <div className="mt-5 pt-5 border-t border-gray-100 pb-24">
                                     <button onClick={() => {
-                                        setTrainerModalStep(step);
-                                        setSelectedTrainerStore(currentUserData?.store || '');
-                                        setSelectedTrainerName('');
-                                        setShowTrainerModal(true);
+                                        if (step.requireSignature) {
+                                          setShowSignatureModal(step);
+                                          setSignatureDataUrl('');
+                                        } else {
+                                          setTrainerModalStep(step);
+                                          setSelectedTrainerStore(currentUserData?.store || '');
+                                          setSelectedTrainerName('');
+                                          setShowTrainerModal(true);
+                                        }
                                       }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
-                                      <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
+                                      <CheckCircle2 c="w-6 h-6 mr-2" />{step.requireSignature ? '✍️ 簽名並完成學習' : '完成學習，紀錄進度'}
                                     </button>
                                   </div>
                                 </div>
@@ -2335,6 +2360,13 @@ export default function App() {
                                                 <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-1">{catLabel}</span>
                                               )}
                                               <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
+                                              {/* 簽名縮圖 */}
+                                              {h.signatureUrl && (
+                                                <div className="mt-2 mb-1">
+                                                  <p className="text-[9px] text-gray-400 mb-1">✍️ 本人簽名</p>
+                                                  <img src={h.signatureUrl} alt="簽名" className="h-12 border border-gray-200 rounded bg-white object-contain" onClick={() => setFullscreenImage(h.signatureUrl)} style={{cursor:'pointer'}} title="點擊放大" />
+                                                </div>
+                                              )}
                                               <div className="flex items-center mt-2 justify-between">
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-[9px] text-gray-400">{h.approvedAt ? new Date(h.approvedAt).toLocaleDateString() : ''} 完成</span>
@@ -2584,6 +2616,12 @@ export default function App() {
                                                <span className="text-[10px] font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full self-start mb-1">{catLabel}</span>
                                              )}
                                              <span className="text-xs font-bold text-gray-800">{String(h.stepName)}</span>
+                                             {h.signatureUrl && (
+                                               <div className="mt-2 mb-1">
+                                                 <p className="text-[9px] text-gray-400 mb-1">✍️ 本人簽名</p>
+                                                 <img src={h.signatureUrl} alt="簽名" className="h-12 border border-gray-200 rounded bg-white object-contain" onClick={() => setFullscreenImage(h.signatureUrl)} style={{cursor:'pointer'}} title="點擊放大" />
+                                               </div>
+                                             )}
                                              <div className="flex items-center mt-2 justify-between">
                                                 <div className="flex items-center gap-2">
                                                   <span className="text-[9px] text-gray-400">{h.approvedAt ? new Date(h.approvedAt).toLocaleDateString() : ''} 完成</span>
@@ -2755,6 +2793,81 @@ export default function App() {
                   <CheckCircle2 c="w-4 h-4 mr-1.5" />儲存紀錄
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 手寫簽名 Modal */}
+      {showSignatureModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
+              <h3 className="font-black text-lg">✍️ 請簽名確認</h3>
+              <button onClick={() => setShowSignatureModal(null)} className="text-indigo-200 hover:text-white"><XCircle c="w-6 h-6" /></button>
+            </div>
+            <div className="p-4">
+              <p className="text-xs text-gray-500 mb-3 font-bold text-center">請在下方空白處以手指簽名，確認已完成「{showSignatureModal?.title}」學習</p>
+              <div className="border-2 border-gray-200 rounded-xl overflow-hidden bg-gray-50 relative" style={{touchAction:'none'}}>
+                <canvas
+                  id="signature-canvas"
+                  width={340}
+                  height={180}
+                  className="w-full block"
+                  style={{touchAction:'none', cursor:'crosshair'}}
+                  onPointerDown={e => {
+                    setIsDrawing(true);
+                    const canvas = e.currentTarget;
+                    const ctx = canvas.getContext('2d')!;
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    ctx.beginPath();
+                    ctx.moveTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+                    ctx.strokeStyle = '#1e3a5f';
+                    ctx.lineWidth = 2.5;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  }}
+                  onPointerMove={e => {
+                    if (!isDrawing) return;
+                    const canvas = e.currentTarget;
+                    const ctx = canvas.getContext('2d')!;
+                    const rect = canvas.getBoundingClientRect();
+                    const scaleX = canvas.width / rect.width;
+                    const scaleY = canvas.height / rect.height;
+                    ctx.lineTo((e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY);
+                    ctx.stroke();
+                  }}
+                  onPointerUp={e => {
+                    setIsDrawing(false);
+                    const canvas = e.currentTarget;
+                    setSignatureDataUrl(canvas.toDataURL());
+                  }}
+                />
+                <p className="absolute inset-0 flex items-center justify-center text-gray-300 text-sm font-bold pointer-events-none" style={{display: signatureDataUrl ? 'none' : 'flex'}}>在此簽名</p>
+              </div>
+              <button onClick={() => {
+                const canvas = document.getElementById('signature-canvas') as HTMLCanvasElement;
+                if (canvas) { const ctx = canvas.getContext('2d')!; ctx.clearRect(0, 0, canvas.width, canvas.height); }
+                setSignatureDataUrl('');
+              }} className="mt-2 text-xs text-red-400 hover:text-red-600 font-bold w-full text-center">清除重簽</button>
+            </div>
+            <div className="px-4 pb-4 flex gap-2">
+              <button onClick={() => setShowSignatureModal(null)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm">取消</button>
+              <button
+                disabled={!signatureDataUrl}
+                onClick={() => {
+                  const step = showSignatureModal;
+                  setShowSignatureModal(null);
+                  setTrainerModalStep(step);
+                  setSelectedTrainerStore(currentUserData?.store || '');
+                  setSelectedTrainerName('');
+                  setShowTrainerModal(true);
+                }}
+                className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${signatureDataUrl ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+              >確認簽名</button>
             </div>
           </div>
         </div>
