@@ -154,6 +154,7 @@ export default function App() {
   const [showSignatureModal, setShowSignatureModal] = useState<any>(null); // step
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
+  const [localCompletedBlocks, setLocalCompletedBlocks] = useState<{[key: string]: boolean}>({});
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [isConfigLoaded, setIsConfigLoaded] = useState<boolean>(false);
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
@@ -1213,7 +1214,7 @@ export default function App() {
               {/* 學習內容設定主區塊 */}
               <div className="bg-transparent">
                 {/* Sticky 標題列 + 分類頁籤 */}
-                <div className="sticky top-0 z-20 bg-slate-50 pt-3 pb-3 -mx-4 px-4 border-b border-gray-100 shadow-sm mb-4">
+                <div className="sticky top-0 z-20 pt-3 pb-3 -mx-4 px-4 border-b shadow-sm mb-4" style={{backgroundColor: 'color-mix(in srgb, var(--theme-main) 8%, white)', borderColor: 'color-mix(in srgb, var(--theme-main) 20%, #e5e7eb)'}}>
                   <div className="flex justify-between items-center mb-4 px-1">
                     <div></div>
                     {canEdit && (
@@ -1242,7 +1243,7 @@ export default function App() {
                                 document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }}
                               style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}
+                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'text-white border-transparent' : 'bg-white text-gray-600 border-white/80'}`}
                               style={isActive ? {backgroundColor: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {}}
                             >{String(parent.name)}</button>
                           );
@@ -1280,7 +1281,7 @@ export default function App() {
                                 document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }
                             }}
-                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {})}}
+                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {color:'rgba(0,0,0,0.45)', borderBottom:'2px solid transparent'})}}
                             className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-400 border-transparent hover:text-gray-600'}`}
                           >
                             {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
@@ -1943,16 +1944,18 @@ export default function App() {
                                           )}
                                           <button
                                             onClick={() => {
-                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
-                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                              const key = `${step.id}_${block.id}`;
+                                              const base = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                              const merged = {...base, ...localCompletedBlocks};
+                                              const next = !( merged[key] || false);
+                                              setLocalCompletedBlocks(prev => ({...prev, [key]: next}));
+                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: {...merged, [key]: next} });
                                             }}
                                             style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
-                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
+                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${({...(currentUserData?.completedBlocks||{}), ...localCompletedBlocks})[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
                                           >
-                                            <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'14px',height:'14px',borderRadius:'3px',flexShrink:0,backgroundColor:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'#16a34a':'white',border:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'2px solid #16a34a':'2px solid #d1d5db'}}>
-                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                            <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'14px',height:'14px',borderRadius:'3px',flexShrink:0,backgroundColor:({...(currentUserData?.completedBlocks||{}), ...localCompletedBlocks})[`${step.id}_${block.id}`]?'#16a34a':'white',border:({...(currentUserData?.completedBlocks||{}), ...localCompletedBlocks})[`${step.id}_${block.id}`]?'2px solid #16a34a':'2px solid #d1d5db'}}>
+                                              {({...(currentUserData?.completedBlocks||{}), ...localCompletedBlocks})[`${step.id}_${block.id}`] && <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                             </span>
                                             教學完畢
                                           </button>
@@ -1999,15 +2002,18 @@ export default function App() {
                                           {/* --- 前台專用：教學完畢打勾儲存 --- */}
                                           <button
                                             onClick={() => {
-                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
-                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
-                                              showToast(!current ? '已標記為教學完畢！' : '已取消標記！');
+                                              const key = `${step.id}_${block.id}`;
+                                              const base = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                              const merged = {...base, ...localCompletedBlocks};
+                                              const current = merged[key] || false;
+                                              const next = !current;
+                                              setLocalCompletedBlocks(prev => ({...prev, [key]: next}));
+                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: {...merged, [key]: next} });
+                                              showToast(next ? '已標記為教學完畢！' : '已取消標記！');
                                             }}
                                             style={{WebkitUserSelect:'none', userSelect:'none'}}
                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
-                                              currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]
+                                              ({...( currentUserData?.completedBlocks || {}), ...localCompletedBlocks})[`${step.id}_${block.id}`]
                                                 ? 'bg-green-50 border-green-300 text-green-700'
                                                 : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'
                                             }`}
@@ -2015,11 +2021,11 @@ export default function App() {
                                             <span style={{
                                               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                                               width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-                                              backgroundColor: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '#16a34a' : 'white',
-                                              border: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '2px solid #16a34a' : '2px solid #d1d5db',
+                                              backgroundColor: ({...( currentUserData?.completedBlocks || {}), ...localCompletedBlocks})[`${step.id}_${block.id}`] ? '#16a34a' : 'white',
+                                              border: ({...( currentUserData?.completedBlocks || {}), ...localCompletedBlocks})[`${step.id}_${block.id}`] ? '2px solid #16a34a' : '2px solid #d1d5db',
                                               transition: 'all 0.2s',
                                             }}>
-                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && (
+                                              {({...( currentUserData?.completedBlocks || {}), ...localCompletedBlocks})[`${step.id}_${block.id}`] && (
                                                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
                                                   <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                                                 </svg>
