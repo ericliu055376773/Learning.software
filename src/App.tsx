@@ -1280,8 +1280,8 @@ export default function App() {
                                 document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
                               }
                             }}
-                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {backgroundColor:'var(--theme-light)', color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`} : {})}}
-                            className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-500 border-transparent hover:text-gray-700'}`}
+                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {})}}
+                            className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-400 border-transparent hover:text-gray-600'}`}
                           >
                             {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
                         );
