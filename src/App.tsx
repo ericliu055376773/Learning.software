@@ -556,9 +556,9 @@ export default function App() {
         chunks.push(stepsToAssign.slice(i, i + 10));
       }
       for (const chunk of chunks) {
-        await Promise.all(chunk.map((s: any) =>
-          optStep(s.id, { categoryId: untaggedId }); updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
-        ));
+        await Promise.all(chunk.map((s: any) => {
+          optStep(s.id, { categoryId: untaggedId }); return updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId });
+        }));
       }
       setActiveCategoryId(untaggedId);
       showToast(`✅ 已將 ${stepsToAssign.length} 筆內容移入「未標注」！`);
@@ -1632,6 +1632,7 @@ export default function App() {
                               for (let i = 0; i < newSteps.length; i++) {
                                 optStepWrite(newSteps[i].id, { createdAt: Date.now() + i }, doc(db, 'learningSteps', newSteps[i].id));
                                 optStep(newSteps[i].id, { createdAt: Date.now() + i });
+                              }
                             }}
                             className={`flex flex-col gap-3 p-5 rounded-xl border bg-white shadow-sm relative transition-all ${
                               draggedStepIndex === index ? 'opacity-40 scale-95 border-indigo-300' :
