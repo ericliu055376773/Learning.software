@@ -1746,12 +1746,13 @@ export default function App() {
                                       blocks.splice(bIndex, 0, moved);
                                       optStepWrite(step.id, { blocks }, doc(db, 'learningSteps', step.id));
                                       optStep(step.id, { blocks });
+                                    } else {
                                       const srcStep = filteredSteps.find((s:any) => s.id === draggedBlockInfo.stepId);
                                       if (!srcStep) return;
                                       const srcBlocks = [...getStepBlocks(srcStep)];
-                                      const [moved] = srcBlocks.splice(draggedBlockInfo.blockIndex, 1);
+                                      const [movedBlock] = srcBlocks.splice(draggedBlockInfo.blockIndex, 1);
                                       const destBlocks = [...getStepBlocks(step)];
-                                      destBlocks.splice(bIndex, 0, moved);
+                                      destBlocks.splice(bIndex, 0, movedBlock);
                                       optStepWrite(srcStep.id, {blocks:srcBlocks}, doc(db,'learningSteps',srcStep.id)); optStepWrite(step.id, {blocks:destBlocks}, doc(db,'learningSteps',step.id));
                                       optStep(srcStep.id,{blocks:srcBlocks}); optStep(step.id,{blocks:destBlocks});
                                       showToast(`區塊已移至「${step.title}」`);
