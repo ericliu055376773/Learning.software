@@ -155,6 +155,16 @@ export default function App() {
   const [signatureDataUrl, setSignatureDataUrl] = useState<string>('');
   const [isDrawing, setIsDrawing] = useState<boolean>(false);
   const [localCompletedBlocks, setLocalCompletedBlocks] = useState<{[key: string]: boolean}>({});
+
+  // ── Optimistic Update 架構 ─────────────────────────────────────────
+  // 用 ref 存覆寫值＋寫入時間戳，snapshot 收到後只有「超過 3 秒」才覆蓋本地改動
+  const localEmpOverridesRef  = React.useRef<{[id:string]:any}>({});
+  const localStepOverridesRef = React.useRef<{[id:string]:any}>({});
+  const localStoreOverridesRef= React.useRef<{[id:string]:any}>({});
+  const empWriteAtRef   = React.useRef<{[id:string]:number}>({});
+  const stepWriteAtRef  = React.useRef<{[id:string]:number}>({});
+  const storeWriteAtRef = React.useRef<{[id:string]:number}>({});
+  // ─────────────────────────────────────────────────────────────────
   const [globalTheme, setGlobalTheme] = useState<string>('indigo');
   const [isConfigLoaded, setIsConfigLoaded] = useState<boolean>(false);
   const [systemLogoUrl, setSystemLogoUrl] = useState<string>('');
@@ -201,16 +211,23 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    // merge helper: 有本地 override 的欄位永遠以本地為準，不受時間限制
+    function mergeSnap(fromDB: any[], overridesRef: React.MutableRefObject<{[id:string]:any}>) {
+      return fromDB.map((base:any) => {
+        const ov = overridesRef.current[base.id];
+        return ov ? {...base, ...ov} : base;
+      });
+    }
     const unsubStores = onSnapshot(collection(db, 'stores'), 
-      (snap: any) => setStores(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any, b: any) => (a.order ?? a.createdAt ?? 0) - (b.order ?? b.createdAt ?? 0))),
+      (snap: any) => { const d = snap.docs.map((d:any)=>({id:d.id,...d.data()})).sort((a:any,b:any)=>(a.order??a.createdAt??0)-(b.order??b.createdAt??0)); setStores(mergeSnap(d, localStoreOverridesRef)); },
       (err: any) => console.error("Stores fetch error:", err)
     );
     const unsubSteps = onSnapshot(collection(db, 'learningSteps'), 
-      (snap: any) => setLearningSteps(snap.docs.map((d: any) => ({id: d.id, ...d.data()})).sort((a: any,b: any)=>a.createdAt-b.createdAt)),
+      (snap: any) => { const d = snap.docs.map((d:any)=>({id:d.id,...d.data()})).sort((a:any,b:any)=>a.createdAt-b.createdAt); setLearningSteps(mergeSnap(d, localStepOverridesRef)); },
       (err: any) => console.error("Steps fetch error:", err)
     );
     const unsubEmp = onSnapshot(collection(db, 'employees'), 
-      (snap: any) => setEmployees(snap.docs.map((d: any) => ({id: d.id, ...d.data()}))),
+      (snap: any) => { const d = snap.docs.map((d:any)=>({id:d.id,...d.data()})); setEmployees(mergeSnap(d, localEmpOverridesRef)); },
       (err: any) => console.error("Employees fetch error:", err)
     );
     const unsubPending = onSnapshot(collection(db, 'pendingAccounts'), 
@@ -223,7 +240,7 @@ export default function App() {
           const data = d.data();
           setGlobalTheme(data.theme || 'indigo');
           setSystemLogoUrl(data.logoUrl || '');
-          if (data.customTitles) setCustomTitles({...customTitles, ...data.customTitles});
+          if (data.customTitles) setCustomTitles(prev => ({...prev, ...data.customTitles}));
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -244,10 +261,46 @@ export default function App() {
     );
 
     return () => { unsubStores(); unsubSteps(); unsubEmp(); unsubPending(); unsubConfig(); };
-  }, [activeCategoryId]);
+  }, []);
 
   const canEdit = currentUserRole === 'super_admin';
   const currentUserData = employees.find(e => e.name === currentUserName);
+
+  // ── Optimistic update helpers ──────────────────────────────────────
+  function opt(
+    id: string, fields: any,
+    overridesRef: React.MutableRefObject<{[id:string]:any}>,
+    writeAtRef:   React.MutableRefObject<{[id:string]:number}>,
+    setter: React.Dispatch<React.SetStateAction<any[]>>
+  ) {
+    overridesRef.current = {...overridesRef.current, [id]: {...(overridesRef.current[id]||{}), ...fields}};
+    writeAtRef.current[id] = Date.now();
+    setter(prev => prev.map(item => item.id === id ? {...item, ...fields} : item));
+  }
+  function clearOpt(id: string, overridesRef: React.MutableRefObject<{[id:string]:any}>) {
+    const next = {...overridesRef.current};
+    delete next[id];
+    overridesRef.current = next;
+  }
+  function optEmp  (id:string, fields:any) { opt(id, fields, localEmpOverridesRef,   empWriteAtRef,   setEmployees);    }
+  function optStep (id:string, fields:any) { opt(id, fields, localStepOverridesRef,  stepWriteAtRef,  setLearningSteps);}
+  function optStore(id:string, fields:any) { opt(id, fields, localStoreOverridesRef, storeWriteAtRef, setStores);       }
+  async function optEmpWrite(id:string, fields:any, docRef:any) {
+    optEmp(id, fields);
+    await updateDoc(docRef, fields);
+    clearOpt(id, localEmpOverridesRef);
+  }
+  async function optStepWrite(id:string, fields:any, docRef:any) {
+    optStep(id, fields);
+    await updateDoc(docRef, fields);
+    clearOpt(id, localStepOverridesRef);
+  }
+  async function optStoreWrite(id:string, fields:any, docRef:any) {
+    optStore(id, fields);
+    await updateDoc(docRef, fields);
+    clearOpt(id, localStoreOverridesRef);
+  }
+  // ──────────────────────────────────────────────────────────────────
   const totalAdminNotifications = pendingAccounts.length;
 
   useEffect(() => {
@@ -382,8 +435,8 @@ export default function App() {
 
       const blocks = getStepBlocks(step);
       const newBlocks = blocks.map((b: any) => b.id === blockId ? { ...b, mediaUrl: url, fileName: file.name } : b);
-      await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
-      showToast("上傳成功！");
+      optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+      optStep(step.id, { blocks: newBlocks });
     } catch (err: any) { 
       console.error("Upload error:", err);
       showToast("上傳失敗：" + (err.message || "請檢查權限設定！")); 
@@ -409,31 +462,31 @@ export default function App() {
 
   async function addBlock(step: any) {
      const blocks = getStepBlocks(step);
-     const newBlocks = [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }, ...blocks];
-     await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
-     showToast("已新增內容區塊！");
+     const newBlocks = [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '', enableCheck: true }, ...blocks];
+     optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+     optStep(step.id, { blocks: newBlocks });
   }
 
   async function removeBlock(step: any, blockId: string) {
      if (!window.confirm("確定要刪除這個內容區塊嗎？（刪除後無法復原）")) return;
      const blocks = getStepBlocks(step);
      const newBlocks = blocks.filter((b: any) => b.id !== blockId);
-     await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
-     showToast("區塊已刪除！");
+     optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+     optStep(step.id, { blocks: newBlocks });
   }
 
   async function removeBlockMedia(step: any, blockId: string) {
      if (!window.confirm("確定要移除此附件嗎？")) return;
      const blocks = getStepBlocks(step);
      const newBlocks = blocks.map((b: any) => b.id === blockId ? { ...b, mediaUrl: '', fileName: '' } : b);
-     await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
-  }
+     optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+     optStep(step.id, { blocks: newBlocks });
 
   async function updateBlockField(step: any, blockId: string, field: string, value: any) {
      const blocks = getStepBlocks(step);
      const newBlocks = blocks.map((b: any) => b.id === blockId ? { ...b, [field]: value } : b);
-     await updateDoc(doc(db, 'learningSteps', step.id), { blocks: newBlocks });
-  }
+     optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+     optStep(step.id, { blocks: newBlocks });
 
   function startEditEmployee(emp: any) {
     setEditingEmployeeId(emp.id);
@@ -455,8 +508,8 @@ export default function App() {
       showToast('資料格式不完整或密碼不為 6 碼！'); return;
     }
     try {
-      await updateDoc(doc(db, 'employees', id), editEmployeeData);
-      setEditingEmployeeId(null); showToast('人員資料已成功更新！');
+      optEmpWrite(id, editEmployeeData, doc(db, 'employees', id));
+      optEmp(id, editEmployeeData);
     } catch (error) { showToast('更新失敗，請檢查網路連線。'); }
   }
   
@@ -504,7 +557,7 @@ export default function App() {
       }
       for (const chunk of chunks) {
         await Promise.all(chunk.map((s: any) =>
-          updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
+          optStep(s.id, { categoryId: untaggedId }); updateDoc(doc(db, 'learningSteps', s.id), { categoryId: untaggedId })
         ));
       }
       setActiveCategoryId(untaggedId);
@@ -537,10 +590,7 @@ export default function App() {
         ...(signatureDataUrl ? { signatureUrl: signatureDataUrl } : {})
       });
 
-      await updateDoc(doc(db, 'employees', emp.id), { 
-        completedLearning: newProgress,
-        learningHistory: newHistory
-      });
+      await optEmpWrite(emp.id, { completedLearning: newProgress, learningHistory: newHistory }, doc(db, 'employees', emp.id));
     }
     
     setShowTrainerModal(false);
@@ -553,8 +603,8 @@ export default function App() {
       const newHistory = [...emp.learningHistory];
       newHistory[historyIndex].trainerName = newTrainerName;
       try {
-          await updateDoc(doc(db, 'employees', emp.id), { learningHistory: newHistory });
-          showToast('教學人員已更新！');
+          optEmpWrite(emp.id, { learningHistory: newHistory }, doc(db, 'employees', emp.id));
+          optEmp(emp.id, { learningHistory: newHistory });
       } catch (error) {
           showToast('更新失敗！請檢查網路。');
       }
@@ -597,11 +647,7 @@ export default function App() {
       });
 
       try {
-          await updateDoc(doc(db, 'employees', emp.id), {
-              learningHistory: newHistory,
-              completedLearning: newCompletedLearning,
-              completedBlocks: newCompletedBlocks
-          });
+          await optEmpWrite(emp.id, { learningHistory: newHistory, completedLearning: newCompletedLearning, completedBlocks: newCompletedBlocks }, doc(db, 'employees', emp.id));
           showToast('學習紀錄已刪除！該員需重新學習。');
       } catch (error) {
           showToast('刪除失敗！請檢查網路連線。');
@@ -796,8 +842,8 @@ export default function App() {
                   <div>
                     <label className="block text-[10px] font-bold text-gray-500 uppercase ml-1 mb-1">人格特質</label>
                     <div className="relative">
-                      <select name="mbti" required defaultValue="" className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-[11px] sm:text-sm">
-                        <option value="" disabled>請選擇...</option>
+                      <select name="mbti" defaultValue="" className="w-full p-2.5 sm:p-3.5 border border-gray-200 bg-gray-50 rounded-xl font-bold text-gray-700 outline-none focus:border-indigo-500 appearance-none text-[11px] sm:text-sm">
+                        <option value="">請選擇（選填）</option>
                         <option value="E">E型 (外向)</option>
                         <option value="I">I型 (內向)</option>
                       </select>
@@ -1086,7 +1132,7 @@ export default function App() {
                             showToast('定位中...');
                             navigator.geolocation.getCurrentPosition(
                               (pos) => {
-                                updateDoc(doc(db, 'stores', store.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                const gf={lat:pos.coords.latitude,lng:pos.coords.longitude}; optStoreWrite(store.id,gf,doc(db,'stores',store.id));
                                 showToast(`${store.name} 座標已更新！`);
                               },
                               (err) => showToast('無法取得定位，請確認權限是否開啟'),
@@ -1101,11 +1147,11 @@ export default function App() {
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-[10px] text-gray-500 font-bold block mb-1">緯度 (Latitude)</label>
-                          <input type="number" step="any" value={store.lat || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lat: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
+                          <input type="number" step="any" value={store.lat || ''} onChange={e => { const v=parseFloat(e.target.value)||null; optStoreWrite(store.id,{lat:v},doc(db,'stores',store.id)); }} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
                         </div>
                         <div>
                           <label className="text-[10px] text-gray-500 font-bold block mb-1">經度 (Longitude)</label>
-                          <input type="number" step="any" value={store.lng || ''} onChange={e => updateDoc(doc(db, 'stores', store.id), { lng: parseFloat(e.target.value) || null })} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
+                          <input type="number" step="any" value={store.lng || ''} onChange={e => { const v=parseFloat(e.target.value)||null; optStoreWrite(store.id,{lng:v},doc(db,'stores',store.id)); }} className="w-full p-2 border border-gray-200 rounded text-xs outline-none focus:border-indigo-500 bg-gray-50" placeholder="未設定" />
                         </div>
                       </div>
                       {(store.lat && store.lng) && (
@@ -1469,8 +1515,8 @@ export default function App() {
                                        const newCatId = e.target.value;
                                        if (!newCatId) return;
                                        for (const s of group.steps) {
-                                         await updateDoc(doc(db, 'learningSteps', s.id), { categoryId: newCatId });
-                                       }
+                                         optStepWrite(s.id, { categoryId: newCatId }, doc(db, 'learningSteps', s.id));
+                                         optStep(s.id, { categoryId: newCatId });
                                        showToast(`✅ ${group.steps.length} 筆已移至新分類！`);
                                      }}
                                      className="text-[11px] bg-slate-600 text-white border border-slate-400 rounded px-2 py-1 outline-none"
@@ -1526,7 +1572,7 @@ export default function App() {
                     <div className="mb-4">
                       <button onClick={async () => {
                         const minCreatedAt = filteredSteps.length > 0 ? Math.min(...filteredSteps.map((s:any) => s.createdAt || 0)) - 1 : Date.now();
-                        await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }], categoryId: currentActiveCatId, status: 'locked', createdAt: minCreatedAt });
+                        await addDoc(collection(db, 'learningSteps'), { title: '新學習項目', blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '', enableCheck: true }], categoryId: currentActiveCatId, status: 'locked', createdAt: minCreatedAt });
                       }} className="w-full py-3 border border-gray-200 rounded-xl text-sm text-indigo-600 font-bold flex justify-center items-center hover:bg-gray-50 transition-colors shadow-sm bg-white">
                         <PlusCircle c="w-4 h-4 mr-1.5"/> 於「{String(effectiveCategories.find((c:any)=>c.id === currentActiveCatId)?.name || '')}」新增內容
                       </button>
@@ -1584,8 +1630,8 @@ export default function App() {
                               setDragOverStepIndex(null);
                               // 更新 Firebase 排序
                               for (let i = 0; i < newSteps.length; i++) {
-                                await updateDoc(doc(db, 'learningSteps', newSteps[i].id), { createdAt: Date.now() + i });
-                              }
+                                optStepWrite(newSteps[i].id, { createdAt: Date.now() + i }, doc(db, 'learningSteps', newSteps[i].id));
+                                optStep(newSteps[i].id, { createdAt: Date.now() + i });
                             }}
                             className={`flex flex-col gap-3 p-5 rounded-xl border bg-white shadow-sm relative transition-all ${
                               draggedStepIndex === index ? 'opacity-40 scale-95 border-indigo-300' :
@@ -1607,7 +1653,7 @@ export default function App() {
                               </span>
                               <div className="font-black text-gray-300 text-xl w-6">{index + 1}.</div>
                               <div className="flex flex-1 gap-2 pr-6">
-                                <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
+                                <input type="text" defaultValue={step.title} onBlur={e => { optStepWrite(step.id, {title: e.target.value}, doc(db,'learningSteps',step.id)); }} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
                               </div>
                             </div>
 
@@ -1621,8 +1667,8 @@ export default function App() {
                                 onChange={async e => {
                                   const newCatId = e.target.value;
                                   if (!newCatId) return;
-                                  await updateDoc(doc(db, 'learningSteps', step.id), { categoryId: newCatId });
-                                  const targetCat = allCats.find((c:any) => c.id === newCatId);
+                                  optStepWrite(step.id, { categoryId: newCatId }, doc(db, 'learningSteps', step.id));
+                                  optStep(step.id, { categoryId: newCatId });
                                   // 同時切換母分類和子分類頁籤
                                   if (targetCat?.parentId) {
                                     setActiveParentId(targetCat.parentId);
@@ -1662,8 +1708,9 @@ export default function App() {
                               <span className="text-[11px] text-gray-500 font-bold flex items-center gap-1">✍️ 完成時需要本人簽名</span>
                               <button
                                 onClick={async () => {
-                                  await updateDoc(doc(db, 'learningSteps', step.id), { requireSignature: !step.requireSignature });
-                                  showToast(step.requireSignature ? '已關閉簽名功能' : '已開啟簽名功能');
+                                  const nextSig = !step.requireSignature;
+                                  optStepWrite(step.id, { requireSignature: nextSig }, doc(db, 'learningSteps', step.id));
+                                  optStep(step.id, { requireSignature: nextSig });
                                 }}
                                 style={{WebkitUserSelect:'none', userSelect:'none'}}
                                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${step.requireSignature ? 'bg-indigo-600' : 'bg-gray-200'}`}
@@ -1693,16 +1740,16 @@ export default function App() {
                                       const blocks = [...getStepBlocks(step)];
                                       const [moved] = blocks.splice(draggedBlockInfo.blockIndex, 1);
                                       blocks.splice(bIndex, 0, moved);
-                                      await updateDoc(doc(db, 'learningSteps', step.id), { blocks });
-                                    } else {
+                                      optStepWrite(step.id, { blocks }, doc(db, 'learningSteps', step.id));
+                                      optStep(step.id, { blocks });
                                       const srcStep = filteredSteps.find((s:any) => s.id === draggedBlockInfo.stepId);
                                       if (!srcStep) return;
                                       const srcBlocks = [...getStepBlocks(srcStep)];
                                       const [moved] = srcBlocks.splice(draggedBlockInfo.blockIndex, 1);
                                       const destBlocks = [...getStepBlocks(step)];
                                       destBlocks.splice(bIndex, 0, moved);
-                                      await updateDoc(doc(db, 'learningSteps', srcStep.id), { blocks: srcBlocks });
-                                      await updateDoc(doc(db, 'learningSteps', step.id), { blocks: destBlocks });
+                                      optStepWrite(srcStep.id, {blocks:srcBlocks}, doc(db,'learningSteps',srcStep.id)); optStepWrite(step.id, {blocks:destBlocks}, doc(db,'learningSteps',step.id));
+                                      optStep(srcStep.id,{blocks:srcBlocks}); optStep(step.id,{blocks:destBlocks});
                                       showToast(`區塊已移至「${step.title}」`);
                                     }
                                     setDraggedBlockInfo(null); setDragOverBlockIndex(null);
@@ -1725,8 +1772,8 @@ export default function App() {
                                       </span>
                                       {/* 上下按鈕 */}
                                       <div className="flex gap-1">
-                                        <button onClick={async () => { if (bIndex===0) return; const b=[...getStepBlocks(step)]; [b[bIndex-1],b[bIndex]]=[b[bIndex],b[bIndex-1]]; await updateDoc(doc(db,'learningSteps',step.id),{blocks:b}); }} disabled={bIndex===0} style={{WebkitUserSelect:'none',userSelect:'none'}} className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${bIndex===0?'text-gray-200 cursor-not-allowed':'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>▲</button>
-                                        <button onClick={async () => { const b=[...getStepBlocks(step)]; if(bIndex===b.length-1) return; [b[bIndex],b[bIndex+1]]=[b[bIndex+1],b[bIndex]]; await updateDoc(doc(db,'learningSteps',step.id),{blocks:b}); }} disabled={bIndex===getStepBlocks(step).length-1} style={{WebkitUserSelect:'none',userSelect:'none'}} className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${bIndex===getStepBlocks(step).length-1?'text-gray-200 cursor-not-allowed':'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>▼</button>
+                                        <button onClick={async () => { if (bIndex===0) return; const b=[...getStepBlocks(step)]; [b[bIndex-1],b[bIndex]]=[b[bIndex],b[bIndex-1]]; optStepWrite(step.id,{blocks:b},doc(db,'learningSteps',step.id)); }} disabled={bIndex===0} style={{WebkitUserSelect:'none',userSelect:'none'}} className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${bIndex===0?'text-gray-200 cursor-not-allowed':'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>▲</button>
+                                        <button onClick={async () => { const b=[...getStepBlocks(step)]; if(bIndex===b.length-1) return; [b[bIndex],b[bIndex+1]]=[b[bIndex+1],b[bIndex]]; optStepWrite(step.id,{blocks:b},doc(db,'learningSteps',step.id)); }} disabled={bIndex===getStepBlocks(step).length-1} style={{WebkitUserSelect:'none',userSelect:'none'}} className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${bIndex===getStepBlocks(step).length-1?'text-gray-200 cursor-not-allowed':'text-gray-400 hover:text-indigo-600 hover:bg-indigo-50'}`}>▼</button>
                                       </div>
                                       <span className="text-xs font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded">區塊 {bIndex + 1}</span>
                                       {/* 移至同分類其他項目 */}
@@ -1741,8 +1788,8 @@ export default function App() {
                                             const srcBlocks = [...getStepBlocks(step)];
                                             const [moved] = srcBlocks.splice(bIndex, 1);
                                             const destBlocks = [...getStepBlocks(targetStep), moved];
-                                            await updateDoc(doc(db, 'learningSteps', step.id), { blocks: srcBlocks });
-                                            await updateDoc(doc(db, 'learningSteps', targetStepId), { blocks: destBlocks });
+                                            optStepWrite(step.id, {blocks:srcBlocks}, doc(db,'learningSteps',step.id)); optStepWrite(targetStepId, {blocks:destBlocks}, doc(db,'learningSteps',targetStepId));
+                                            optStep(step.id,{blocks:srcBlocks}); optStep(targetStepId,{blocks:destBlocks});
                                             showToast(`✅ 區塊已移至「${targetStep.title}」`);
                                           }}
                                           style={{WebkitUserSelect:'none', userSelect:'none'}}
@@ -1759,6 +1806,22 @@ export default function App() {
                                   </div>
                                   
                                   <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3 select-text" style={{userSelect:'text', WebkitUserSelect:'text'}} placeholder="請輸入子標題（選填）"/>
+                                  
+                                  {/* 教學完畢打勾開關 */}
+                                  <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg mb-3">
+                                    <span className="text-xs font-bold text-gray-600">✅ 顯示「教學完畢」打勾按鈕</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const next = !(block.enableCheck !== false);
+                                        const newBlocks = getStepBlocks(step).map((b: any) => b.id === block.id ? {...b, enableCheck: next} : b);
+                                        optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
+                                      }}
+                                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ${block.enableCheck !== false ? 'bg-indigo-600' : 'bg-gray-300'}`}
+                                    >
+                                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${block.enableCheck !== false ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                  </div>
                                   
                                   <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[100px] select-text" style={{userSelect:'text', WebkitUserSelect:'text', resize:'vertical'}} placeholder="請輸入學習內容..." />
                                 
@@ -1796,8 +1859,8 @@ export default function App() {
                                     const srcBlocks = [...getStepBlocks(srcStep)];
                                     const [moved] = srcBlocks.splice(draggedBlockInfo.blockIndex, 1);
                                     const destBlocks = [...getStepBlocks(step), moved];
-                                    await updateDoc(doc(db, 'learningSteps', srcStep.id), { blocks: srcBlocks });
-                                    await updateDoc(doc(db, 'learningSteps', step.id), { blocks: destBlocks });
+                                    optStepWrite(srcStep.id, {blocks:srcBlocks}, doc(db,'learningSteps',srcStep.id)); optStepWrite(step.id, {blocks:destBlocks}, doc(db,'learningSteps',step.id));
+                                    optStep(srcStep.id,{blocks:srcBlocks}); optStep(step.id,{blocks:destBlocks});
                                     showToast(`區塊已移至「${step.title}」`);
                                     setDraggedBlockInfo(null); setDragOverBlockIndex(null);
                                   }}
@@ -1820,7 +1883,7 @@ export default function App() {
                                   const minCreatedAt = filteredSteps.length > 0 ? Math.min(...filteredSteps.map((s:any) => s.createdAt || 0)) - 1 : Date.now();
                                   await addDoc(collection(db, 'learningSteps'), {
                                     title: '新學習項目',
-                                    blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }],
+                                    blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '', enableCheck: true }],
                                     categoryId: currentActiveCatId,
                                     status: 'locked',
                                     createdAt: minCreatedAt
@@ -1864,7 +1927,7 @@ export default function App() {
                                       'bg-gray-50 text-gray-500 border-gray-200'
                                     }`}
                                   >
-                                    {isCompleted ? '✅' : ''} {String(step.title).slice(0, 8)}
+                                    {isCompleted ? '✅ ' : ''}{String(step.title).slice(0, 12)}
                                   </button>
                                 );
                               })}
@@ -1942,14 +2005,16 @@ export default function App() {
                                           {block.subtitle && (
                                             <h4 className="font-bold text-base pb-2 border-b border-gray-200 flex-1" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
                                           )}
+                                          {block.enableCheck !== false && (
                                           <button
                                             onClick={() => {
                                               const key = `${step.id}_${block.id}`;
                                               const base = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
                                               const merged = {...base, ...localCompletedBlocks};
                                               const next = !( merged[key] || false);
+                                              const newBlocks = {...merged, [key]: next};
                                               setLocalCompletedBlocks(prev => ({...prev, [key]: next}));
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: {...merged, [key]: next} });
+                                              optEmpWrite(currentUserData.id, { completedBlocks: newBlocks }, doc(db, 'employees', currentUserData.id));
                                             }}
                                             style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
                                             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${({...(currentUserData?.completedBlocks||{}), ...localCompletedBlocks})[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
@@ -1959,6 +2024,7 @@ export default function App() {
                                             </span>
                                             教學完畢
                                           </button>
+                                          )}{/* end enableCheck */}
                                         </div>
                                         <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
                                         {block.mediaUrl && (
@@ -2000,6 +2066,7 @@ export default function App() {
                                           )}
                                           
                                           {/* --- 前台專用：教學完畢打勾儲存 --- */}
+                                          {block.enableCheck !== false && (
                                           <button
                                             onClick={() => {
                                               const key = `${step.id}_${block.id}`;
@@ -2007,8 +2074,9 @@ export default function App() {
                                               const merged = {...base, ...localCompletedBlocks};
                                               const current = merged[key] || false;
                                               const next = !current;
+                                              const newBlocks = {...merged, [key]: next};
                                               setLocalCompletedBlocks(prev => ({...prev, [key]: next}));
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: {...merged, [key]: next} });
+                                              optEmpWrite(currentUserData.id, { completedBlocks: newBlocks }, doc(db, 'employees', currentUserData.id));
                                               showToast(next ? '已標記為教學完畢！' : '已取消標記！');
                                             }}
                                             style={{WebkitUserSelect:'none', userSelect:'none'}}
@@ -2033,6 +2101,7 @@ export default function App() {
                                             </span>
                                             教學完畢
                                           </button>
+                                          )}{/* end enableCheck */}
                                         </div>
                                         <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: '2.4', letterSpacing: '0.02em'}}>{String(block.description)}</p>
                                         
@@ -2130,7 +2199,7 @@ export default function App() {
                           try {
                               for (let i = 0; i < newStores.length; i++) {
                                   if (stores[i].id !== newStores[i].id) {
-                                      await updateDoc(doc(db, 'stores', newStores[i].id), { order: i });
+                                      optStoreWrite(newStores[i].id,{order:i},doc(db,'stores',newStores[i].id));
                                   }
                               }
                           } catch (err) {
@@ -2228,6 +2297,31 @@ export default function App() {
                                       <label className="text-[10px] font-bold text-blue-600 mb-1 block">職位權限</label>
                                       <select value={editEmployeeData.role} onChange={(e) => setEditEmployeeData({...editEmployeeData, role: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                                         {jobRoles.map(role => <option key={role} value={role}>{String(role)}</option>)}
+                                      </select>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">出生年月日</label>
+                                      <input type="date" value={editEmployeeData.birthdate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, birthdate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">到職日</label>
+                                      <input type="date" value={editEmployeeData.hireDate || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, hireDate: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white"/>
+                                    </div>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">聯絡電話</label>
+                                      <input type="tel" value={editEmployeeData.phone || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, phone: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white" placeholder="09XX"/>
+                                    </div>
+                                    <div>
+                                      <label className="text-[10px] font-bold text-blue-600 mb-1 block">人格特質</label>
+                                      <select value={editEmployeeData.mbti || ''} onChange={(e) => setEditEmployeeData({...editEmployeeData, mbti: e.target.value})} className="w-full p-2.5 border border-blue-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                                        <option value="">請選擇...</option>
+                                        {['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'].map(m => <option key={m} value={m}>{m}</option>)}
                                       </select>
                                     </div>
                                   </div>
