@@ -1809,12 +1809,12 @@ export default function App() {
                                     </div>
                                     <button onClick={() => removeBlock(step, block.id)} className="text-red-400 hover:text-red-600 bg-red-50 p-1.5 rounded transition-colors" title="刪除此區塊"><Trash2 c="w-3.5 h-3.5" /></button>
                                   </div>
-                                  
-                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3 select-text" style={{userSelect:'text', WebkitUserSelect:'text'}} placeholder="請輸入子標題（選填）"/>
-                                  
-                                  {/* 教學完畢打勾開關 */}
-                                  <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg mb-3">
-                                    <span className="text-xs font-bold text-gray-600">✅ 顯示「教學完畢」打勾按鈕</span>
+
+                                  {/* 教學完畢打勾開關 — 放在子標題上方，最容易看到 */}
+                                  <div className="flex items-center justify-between px-3 py-2 mb-3 rounded-lg border" style={{background: block.enableCheck !== false ? '#eef2ff' : '#f9fafb', borderColor: block.enableCheck !== false ? '#c7d2fe' : '#e5e7eb'}}>
+                                    <span className="text-xs font-bold" style={{color: block.enableCheck !== false ? '#4f46e5' : '#9ca3af'}}>
+                                      {block.enableCheck !== false ? '✅ 教學完畢按鈕：開啟' : '☐ 教學完畢按鈕：關閉'}
+                                    </span>
                                     <button
                                       type="button"
                                       onClick={() => {
@@ -1827,6 +1827,8 @@ export default function App() {
                                       <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${block.enableCheck !== false ? 'translate-x-6' : 'translate-x-1'}`} />
                                     </button>
                                   </div>
+
+                                  <input type="text" defaultValue={block.subtitle || ''} onBlur={e => updateBlockField(step, block.id, 'subtitle', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-2.5 border border-gray-200 rounded-lg font-bold text-gray-800 bg-gray-50 text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white mb-3 select-text" style={{userSelect:'text', WebkitUserSelect:'text'}} placeholder="請輸入子標題（選填）"/>
                                   
                                   <textarea defaultValue={block.description} onBlur={e => updateBlockField(step, block.id, 'description', e.target.value)} onDragStart={e => e.preventDefault()} className="w-full p-3 border border-gray-200 rounded-lg text-sm text-gray-700 bg-gray-50 outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white min-h-[100px] select-text" style={{userSelect:'text', WebkitUserSelect:'text', resize:'vertical'}} placeholder="請輸入學習內容..." />
                                 
