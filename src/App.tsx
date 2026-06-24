@@ -1517,6 +1517,7 @@ export default function App() {
                                        for (const s of group.steps) {
                                          optStepWrite(s.id, { categoryId: newCatId }, doc(db, 'learningSteps', s.id));
                                          optStep(s.id, { categoryId: newCatId });
+                                       }
                                        showToast(`✅ ${group.steps.length} 筆已移至新分類！`);
                                      }}
                                      className="text-[11px] bg-slate-600 text-white border border-slate-400 rounded px-2 py-1 outline-none"
