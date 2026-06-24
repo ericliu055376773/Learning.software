@@ -481,12 +481,14 @@ export default function App() {
      const newBlocks = blocks.map((b: any) => b.id === blockId ? { ...b, mediaUrl: '', fileName: '' } : b);
      optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
      optStep(step.id, { blocks: newBlocks });
+  }
 
   async function updateBlockField(step: any, blockId: string, field: string, value: any) {
      const blocks = getStepBlocks(step);
      const newBlocks = blocks.map((b: any) => b.id === blockId ? { ...b, [field]: value } : b);
      optStepWrite(step.id, { blocks: newBlocks }, doc(db, 'learningSteps', step.id));
      optStep(step.id, { blocks: newBlocks });
+  }
 
   function startEditEmployee(emp: any) {
     setEditingEmployeeId(emp.id);
