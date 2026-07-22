@@ -1135,6 +1135,18 @@ export default function App() {
                     </div>
                   ))}
                   {stores.length === 0 && <p className="text-center text-gray-400 text-xs py-4 font-bold">目前無門店資料，請先新增門店</p>}
+                  {/* 新增門店 */}
+                  <div className="flex gap-2 mt-3">
+                    <input type="text" id="gps-new-store" className="flex-1 p-2 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-indigo-500" placeholder="輸入新門店名稱..." />
+                    <button type="button" onClick={async () => {
+                      const input = document.getElementById('gps-new-store') as HTMLInputElement;
+                      if (input?.value.trim()) {
+                        await addDoc(collection(db, 'stores'), { name: input.value.trim(), order: stores.length, createdAt: Date.now() });
+                        input.value = '';
+                        showToast('門店已新增！');
+                      }
+                    }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors whitespace-nowrap">＋ 新增門店</button>
+                  </div>
                 </div>
               </div>
             </div>
