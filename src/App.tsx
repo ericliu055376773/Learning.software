@@ -186,6 +186,9 @@ export default function App() {
   const [draggedStepIndex, setDraggedStepIndex] = useState<number | null>(null);
   const [dragOverStepIndex, setDragOverStepIndex] = useState<number | null>(null);
 
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+  const toggleStep = (stepId: string) => setExpandedSteps(prev => { const n = new Set(prev); if (n.has(stepId)) n.delete(stepId); else n.add(stepId); return n; });
+
   const [showTrainerModal, setShowTrainerModal] = useState<boolean>(false);
   const [trainerModalStep, setTrainerModalStep] = useState<any>(null);
   const [selectedTrainerStore, setSelectedTrainerStore] = useState<string>('');
@@ -1910,36 +1913,39 @@ export default function App() {
 
                             if (isLocked) {
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm relative">
-                                  <div className="flex items-center gap-3 mb-4">
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-gray-200 rounded-xl shadow-sm relative overflow-hidden">
+                                  <div onClick={() => toggleStep(step.id)} className="flex items-center gap-3 p-5 cursor-pointer active:bg-gray-50 transition-colors" style={{WebkitUserSelect:'none', userSelect:'none'}}>
                                     <div className="w-8 h-8 rounded-full border-2 border-gray-300 bg-gray-50 flex items-center justify-center text-gray-400">
                                       <BookOpen c="w-4 h-4" />
                                     </div>
-                                    <h3 className="font-bold text-gray-700 text-lg">{String(step.title)}</h3>
+                                    <h3 className="font-bold text-gray-700 text-lg flex-1">{String(step.title)}</h3>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expandedSteps.has(step.id) ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
                                   </div>
-                                  <div className="space-y-4 select-text">
-                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                      <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                        {block.subtitle && (
-                                          <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
-                                        )}
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
-                                        {block.mediaUrl && (
-                                          <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
-                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
-                                              <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
-                                            ) : (
-                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
-                                            )}
-                                          </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                  <div className="mt-5 pt-4 border-t border-gray-100 pb-24">
-                                    <button onClick={() => { if (step.requireSignature) { setShowSignatureModal(step); setSignatureDataUrl(''); } else { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); } }} className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
-                                      <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
-                                    </button>
+                                  <div className={`transition-all duration-300 ease-in-out ${expandedSteps.has(step.id) ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                                    <div className="px-5 pb-5 space-y-4 select-text">
+                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                        <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                          {block.subtitle && (
+                                            <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
+                                          )}
+                                          <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
+                                          {block.mediaUrl && (
+                                            <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
+                                              {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                                <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                              ) : (
+                                                <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                    <div className="px-5 pb-5 pt-4 border-t border-gray-100">
+                                      <button onClick={() => { if (step.requireSignature) { setShowSignatureModal(step); setSignatureDataUrl(''); } else { setTrainerModalStep(step); setSelectedTrainerStore(currentUserData?.store || ''); setSelectedTrainerName(''); setShowTrainerModal(true); } }} className="w-full py-4 bg-gray-700 hover:bg-gray-800 text-white font-black rounded-xl text-base shadow-lg transition-all active:scale-95 flex justify-center items-center">
+                                        <CheckCircle2 c="w-6 h-6 mr-2" />完成學習，紀錄進度
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -1949,58 +1955,62 @@ export default function App() {
                               const historyRecord = currentUserData?.learningHistory?.find((h: any) => h.stepId === step.id);
                               const trainerName = historyRecord?.trainerName;
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-green-200 rounded-xl p-5 shadow-sm relative">
-                                  {/* 已完成標題列 */}
-                                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border border-green-200 rounded-xl shadow-sm relative overflow-hidden">
+                                  {/* 已完成標題列 - 可點擊收合 */}
+                                  <div onClick={() => toggleStep(step.id)} className="flex flex-wrap items-center gap-3 p-5 cursor-pointer active:bg-green-50/50 transition-colors" style={{WebkitUserSelect:'none', userSelect:'none'}}>
                                     <div className="w-8 h-8 rounded-full border-2 border-green-500 bg-green-50 flex items-center justify-center text-green-600 shadow-sm">
                                       <CheckCircle2 c="w-5 h-5" />
                                     </div>
-                                    <h3 className="font-bold text-gray-800 text-lg">{String(step.title)}</h3>
-                                    <span className="ml-auto text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm">
+                                    <h3 className="font-bold text-gray-800 text-lg flex-1">{String(step.title)}</h3>
+                                    <span className="text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm">
                                       <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
                                     </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expandedSteps.has(step.id) ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
                                   </div>
-                                  {trainerName && trainerName !== '無' && (
-                                    <div className="text-[11px] font-bold text-red-500 flex items-center mb-3">
-                                      <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
-                                    </div>
-                                  )}
-                                  {/* 顯示完整內容區塊（與目前進度相同） */}
-                                  <div className="space-y-5 select-text">
-                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                      <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                        <div className="flex items-start justify-between gap-2 mb-2">
-                                          {block.subtitle && (
-                                            <h4 className="font-bold text-base pb-2 border-b border-gray-200 flex-1" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
-                                          )}
-                                          <button
-                                            onClick={() => {
-                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
-                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
-                                            }}
-                                            style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
-                                            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
-                                          >
-                                            <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'14px',height:'14px',borderRadius:'3px',flexShrink:0,backgroundColor:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'#16a34a':'white',border:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'2px solid #16a34a':'2px solid #d1d5db'}}>
-                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                                            </span>
-                                            教學完畢
-                                          </button>
-                                        </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
-                                        {block.mediaUrl && (
-                                          <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
-                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
-                                              <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
-                                            ) : (
-                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
-                                            )}
-                                          </div>
-                                        )}
+                                  <div className={`transition-all duration-300 ease-in-out ${expandedSteps.has(step.id) ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                                    {trainerName && trainerName !== '無' && (
+                                      <div className="text-[11px] font-bold text-red-500 flex items-center px-5 mb-3">
+                                        <UserIcon c="w-3.5 h-3.5 mr-1" />教學人員: {trainerName}
                                       </div>
-                                    ))}
+                                    )}
+                                    {/* 顯示完整內容區塊（與目前進度相同） */}
+                                    <div className="space-y-5 select-text px-5 pb-5">
+                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                        <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                          <div className="flex items-start justify-between gap-2 mb-2">
+                                            {block.subtitle && (
+                                              <h4 className="font-bold text-base pb-2 border-b border-gray-200 flex-1" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
+                                            )}
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                                const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
+                                                newCompletedBlocks[`${step.id}_${block.id}`] = !current;
+                                                updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                              }}
+                                              style={{WebkitUserSelect:'none', userSelect:'none', flexShrink:0}}
+                                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-bold transition-all ${currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? 'bg-green-50 border-green-300 text-green-700' : 'bg-white border-gray-200 text-gray-400'}`}
+                                            >
+                                              <span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'14px',height:'14px',borderRadius:'3px',flexShrink:0,backgroundColor:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'#16a34a':'white',border:currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]?'2px solid #16a34a':'2px solid #d1d5db'}}>
+                                                {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && <svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                              </span>
+                                              教學完畢
+                                            </button>
+                                          </div>
+                                          <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
+                                          {block.mediaUrl && (
+                                            <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
+                                              {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                                <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                              ) : (
+                                                <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -2008,87 +2018,90 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className="bg-white border-[3px] border-indigo-500 rounded-xl p-5 shadow-lg relative">
-                                  <div className="flex items-center gap-3 mb-4">
+                                <div key={step.id} id={`step-${step.id}`} className="bg-white border-[3px] border-indigo-500 rounded-xl shadow-lg relative overflow-hidden">
+                                  <div onClick={() => toggleStep(step.id)} className="flex items-center gap-3 p-5 cursor-pointer active:bg-indigo-50/50 transition-colors" style={{WebkitUserSelect:'none', userSelect:'none'}}>
                                     <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-md animate-pulse">
                                       <BookOpen c="w-5 h-5" />
                                     </div>
-                                    <h3 className="font-bold text-gray-900 text-xl">{String(step.title)}</h3>
-                                    <span className="ml-auto text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-full shadow-sm">目前進度</span>
+                                    <h3 className="font-bold text-gray-900 text-xl flex-1">{String(step.title)}</h3>
+                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-full shadow-sm">目前進度</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expandedSteps.has(step.id) ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
                                   </div>
-                                  
-                                  {/* 純白底層內容區塊 */}
-                                  <div className="space-y-5 mb-5 select-text">
-                                    {getStepBlocks(step).map((block: any, bIndex: number) => (
-                                      <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-                                        <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3 gap-2">
-                                          {block.subtitle ? (
-                                            <h4 className="font-bold text-lg flex-1" style={{color: '#1e3a5f', fontFamily: 'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
-                                          ) : (
-                                            <h4 className="font-bold text-indigo-900 text-lg flex-1">內容區塊</h4>
-                                          )}
-                                          
-                                          {/* --- 前台專用：教學完畢打勾儲存 --- */}
-                                          <button
-                                            onClick={() => {
-                                              const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
-                                              const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
-                                              newCompletedBlocks[`${step.id}_${block.id}`] = !current;
-                                              updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
-                                              showToast(!current ? '已標記為教學完畢！' : '已取消標記！');
-                                            }}
-                                            style={{WebkitUserSelect:'none', userSelect:'none'}}
-                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
-                                              currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]
-                                                ? 'bg-green-50 border-green-300 text-green-700'
-                                                : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'
-                                            }`}
-                                          >
-                                            <span style={{
-                                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                              width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-                                              backgroundColor: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '#16a34a' : 'white',
-                                              border: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '2px solid #16a34a' : '2px solid #d1d5db',
-                                              transition: 'all 0.2s',
-                                            }}>
-                                              {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && (
-                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                                                </svg>
-                                              )}
-                                            </span>
-                                            教學完畢
-                                          </button>
-                                        </div>
-                                        <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: '2.4', letterSpacing: '0.02em'}}>{String(block.description)}</p>
-                                        
-                                        {block.mediaUrl && (
-                                          <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
-                                            {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
-                                              <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
-                                            ) : ( 
-                                              <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer hover:scale-105 transition-transform duration-300" alt="教材" title="點擊放大" /> 
+                                  <div className={`transition-all duration-300 ease-in-out ${expandedSteps.has(step.id) ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                                    {/* 純白底層內容區塊 */}
+                                    <div className="space-y-5 mb-5 select-text px-5">
+                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                        <div key={block.id} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                                          <div className="flex items-start justify-between mb-3 border-b border-gray-100 pb-3 gap-2">
+                                            {block.subtitle ? (
+                                              <h4 className="font-bold text-lg flex-1" style={{color: '#1e3a5f', fontFamily: 'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
+                                            ) : (
+                                              <h4 className="font-bold text-indigo-900 text-lg flex-1">內容區塊</h4>
                                             )}
+                                            
+                                            {/* --- 前台專用：教學完畢打勾儲存 --- */}
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                const newCompletedBlocks = currentUserData?.completedBlocks ? {...currentUserData.completedBlocks} : {};
+                                                const current = newCompletedBlocks[`${step.id}_${block.id}`] || false;
+                                                newCompletedBlocks[`${step.id}_${block.id}`] = !current;
+                                                updateDoc(doc(db, 'employees', currentUserData.id), { completedBlocks: newCompletedBlocks });
+                                                showToast(!current ? '已標記為教學完畢！' : '已取消標記！');
+                                              }}
+                                              style={{WebkitUserSelect:'none', userSelect:'none'}}
+                                              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[11px] font-bold transition-all shadow-sm cursor-pointer ${
+                                                currentUserData?.completedBlocks?.[`${step.id}_${block.id}`]
+                                                  ? 'bg-green-50 border-green-300 text-green-700'
+                                                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-indigo-50 hover:border-indigo-200 hover:text-indigo-600'
+                                              }`}
+                                            >
+                                              <span style={{
+                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
+                                                backgroundColor: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '#16a34a' : 'white',
+                                                border: currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] ? '2px solid #16a34a' : '2px solid #d1d5db',
+                                                transition: 'all 0.2s',
+                                              }}>
+                                                {currentUserData?.completedBlocks?.[`${step.id}_${block.id}`] && (
+                                                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                                                  </svg>
+                                                )}
+                                              </span>
+                                              教學完畢
+                                            </button>
                                           </div>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
+                                          <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily: 'system-ui, -apple-system, sans-serif', lineHeight: '2.4', letterSpacing: '0.02em'}}>{String(block.description)}</p>
+                                          
+                                          {block.mediaUrl && (
+                                            <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 flex justify-center shadow-inner">
+                                              {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                                <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                              ) : ( 
+                                                <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer hover:scale-105 transition-transform duration-300" alt="教材" title="點擊放大" /> 
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
 
-                                  <div className="mt-5 pt-5 border-t border-gray-100 pb-24">
-                                    <button onClick={() => {
-                                        if (step.requireSignature) {
-                                          setShowSignatureModal(step);
-                                          setSignatureDataUrl('');
-                                        } else {
-                                          setTrainerModalStep(step);
-                                          setSelectedTrainerStore(currentUserData?.store || '');
-                                          setSelectedTrainerName('');
-                                          setShowTrainerModal(true);
-                                        }
-                                      }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
-                                      <CheckCircle2 c="w-6 h-6 mr-2" />{step.requireSignature ? '✍️ 簽名並完成學習' : '完成學習，紀錄進度'}
-                                    </button>
+                                    <div className="px-5 pb-5 pt-5 border-t border-gray-100">
+                                      <button onClick={() => {
+                                          if (step.requireSignature) {
+                                            setShowSignatureModal(step);
+                                            setSignatureDataUrl('');
+                                          } else {
+                                            setTrainerModalStep(step);
+                                            setSelectedTrainerStore(currentUserData?.store || '');
+                                            setSelectedTrainerName('');
+                                            setShowTrainerModal(true);
+                                          }
+                                        }} className="w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl text-base shadow-lg shadow-indigo-200 transition-all active:scale-95 flex justify-center items-center">
+                                        <CheckCircle2 c="w-6 h-6 mr-2" />{step.requireSignature ? '✍️ 簽名並完成學習' : '完成學習，紀錄進度'}
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               );
