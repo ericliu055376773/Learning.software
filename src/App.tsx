@@ -149,7 +149,8 @@ export default function App() {
   const [categoryPasswords, setCategoryPasswords] = useState<{[catId: string]: string}>({});
   const [unlockedCategories, setUnlockedCategories] = useState<Set<string>>(new Set());
   const [lockedCollapseCategories, setLockedCollapseCategories] = useState<{[catId: string]: boolean}>({});
-  const [collapseCheckStep, setCollapseCheckStep] = useState<any>(null); // step for collapse-check trainer modal
+  const [collapseCheckStep, setCollapseCheckStep] = useState<any>(null);
+  const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({}); // step for collapse-check trainer modal
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
   // 簽名功能
@@ -244,6 +245,7 @@ export default function App() {
           }
           if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
           if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
+          if (data.hiddenItems) setHiddenItems(data.hiddenItems);
         }
         setIsConfigLoaded(true);
       },
@@ -267,6 +269,13 @@ export default function App() {
   function showToast(msg: string) { 
     setToast(msg); 
     setTimeout(() => setToast(null), 3000); 
+  }
+
+  async function toggleHidden(id: string) {
+    const newHidden = {...hiddenItems};
+    if (newHidden[id]) delete newHidden[id]; else newHidden[id] = true;
+    setHiddenItems(newHidden);
+    await setDoc(doc(db, 'config', 'global'), { hiddenItems: newHidden }, { merge: true });
   }
 
   // 安全抓取進度總數
@@ -643,17 +652,23 @@ export default function App() {
     ? allCats.filter((c: any) => !c.parentId || c.parentId === '')
     : allCats;
   
-  const currentParentId = activeParentId || parentCategories[0]?.id || '';
+  // 員工端過濾隱藏的母分類
+  const visibleParentCategories = canEdit ? parentCategories : parentCategories.filter((c: any) => !hiddenItems[c.id]);
+  
+  const currentParentId = activeParentId || visibleParentCategories[0]?.id || parentCategories[0]?.id || '';
   
   const childCategories = hasTwoLevel
     ? allCats.filter((c: any) => c.parentId === currentParentId)
     : [];
   
-  const hasChildren = childCategories.length > 0;
+  // 員工端過濾隱藏的子分類
+  const visibleChildCategories = canEdit ? childCategories : childCategories.filter((c: any) => !hiddenItems[c.id]);
+  
+  const hasChildren = (canEdit ? childCategories : visibleChildCategories).length > 0;
   
   const effectiveCategories = hasTwoLevel
-    ? (hasChildren ? childCategories : [{...allCats.find((c:any) => c.id === currentParentId)}])
-    : allCats;
+    ? (hasChildren ? (canEdit ? childCategories : visibleChildCategories) : [{...allCats.find((c:any) => c.id === currentParentId)}])
+    : (canEdit ? allCats : allCats.filter((c: any) => !hiddenItems[c.id]));
 
   // 找出孤兒 steps（categoryId 不存在、或找不到對應分類）
   const ORPHAN_CAT_ID = '__orphan__';
@@ -681,9 +696,14 @@ export default function App() {
   })();
   const currentActiveCat = allCats.find((c:any) => c.id === currentActiveCatId);
   
-  const filteredSteps = currentActiveCatId === ORPHAN_CAT_ID
-    ? orphanSteps
-    : learningSteps.filter((s: any) => s.categoryId === currentActiveCatId);
+  const filteredSteps = (() => {
+    let steps = currentActiveCatId === ORPHAN_CAT_ID
+      ? orphanSteps
+      : learningSteps.filter((s: any) => s.categoryId === currentActiveCatId);
+    // 員工端過濾隱藏的項目
+    if (!canEdit) steps = steps.filter((s: any) => !hiddenItems[s.id]);
+    return steps;
+  })();
   
   // 計算登入者自己的進度 (若為總部看總部人員可能不具代表性，但防呆)
   const categoryProgress = (currentUserData && typeof currentUserData.completedLearning === 'object' && currentUserData.completedLearning !== null) 
@@ -1303,18 +1323,27 @@ export default function App() {
                       <div id="parent-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
                         {parentCategories.map((parent: any) => {
                           const isActive = currentParentId === parent.id;
+                          const isHidden = hiddenItems[parent.id];
                           return (
-                            <button key={parent.id}
-                              onClick={() => {
-                                setActiveParentId(parent.id);
-                                const firstChild = allCats.find((c: any) => c.parentId === parent.id);
-                                setActiveCategoryId(firstChild ? firstChild.id : parent.id);
-                                document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
-                              }}
-                              style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none'}}
-                              className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}
-                              style={isActive ? {backgroundColor: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {}}
-                            >{String(parent.name)}</button>
+                            <div key={parent.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'2px'}}>
+                              <button
+                                onClick={() => {
+                                  setActiveParentId(parent.id);
+                                  const firstChild = allCats.find((c: any) => c.parentId === parent.id);
+                                  setActiveCategoryId(firstChild ? firstChild.id : parent.id);
+                                  document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                                }}
+                                style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', opacity: isHidden ? 0.4 : 1, ...(isActive ? {backgroundColor: 'var(--theme-main)', borderColor: 'var(--theme-main)'} : {})}}
+                                className={`px-4 py-2 rounded-full text-xs font-bold transition-all border shadow-sm ${isActive ? 'text-white border-transparent' : 'bg-white text-gray-600 border-gray-200'}`}
+                              >{String(parent.name)}</button>
+                              {canEdit && (
+                                <button onClick={(e) => { e.stopPropagation(); toggleHidden(parent.id); }} title={isHidden ? '點擊顯示' : '點擊隱藏'} className="p-1 rounded-full hover:bg-gray-100 transition-colors" style={{flexShrink:0}}>
+                                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-3.5 h-3.5 ${isHidden ? 'text-red-400' : 'text-gray-400'}`}>
+                                    {isHidden ? (<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></>) : (<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>)}
+                                  </svg>
+                                </button>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -1337,23 +1366,33 @@ export default function App() {
                       {effectiveCategories.map((cat: any) => {
                         if (!cat || !cat.id) return null;
                         const isActive = currentActiveCatId === cat.id;
+                        const isHidden = hiddenItems[cat.id];
                         return (
-                          <button key={cat.id}
-                            onClick={() => {
-                              const pwd = categoryPasswords[cat.id];
-                              if (!canEdit && pwd && !unlockedCategories.has(cat.id)) {
-                                setShowCatLockModal(cat.id);
-                                setCatLockInput('');
-                              } else {
-                                setActiveCategoryId(cat.id);
-                                if (!hasTwoLevel) setActiveParentId(cat.id);
-                                document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
-                              }
-                            }}
-                            style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {})}}
-                            className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-400 border-transparent hover:text-gray-600'}`}
-                          >
-                            {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
+                          <div key={cat.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'1px'}}>
+                            <button
+                              onClick={() => {
+                                const pwd = categoryPasswords[cat.id];
+                                if (!canEdit && pwd && !unlockedCategories.has(cat.id)) {
+                                  setShowCatLockModal(cat.id);
+                                  setCatLockInput('');
+                                } else {
+                                  setActiveCategoryId(cat.id);
+                                  if (!hasTwoLevel) setActiveParentId(cat.id);
+                                  document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                                }
+                              }}
+                              style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', opacity: isHidden ? 0.4 : 1, ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {})}}
+                              className={`px-3 py-2 text-xs font-bold transition-all border-b-2 ${isActive ? 'border-transparent' : 'bg-transparent text-gray-400 border-transparent hover:text-gray-600'}`}
+                            >
+                              {!canEdit && categoryPasswords[cat.id] && !unlockedCategories.has(cat.id) ? '🔒 ' : ''}{String(cat.name)}</button>
+                            {canEdit && (
+                              <button onClick={(e) => { e.stopPropagation(); toggleHidden(cat.id); }} title={isHidden ? '點擊顯示' : '點擊隱藏'} className="p-0.5 rounded-full hover:bg-gray-100 transition-colors" style={{flexShrink:0}}>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-3 h-3 ${isHidden ? 'text-red-400' : 'text-gray-300'}`}>
+                                  {isHidden ? (<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></>) : (<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>)}
+                                </svg>
+                              </button>
+                            )}
+                          </div>
                         );
                       })}
                       {hasOrphans && (
@@ -1660,9 +1699,14 @@ export default function App() {
                               draggedStepIndex === index ? 'opacity-40 scale-95 border-indigo-300' :
                               dragOverStepIndex === index && draggedStepIndex !== index ? 'border-indigo-500 ring-2 ring-indigo-200' :
                               'border-gray-200'
-                            }`}
+                            } ${hiddenItems[step.id] ? 'opacity-50' : ''}`}
                           >
                             <button onClick={async () => await deleteDoc(doc(db, 'learningSteps', step.id))} className="absolute top-4 right-4 p-1.5 text-red-300 hover:text-red-500 rounded transition-colors"><Trash2 c="w-4 h-4" /></button>
+                            <button onClick={() => toggleHidden(step.id)} title={hiddenItems[step.id] ? '點擊顯示此項目' : '點擊隱藏此項目'} className="absolute top-4 right-12 p-1.5 rounded transition-colors hover:bg-gray-100">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 ${hiddenItems[step.id] ? 'text-red-400' : 'text-gray-300'}`}>
+                                {hiddenItems[step.id] ? (<><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></>) : (<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>)}
+                              </svg>
+                            </button>
                             
                             <div className="flex items-center space-x-2 border-b border-gray-100 pb-3 bg-white rounded-lg">
                               {/* 學習項目拖曳把手 */}
