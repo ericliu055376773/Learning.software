@@ -148,6 +148,8 @@ export default function App() {
   // 分類密碼鎖
   const [categoryPasswords, setCategoryPasswords] = useState<{[catId: string]: string}>({});
   const [unlockedCategories, setUnlockedCategories] = useState<Set<string>>(new Set());
+  const [lockedCollapseCategories, setLockedCollapseCategories] = useState<{[catId: string]: boolean}>({});
+  const [collapseCheckStep, setCollapseCheckStep] = useState<any>(null); // step for collapse-check trainer modal
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
   // 簽名功能
@@ -241,6 +243,7 @@ export default function App() {
             }
           }
           if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
+          if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
         }
         setIsConfigLoaded(true);
       },
@@ -523,6 +526,9 @@ export default function App() {
       return;
     }
 
+    const activeStep = trainerModalStep || collapseCheckStep;
+    if (!activeStep) return;
+
     const emp = employees.find(e => e.name === currentUserName);
     if(emp) {
       const targetCatId = activeCategoryId || (categories[0]?.id || 'default');
@@ -531,8 +537,8 @@ export default function App() {
       
       const newHistory = (emp.learningHistory && Array.isArray(emp.learningHistory)) ? [...emp.learningHistory] : [];
       newHistory.push({
-        stepId: trainerModalStep.id,
-        stepName: trainerModalStep.title,
+        stepId: activeStep.id,
+        stepName: activeStep.title,
         firstApprover: '直接通關紀錄',
         trainerName: selectedTrainerName,
         approvedAt: Date.now(),
@@ -548,6 +554,7 @@ export default function App() {
     }
     
     setShowTrainerModal(false);
+    setCollapseCheckStep(null);
     setSignatureDataUrl('');
     showToast(signatureDataUrl ? '✅ 已簽名並完成學習！' : '已完成學習，紀錄已保存！');
   }
@@ -1066,6 +1073,34 @@ export default function App() {
                         {categoryPasswords[cat.id] && (
                           <span className="text-[10px] text-orange-500 font-bold">🔒 已鎖</span>
                         )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 關閉分類收合內容 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><Lock c="w-4 h-4 mr-1.5 text-indigo-500" />關閉分類收合內容</h4>
+                <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">開啟後，該分類下的學習項目內容將收合且無法展開，員工僅可透過打勾按鈕選擇教學人員完成項目。</p>
+                <div className="space-y-2">
+                  {allCats.filter((c:any) => c.name.trim()).map((cat:any) => {
+                    const parent = cat.parentId ? allCats.find((p:any) => p.id === cat.parentId) : null;
+                    const label = parent ? `${parent.name} › ${cat.name}` : cat.name;
+                    return (
+                      <div key={cat.id} className="flex items-center gap-2 bg-white p-2.5 rounded-lg border border-gray-100">
+                        <span className="text-xs font-bold text-gray-700 flex-1 truncate">{label}</span>
+                        <button
+                          onClick={async () => {
+                            const newVal = {...lockedCollapseCategories, [cat.id]: !lockedCollapseCategories[cat.id]};
+                            if (!newVal[cat.id]) delete newVal[cat.id];
+                            setLockedCollapseCategories(newVal);
+                            await setDoc(doc(db, 'config', 'global'), { lockedCollapseCategories: newVal }, { merge: true });
+                          }}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${lockedCollapseCategories[cat.id] ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${lockedCollapseCategories[cat.id] ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
                       </div>
                     );
                   })}
@@ -1910,6 +1945,50 @@ export default function App() {
                             const isCompleted = completedStepIds.has(step.id);
                             const isCurrent = !isCompleted;
                             const isLocked = false; // 取消鎖定，所有項目都可執行
+                            const isCollapseLocked = lockedCollapseCategories[currentActiveCatId] === true;
+
+                            // === 收合鎖定模式：內容不可展開，右側有打勾按鈕 ===
+                            if (isCollapseLocked && !canEdit) {
+                              const historyRecord = currentUserData?.learningHistory?.find((h: any) => h.stepId === step.id);
+                              const trainerName = historyRecord?.trainerName;
+                              return (
+                                <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : 'border-gray-200'}`}>
+                                  <div className="flex items-center gap-3 p-4" style={{WebkitUserSelect:'none', userSelect:'none'}}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${isCompleted ? 'bg-green-50 border-2 border-green-500 text-green-600' : 'bg-indigo-50 border-2 border-indigo-400 text-indigo-600'}`}>
+                                      {isCompleted ? <CheckCircle2 c="w-5 h-5" /> : <BookOpen c="w-4 h-4" />}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h3 className="font-bold text-gray-800 text-base truncate">{String(step.title)}</h3>
+                                      {isCompleted && trainerName && trainerName !== '無' && (
+                                        <p className="text-[11px] font-bold text-red-500 flex items-center mt-1"><UserIcon c="w-3 h-3 mr-1" />教學人員: {trainerName}</p>
+                                      )}
+                                    </div>
+                                    {isCompleted ? (
+                                      <span className="text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm flex-shrink-0">
+                                        <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          if (step.requireSignature) {
+                                            setShowSignatureModal(step);
+                                            setSignatureDataUrl('');
+                                          } else {
+                                            setCollapseCheckStep(step);
+                                            setSelectedTrainerStore(currentUserData?.store || '');
+                                            setSelectedTrainerName('');
+                                            setShowTrainerModal(true);
+                                          }
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl border-2 border-indigo-300 bg-indigo-50 text-indigo-700 text-xs font-bold transition-all active:scale-95 hover:bg-indigo-100 shadow-sm flex-shrink-0"
+                                      >
+                                        <CheckCircle2 c="w-4 h-4" />完成
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            }
 
                             if (isLocked) {
                               return (
@@ -2801,16 +2880,16 @@ export default function App() {
 
       {/* 選擇教學人員 Modal */}
       {showTrainerModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowTrainerModal(false)}>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => { setShowTrainerModal(false); setCollapseCheckStep(null); }}>
           <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
             <div className="bg-indigo-600 p-4 flex justify-between items-center text-white">
               <h3 className="font-black text-lg flex items-center"><UserIcon c="w-5 h-5 mr-2" /> 選擇教學人員</h3>
-              <button onClick={() => setShowTrainerModal(false)} className="text-indigo-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
+              <button onClick={() => { setShowTrainerModal(false); setCollapseCheckStep(null); }} className="text-indigo-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
             </div>
             
             <div className="p-5 space-y-4">
               <div className="text-center mb-2">
-                <p className="text-sm font-bold text-gray-800">完成項目：<span className="text-indigo-600">{trainerModalStep?.title}</span></p>
+                <p className="text-sm font-bold text-gray-800">完成項目：<span className="text-indigo-600">{(trainerModalStep || collapseCheckStep)?.title}</span></p>
                 <p className="text-xs text-gray-500 mt-1">請選擇負責帶領您的教學人員</p>
               </div>
 
@@ -2855,7 +2934,7 @@ export default function App() {
               </div>
 
               <div className="pt-4 flex gap-2">
-                <button onClick={() => setShowTrainerModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">取消</button>
+                <button onClick={() => { setShowTrainerModal(false); setCollapseCheckStep(null); }} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">取消</button>
                 <button 
                   onClick={submitLearningRequest} 
                   disabled={!selectedTrainerName}
