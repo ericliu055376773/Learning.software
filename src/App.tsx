@@ -245,7 +245,7 @@ export default function App() {
           }
           if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
           if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
-          if (data.hiddenItems) setHiddenItems(data.hiddenItems);
+          setHiddenItems(data.hiddenItems || {});
         }
         setIsConfigLoaded(true);
       },
@@ -275,7 +275,7 @@ export default function App() {
     const newHidden = {...hiddenItems};
     if (newHidden[id]) delete newHidden[id]; else newHidden[id] = true;
     setHiddenItems(newHidden);
-    await setDoc(doc(db, 'config', 'global'), { hiddenItems: newHidden }, { merge: true });
+    await updateDoc(doc(db, 'config', 'global'), { hiddenItems: newHidden });
   }
 
   // 安全抓取進度總數
@@ -1321,7 +1321,7 @@ export default function App() {
                   {hasTwoLevel && (
                     <div style={{display:'flex', alignItems:'center', gap:'4px', paddingBottom:'8px', minWidth:0}}>
                       <div id="parent-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
-                        {parentCategories.map((parent: any) => {
+                        {(canEdit ? parentCategories : visibleParentCategories).map((parent: any) => {
                           const isActive = currentParentId === parent.id;
                           const isHidden = hiddenItems[parent.id];
                           return (
@@ -1348,9 +1348,10 @@ export default function App() {
                         })}
                       </div>
                       {/* 右箭頭：跳到下一個母分類 */}
-                      {parentCategories.length > 1 && (() => {
-                        const idx = parentCategories.findIndex((c:any) => c.id === currentParentId);
-                        const next = parentCategories[idx + 1];
+                      {(canEdit ? parentCategories : visibleParentCategories).length > 1 && (() => {
+                        const pList = canEdit ? parentCategories : visibleParentCategories;
+                        const idx = pList.findIndex((c:any) => c.id === currentParentId);
+                        const next = pList[idx + 1];
                         if (!next) return null;
                         return (
                           <button onClick={() => {
