@@ -1325,7 +1325,7 @@ export default function App() {
                           const isActive = currentParentId === parent.id;
                           const isHidden = hiddenItems[parent.id];
                           return (
-                            <div key={parent.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'2px'}}>
+                            <div key={parent.id} data-parent-id={parent.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'2px'}}>
                               <button
                                 onClick={() => {
                                   setActiveParentId(parent.id);
@@ -1353,7 +1353,15 @@ export default function App() {
                         const next = parentCategories[idx + 1];
                         if (!next) return null;
                         return (
-                          <button onClick={() => { setActiveParentId(next.id); const fc = allCats.find((c:any) => c.parentId === next.id); setActiveCategoryId(fc ? fc.id : next.id); }}
+                          <button onClick={() => {
+                            setActiveParentId(next.id);
+                            const fc = allCats.find((c:any) => c.parentId === next.id);
+                            setActiveCategoryId(fc ? fc.id : next.id);
+                            setTimeout(() => {
+                              const tab = document.querySelector(`[data-parent-id="${next.id}"]`) as HTMLElement;
+                              if (tab) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                            }, 50);
+                          }}
                             style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
                             className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-xs font-bold">›</button>
                         );
@@ -1368,7 +1376,7 @@ export default function App() {
                         const isActive = currentActiveCatId === cat.id;
                         const isHidden = hiddenItems[cat.id];
                         return (
-                          <div key={cat.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'1px'}}>
+                          <div key={cat.id} data-cat-id={cat.id} style={{flexShrink:0, display:'flex', alignItems:'center', gap:'1px'}}>
                             <button
                               onClick={() => {
                                 const pwd = categoryPasswords[cat.id];
@@ -1379,6 +1387,10 @@ export default function App() {
                                   setActiveCategoryId(cat.id);
                                   if (!hasTwoLevel) setActiveParentId(cat.id);
                                   document.getElementById('app-scroll-container')?.scrollTo({top: 0, behavior: 'smooth'});
+                                  setTimeout(() => {
+                                    const tab = document.querySelector(`[data-cat-id="${cat.id}"]`) as HTMLElement;
+                                    if (tab) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                                  }, 50);
                                 }
                               }}
                               style={{flexShrink:0, whiteSpace:'nowrap', WebkitUserSelect:'none', userSelect:'none', opacity: isHidden ? 0.4 : 1, ...(isActive ? {color:'var(--theme-main)', borderBottom:`2px solid var(--theme-main)`, fontWeight:'800'} : {})}}
@@ -1419,7 +1431,14 @@ export default function App() {
                       const next = allTabCats[idx + 1];
                       if (!next) return null;
                       return (
-                        <button onClick={() => { setActiveCategoryId(next.id); if (!hasTwoLevel) setActiveParentId(next.id); }}
+                        <button onClick={() => {
+                          setActiveCategoryId(next.id);
+                          if (!hasTwoLevel) setActiveParentId(next.id);
+                          setTimeout(() => {
+                            const tab = document.querySelector(`[data-cat-id="${next.id}"]`) as HTMLElement;
+                            if (tab) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                          }, 50);
+                        }}
                           style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
                           className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-sm font-bold">›</button>
                       );
