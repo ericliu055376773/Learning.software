@@ -1950,6 +1950,7 @@ export default function App() {
                             // === 收合鎖定模式：內容不可展開，右側有打勾按鈕 ===
                             if (isCollapseLocked && !canEdit) {
                               const historyRecord = currentUserData?.learningHistory?.find((h: any) => h.stepId === step.id);
+                              const historyIndex = currentUserData?.learningHistory?.findIndex((h: any) => h.stepId === step.id) ?? -1;
                               const trainerName = historyRecord?.trainerName;
                               return (
                                 <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : 'border-gray-200'}`}>
@@ -1964,9 +1965,18 @@ export default function App() {
                                       )}
                                     </div>
                                     {isCompleted ? (
-                                      <span className="text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm flex-shrink-0">
-                                        <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
-                                      </span>
+                                      <div className="flex items-center gap-2 flex-shrink-0">
+                                        <span className="text-[10px] font-bold text-green-600 flex items-center bg-green-50 border border-green-200 px-2 py-1 rounded-full shadow-sm">
+                                          <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
+                                        </span>
+                                        <button
+                                          onClick={() => { if (currentUserData && historyIndex >= 0) handleDeleteLearningRecord(currentUserData, historyIndex); }}
+                                          className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 bg-red-50 text-red-500 text-[10px] font-bold transition-all active:scale-95 hover:bg-red-100"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+                                          恢復
+                                        </button>
+                                      </div>
                                     ) : (
                                       <button
                                         onClick={() => {
