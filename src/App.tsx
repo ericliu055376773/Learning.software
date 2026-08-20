@@ -150,7 +150,10 @@ export default function App() {
   const [unlockedCategories, setUnlockedCategories] = useState<Set<string>>(new Set());
   const [lockedCollapseCategories, setLockedCollapseCategories] = useState<{[catId: string]: boolean}>({});
   const [collapseCheckStep, setCollapseCheckStep] = useState<any>(null);
-  const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({}); // step for collapse-check trainer modal
+  const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({});
+  const [allowStoreItems, setAllowStoreItems] = useState<boolean>(false);
+  const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
+  const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>(''); // step for collapse-check trainer modal
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
   // 簽名功能
@@ -246,6 +249,7 @@ export default function App() {
           if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
           if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
           setHiddenItems(data.hiddenItems || {});
+          if (data.allowStoreItems !== undefined) setAllowStoreItems(data.allowStoreItems);
         }
         setIsConfigLoaded(true);
       },
@@ -700,8 +704,15 @@ export default function App() {
     let steps = currentActiveCatId === ORPHAN_CAT_ID
       ? orphanSteps
       : learningSteps.filter((s: any) => s.categoryId === currentActiveCatId);
-    // 員工端過濾隱藏的項目
-    if (!canEdit) steps = steps.filter((s: any) => !hiddenItems[s.id]);
+    if (!canEdit) {
+      // 員工端：顯示後台項目（無 storeId）＋自己門店的項目
+      const userStore = currentUserData?.store || '';
+      steps = steps.filter((s: any) => {
+        if (hiddenItems[s.id]) return false;
+        if (!s.storeId) return true; // 後台建立的，所有店都看得到
+        return s.storeId === userStore; // 門店建立的，只有該店看得到
+      });
+    }
     return steps;
   })();
   
@@ -1124,6 +1135,26 @@ export default function App() {
                       </div>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* 各店前台新增項目 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><PlusCircle c="w-4 h-4 mr-1.5 text-indigo-500" />各店前台新增項目</h4>
+                    <p className="text-xs text-gray-500 font-bold leading-relaxed">開啟後，各門店員工可在前台自行新增、刪除項目卡片，新增的項目只會出現在該門店。後台建立的項目為固定內容，前台無法編輯。</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const newVal = !allowStoreItems;
+                      setAllowStoreItems(newVal);
+                      await setDoc(doc(db, 'config', 'global'), { allowStoreItems: newVal }, { merge: true });
+                    }}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors flex-shrink-0 ml-3 ${allowStoreItems ? 'bg-indigo-600' : 'bg-gray-200'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${allowStoreItems ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
                 </div>
               </div>
 
@@ -1739,8 +1770,9 @@ export default function App() {
                                 <GripVertical c="w-5 h-5 text-gray-300 hover:text-gray-500 transition-colors" />
                               </span>
                               <div className="font-black text-gray-300 text-xl w-6">{index + 1}.</div>
-                              <div className="flex flex-1 gap-2 pr-6">
+                              <div className="flex flex-1 gap-2 pr-6 items-center">
                                 <input type="text" defaultValue={step.title} onBlur={e => updateDoc(doc(db, 'learningSteps', step.id), { title: e.target.value })} className="flex-1 p-2 border border-transparent hover:border-gray-200 rounded-lg font-black text-gray-800 text-lg outline-none focus:border-indigo-500 bg-white focus:bg-gray-50 transition-colors" placeholder="請輸入大標題"/>
+                                {step.storeId && <span className="text-[9px] font-bold text-orange-500 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded flex-shrink-0">{step.storeId}</span>}
                               </div>
                             </div>
 
@@ -2010,6 +2042,7 @@ export default function App() {
                             const isCurrent = !isCompleted;
                             const isLocked = false; // 取消鎖定，所有項目都可執行
                             const isCollapseLocked = lockedCollapseCategories[currentActiveCatId] === true;
+                            const isStoreItem = !!step.storeId; // 門店自建項目
 
                             // === 收合鎖定模式：內容不可展開，右側有打勾按鈕 ===
                             if (isCollapseLocked && !canEdit) {
@@ -2017,13 +2050,22 @@ export default function App() {
                               const historyIndex = currentUserData?.learningHistory?.findIndex((h: any) => h.stepId === step.id) ?? -1;
                               const trainerName = historyRecord?.trainerName;
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : 'border-gray-200'}`}>
+                                <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : isStoreItem ? 'border-orange-200' : 'border-gray-200'}`}>
                                   <div className="flex items-center gap-3 p-4" style={{WebkitUserSelect:'none', userSelect:'none'}}>
+                                    {/* 門店自建項目刪除按鈕 */}
+                                    {isStoreItem && !isCompleted && (
+                                      <button onClick={async () => { if (window.confirm(`確定要刪除「${step.title}」嗎？`)) await deleteDoc(doc(db, 'learningSteps', step.id)); }} className="p-1.5 text-red-300 hover:text-red-500 transition-colors flex-shrink-0 -ml-1">
+                                        <Trash2 c="w-4 h-4" />
+                                      </button>
+                                    )}
                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shadow-sm flex-shrink-0 ${isCompleted ? 'bg-green-50 border-2 border-green-500 text-green-600' : 'bg-indigo-50 border-2 border-indigo-400 text-indigo-600'}`}>
                                       {isCompleted ? <CheckCircle2 c="w-5 h-5" /> : <BookOpen c="w-4 h-4" />}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                      <h3 className="font-bold text-gray-800 text-base truncate">{String(step.title)}</h3>
+                                      <div className="flex items-center gap-1.5">
+                                        <h3 className="font-bold text-gray-800 text-base truncate">{String(step.title)}</h3>
+                                        {isStoreItem && <span className="text-[9px] font-bold text-orange-500 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded flex-shrink-0">本店</span>}
+                                      </div>
                                       {isCompleted && trainerName && trainerName !== '無' && (
                                         <p className="text-[11px] font-bold text-red-500 flex items-center mt-1"><UserIcon c="w-3 h-3 mr-1" />教學人員: {trainerName}</p>
                                       )}
@@ -2171,13 +2213,19 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className="bg-white border-[3px] border-indigo-500 rounded-xl shadow-lg relative overflow-hidden">
+                                <div key={step.id} id={`step-${step.id}`} className={`bg-white border-[3px] ${isStoreItem ? 'border-orange-400' : 'border-indigo-500'} rounded-xl shadow-lg relative overflow-hidden`}>
+                                  {isStoreItem && (
+                                    <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(`確定要刪除「${step.title}」嗎？`)) await deleteDoc(doc(db, 'learningSteps', step.id)); }} className="absolute top-3 right-3 z-10 p-1.5 text-red-300 hover:text-red-500 transition-colors">
+                                      <Trash2 c="w-4 h-4" />
+                                    </button>
+                                  )}
                                   <div onClick={() => toggleStep(step.id)} className="flex items-center gap-3 p-5 cursor-pointer active:bg-indigo-50/50 transition-colors" style={{WebkitUserSelect:'none', userSelect:'none'}}>
-                                    <div className="w-9 h-9 rounded-full bg-indigo-600 flex items-center justify-center text-white shadow-md animate-pulse">
+                                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white shadow-md animate-pulse ${isStoreItem ? 'bg-orange-500' : 'bg-indigo-600'}`}>
                                       <BookOpen c="w-5 h-5" />
                                     </div>
                                     <h3 className="font-bold text-gray-900 text-xl flex-1">{String(step.title)}</h3>
-                                    <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-full shadow-sm">目前進度</span>
+                                    {isStoreItem && <span className="text-[9px] font-bold text-orange-500 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded">本店</span>}
+                                    <span className={`text-[10px] font-bold ${isStoreItem ? 'text-orange-600 bg-orange-50 border-orange-200' : 'text-indigo-600 bg-indigo-50 border-indigo-200'} border px-2 py-1 rounded-full shadow-sm`}>目前進度</span>
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${expandedSteps.has(step.id) ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
                                   </div>
                                   <div className={`transition-all duration-300 ease-in-out ${expandedSteps.has(step.id) ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
@@ -2261,6 +2309,16 @@ export default function App() {
                             }
                             return null;
                           })}
+
+                          {/* 各店前台新增項目按鈕 */}
+                          {allowStoreItems && !canEdit && currentUserData?.store && (
+                            <button
+                              onClick={() => { setStoreNewItemTitle(''); setShowStoreAddModal(true); }}
+                              className="w-full py-3.5 border-2 border-dashed border-orange-300 rounded-xl text-sm text-orange-600 font-bold flex justify-center items-center hover:bg-orange-50 transition-colors bg-white/80"
+                            >
+                              <PlusCircle c="w-4 h-4 mr-1.5"/>新增本店項目
+                            </button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -3159,6 +3217,48 @@ export default function App() {
           <path d="M12 19V5"/><path d="m5 12 7-7 7 7"/>
         </svg>
       </button>
+
+      {/* 各店前台新增項目 Modal */}
+      {showStoreAddModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200" onClick={() => setShowStoreAddModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden animate-in zoom-in-95" onClick={e => e.stopPropagation()}>
+            <div className="bg-orange-500 p-4 flex justify-between items-center text-white">
+              <h3 className="font-black text-lg flex items-center"><PlusCircle c="w-5 h-5 mr-2" /> 新增本店項目</h3>
+              <button onClick={() => setShowStoreAddModal(false)} className="text-orange-200 hover:text-white transition-colors"><XCircle c="w-6 h-6" /></button>
+            </div>
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-gray-500 font-bold">新增的項目僅會出現在「{currentUserData?.store}」門店</p>
+              <input
+                type="text"
+                value={storeNewItemTitle}
+                onChange={e => setStoreNewItemTitle(e.target.value)}
+                placeholder="請輸入項目名稱"
+                className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm font-bold outline-none focus:border-orange-500 transition-colors"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button onClick={() => setShowStoreAddModal(false)} className="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold text-sm hover:bg-gray-200 transition-colors">取消</button>
+                <button
+                  onClick={async () => {
+                    if (!storeNewItemTitle.trim()) { showToast('請輸入項目名稱！'); return; }
+                    await addDoc(collection(db, 'learningSteps'), {
+                      title: storeNewItemTitle.trim(),
+                      blocks: [{ id: Date.now().toString(), subtitle: '', description: '', mediaUrl: '', fileName: '' }],
+                      categoryId: currentActiveCatId,
+                      status: 'locked',
+                      createdAt: Date.now(),
+                      storeId: currentUserData?.store || ''
+                    });
+                    setShowStoreAddModal(false);
+                    showToast(`已新增「${storeNewItemTitle.trim()}」！`);
+                  }}
+                  className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-sm"
+                >確認新增</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-5 py-2.5 rounded-lg z-[100] text-xs font-bold shadow-xl animate-in fade-in slide-in-from-bottom-2">
