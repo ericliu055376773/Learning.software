@@ -1,5 +1,5 @@
 // @ts-nocheck
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { initializeApp } from "firebase/app";
 import { getFirestore, collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, setDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -153,7 +153,9 @@ export default function App() {
   const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({});
   const [allowStoreItems, setAllowStoreItems] = useState<boolean>(false);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
-  const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>(''); // step for collapse-check trainer modal
+  const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
+  const [longPressDeleteId, setLongPressDeleteId] = useState<string | null>(null);
+  const longPressTimer = useRef<any>(null); // step for collapse-check trainer modal
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
   // 簽名功能
@@ -2005,7 +2007,7 @@ export default function App() {
                         </>
                       ) : (
                         /* 員工視角：純白底層闖關地圖 */
-                        <div className="space-y-6 my-3">
+                        <div className="space-y-6 my-3" onClick={() => { if (longPressDeleteId) setLongPressDeleteId(null); }}>
                           {/* 快速跳轉卡片列 */}
                           {filteredSteps.length > 0 && (
                             <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
@@ -2050,11 +2052,18 @@ export default function App() {
                               const historyIndex = currentUserData?.learningHistory?.findIndex((h: any) => h.stepId === step.id) ?? -1;
                               const trainerName = historyRecord?.trainerName;
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : isStoreItem ? 'border-orange-200' : 'border-gray-200'}`}>
+                                <div key={step.id} id={`step-${step.id}`} className={`bg-white rounded-xl shadow-sm relative overflow-hidden border-2 ${isCompleted ? 'border-green-300' : isStoreItem ? 'border-orange-200' : 'border-gray-200'}`}
+                                  onTouchStart={() => { if (isStoreItem) { longPressTimer.current = setTimeout(() => setLongPressDeleteId(step.id), 600); } }}
+                                  onTouchEnd={() => { clearTimeout(longPressTimer.current); }}
+                                  onTouchMove={() => { clearTimeout(longPressTimer.current); }}
+                                  onMouseDown={() => { if (isStoreItem) { longPressTimer.current = setTimeout(() => setLongPressDeleteId(step.id), 600); } }}
+                                  onMouseUp={() => { clearTimeout(longPressTimer.current); }}
+                                  onMouseLeave={() => { clearTimeout(longPressTimer.current); }}
+                                >
                                   <div className="flex items-center gap-3 p-4" style={{WebkitUserSelect:'none', userSelect:'none'}}>
-                                    {/* 門店自建項目刪除按鈕 */}
-                                    {isStoreItem && !isCompleted && (
-                                      <button onClick={async () => { if (window.confirm(`確定要刪除「${step.title}」嗎？`)) await deleteDoc(doc(db, 'learningSteps', step.id)); }} className="p-1.5 text-red-300 hover:text-red-500 transition-colors flex-shrink-0 -ml-1">
+                                    {/* 長按後顯示刪除按鈕 */}
+                                    {isStoreItem && longPressDeleteId === step.id && (
+                                      <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(`確定要刪除「${step.title}」嗎？`)) { await deleteDoc(doc(db, 'learningSteps', step.id)); } setLongPressDeleteId(null); }} className="p-1.5 bg-red-50 border border-red-200 text-red-500 rounded-lg transition-all active:scale-90 flex-shrink-0 -ml-1 animate-in zoom-in-75 duration-200">
                                         <Trash2 c="w-4 h-4" />
                                       </button>
                                     )}
@@ -2213,9 +2222,16 @@ export default function App() {
 
                             if (isCurrent) {
                               return (
-                                <div key={step.id} id={`step-${step.id}`} className={`bg-white border-[3px] ${isStoreItem ? 'border-orange-400' : 'border-indigo-500'} rounded-xl shadow-lg relative overflow-hidden`}>
-                                  {isStoreItem && (
-                                    <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(`確定要刪除「${step.title}」嗎？`)) await deleteDoc(doc(db, 'learningSteps', step.id)); }} className="absolute top-3 right-3 z-10 p-1.5 text-red-300 hover:text-red-500 transition-colors">
+                                <div key={step.id} id={`step-${step.id}`} className={`bg-white border-[3px] ${isStoreItem ? 'border-orange-400' : 'border-indigo-500'} rounded-xl shadow-lg relative overflow-hidden`}
+                                  onTouchStart={() => { if (isStoreItem) { longPressTimer.current = setTimeout(() => setLongPressDeleteId(step.id), 600); } }}
+                                  onTouchEnd={() => { clearTimeout(longPressTimer.current); }}
+                                  onTouchMove={() => { clearTimeout(longPressTimer.current); }}
+                                  onMouseDown={() => { if (isStoreItem) { longPressTimer.current = setTimeout(() => setLongPressDeleteId(step.id), 600); } }}
+                                  onMouseUp={() => { clearTimeout(longPressTimer.current); }}
+                                  onMouseLeave={() => { clearTimeout(longPressTimer.current); }}
+                                >
+                                  {isStoreItem && longPressDeleteId === step.id && (
+                                    <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(`確定要刪除「${step.title}」嗎？`)) await deleteDoc(doc(db, 'learningSteps', step.id)); setLongPressDeleteId(null); }} className="absolute top-3 right-3 z-10 p-2 bg-red-50 border border-red-200 text-red-500 rounded-lg transition-all active:scale-90 animate-in zoom-in-75 duration-200">
                                       <Trash2 c="w-4 h-4" />
                                     </button>
                                   )}
