@@ -236,7 +236,7 @@ export default function App() {
           const data = d.data();
           setGlobalTheme(data.theme || 'indigo');
           setSystemLogoUrl(data.logoUrl || '');
-          if (data.customTitles) setCustomTitles({...customTitles, ...data.customTitles});
+          if (data.customTitles) setCustomTitles(prev => ({...prev, ...data.customTitles, progressTab: data.customTitles.progressTab || prev.progressTab}));
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -1584,7 +1584,6 @@ export default function App() {
                                  </span>
                                  <span className="w-1 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
                                  <input type="text" value={child.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white" placeholder="子分類名稱" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
-                                 <input type="number" min="0" max="99" value={child.requiredDays || ''} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, requiredDays: parseInt(e.target.value) || 0} : c))} className="w-12 bg-slate-500/50 text-[10px] text-center outline-none text-orange-300 rounded px-1 py-0.5 font-bold placeholder:text-slate-400" placeholder="天數" title="需完成工作天數" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
                                  <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== child.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3 h-3"/></button>
                                </div>
                              ))}
@@ -2345,18 +2344,18 @@ export default function App() {
               </div>
           )}
           
-          {/* TAB: 學習進度 (員工端) */}
-          {activeTab === 'progress' && !canEdit && (
+          {/* TAB: 學習進度 */}
+          {activeTab === 'progress' && (
             <div className="space-y-4 animate-in fade-in duration-300 my-2">
               <h2 className="font-black text-lg text-gray-800 flex items-center gap-2 px-1">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-indigo-600"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                學習進度總覽
+                學習進度
               </h2>
 
               {(() => {
-                // 取得所有母分類
                 const parents = allCats.filter((c: any) => !c.parentId || c.parentId === '');
-                const userHistory = currentUserData?.learningHistory || [];
+                // 員工的學習打卡紀錄：{ [catId]: [ { date: '2026/8/20', timestamp: 1234 }, ... ] }
+                const progressLog = currentUserData?.progressLog || {};
 
                 return parents.filter((p: any) => !hiddenItems[p.id]).map((parent: any) => {
                   const children = allCats.filter((c: any) => c.parentId === parent.id && !hiddenItems[c.id]);
@@ -2364,69 +2363,81 @@ export default function App() {
 
                   return (
                     <div key={parent.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                      {/* 母分類標題 */}
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
-                        <h3 className="font-black text-sm text-gray-700">{String(parent.name)}</h3>
+                        <h3 className="font-black text-sm text-gray-700 text-center">{String(parent.name)}</h3>
                       </div>
-                      {/* 子分類卡片列表 */}
                       <div className="divide-y divide-gray-100">
                         {catsToShow.map((cat: any) => {
-                          const catSteps = learningSteps.filter((s: any) => s.categoryId === cat.id && !hiddenItems[s.id] && (!s.storeId || s.storeId === currentUserData?.store));
-                          const completedIds = new Set(userHistory.map((h: any) => h.stepId));
-                          const completedCount = catSteps.filter((s: any) => completedIds.has(s.id)).length;
-                          const totalCount = catSteps.length;
-                          const pct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+                          const catLog = progressLog[cat.id] || [];
                           const requiredDays = cat.requiredDays || 0;
-
-                          // 取得該分類的學習歷史（含日期）
-                          const catHistory = userHistory.filter((h: any) => {
-                            const step = learningSteps.find((s: any) => s.id === h.stepId);
-                            return step && step.categoryId === cat.id;
-                          });
-                          // 學習天數（去重日期）
-                          const learnDates = [...new Set(catHistory.map((h: any) => {
-                            const d = new Date(h.approvedAt);
-                            return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`;
-                          }))];
+                          const learnCount = catLog.length;
+                          // 去重日期
+                          const learnDates = [...new Set(catLog.map((l: any) => l.date))];
 
                           return (
-                            <div key={cat.id} className="px-4 py-3.5">
+                            <div key={cat.id} className="px-4 py-4">
+                              {/* 第一行：名稱 + 天數設定 + 記錄按鈕 */}
                               <div className="flex items-center gap-3">
-                                {/* 進度圓圈 */}
-                                <div className="relative w-11 h-11 flex-shrink-0">
-                                  <svg viewBox="0 0 36 36" className="w-11 h-11 -rotate-90">
-                                    <circle cx="18" cy="18" r="15" fill="none" stroke="#e5e7eb" strokeWidth="3" />
-                                    <circle cx="18" cy="18" r="15" fill="none" stroke={pct === 100 ? '#16a34a' : 'var(--theme-main)'} strokeWidth="3" strokeDasharray={`${pct * 0.942} 100`} strokeLinecap="round" />
-                                  </svg>
-                                  <span className={`absolute inset-0 flex items-center justify-center text-[10px] font-black ${pct === 100 ? 'text-green-600' : 'text-gray-600'}`}>{pct}%</span>
+                                <h4 className="font-bold text-[15px] text-gray-800 flex-1">{String(cat.name)}</h4>
+                                {/* 天數設定（前台可編輯） */}
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  <span className="text-[10px] text-gray-400 font-bold">需</span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    max="99"
+                                    value={requiredDays || ''}
+                                    onChange={async (e) => {
+                                      const val = parseInt(e.target.value) || 0;
+                                      const newCats = allCats.map((c: any) => c.id === cat.id ? {...c, requiredDays: val} : c);
+                                      setCategories(newCats);
+                                      await setDoc(doc(db, 'config', 'global'), { learningCategories: newCats }, { merge: true });
+                                    }}
+                                    className="w-10 text-center text-sm font-black text-indigo-600 border border-gray-200 rounded-lg py-1 outline-none focus:border-indigo-500 bg-gray-50"
+                                    placeholder="0"
+                                  />
+                                  <span className="text-[10px] text-gray-400 font-bold">天</span>
                                 </div>
-                                {/* 分類名稱 + 進度 */}
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-bold text-sm text-gray-800 truncate">{String(cat.name)}</h4>
-                                    {pct === 100 && <span className="text-[9px] font-bold text-green-600 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full">已完成</span>}
-                                  </div>
-                                  <p className="text-[11px] text-gray-400 font-bold">{completedCount} / {totalCount} 項完成</p>
-                                </div>
-                                {/* 天數資訊 */}
-                                <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                                {/* 記錄學習按鈕 */}
+                                <button
+                                  onClick={async () => {
+                                    if (!currentUserData) return;
+                                    const now = new Date();
+                                    const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+                                    const newLog = {...progressLog};
+                                    if (!newLog[cat.id]) newLog[cat.id] = [];
+                                    newLog[cat.id] = [...newLog[cat.id], { date: dateStr, timestamp: Date.now() }];
+                                    await updateDoc(doc(db, 'employees', currentUserData.id), { progressLog: newLog });
+                                    showToast(`已記錄「${cat.name}」學習！`);
+                                  }}
+                                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex-shrink-0 shadow-sm"
+                                  style={{backgroundColor: 'var(--theme-main)', color: 'white'}}
+                                >
+                                  <PlusCircle c="w-3.5 h-3.5" />記錄
+                                </button>
+                              </div>
+                              {/* 第二行：學習次數 + 天數統計 */}
+                              {learnCount > 0 && (
+                                <div className="flex items-center gap-3 mt-2.5 pl-0.5">
+                                  <span className="text-xs font-bold text-indigo-600">已學 {learnDates.length} 天 / {learnCount} 次</span>
                                   {requiredDays > 0 && (
                                     <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${learnDates.length >= requiredDays ? 'text-green-600 bg-green-50 border-green-200' : 'text-orange-600 bg-orange-50 border-orange-200'}`}>
-                                      需 {requiredDays} 天
+                                      {learnDates.length >= requiredDays ? '✓ 已達標' : `還需 ${requiredDays - learnDates.length} 天`}
                                     </span>
                                   )}
-                                  {learnDates.length > 0 && (
-                                    <span className="text-[10px] font-bold text-indigo-500">已學 {learnDates.length} 天</span>
-                                  )}
                                 </div>
-                              </div>
-                              {/* 學習日期記錄 */}
+                              )}
+                              {/* 第三行：日期記錄 */}
                               {learnDates.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-1.5 pl-14">
-                                  {learnDates.slice(-7).map((d, i) => (
-                                    <span key={i} className="text-[9px] font-bold text-gray-400 bg-gray-50 border border-gray-100 px-1.5 py-0.5 rounded">{d}</span>
-                                  ))}
-                                  {learnDates.length > 7 && <span className="text-[9px] text-gray-300 font-bold">+{learnDates.length - 7}</span>}
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {learnDates.map((d: string, i: number) => {
+                                    const countOnDate = catLog.filter((l: any) => l.date === d).length;
+                                    return (
+                                      <span key={i} className="text-[10px] font-bold text-gray-500 bg-gray-50 border border-gray-100 px-2 py-0.5 rounded-lg">
+                                        {d}{countOnDate > 1 ? ` ×${countOnDate}` : ''}
+                                      </span>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -3072,12 +3083,10 @@ export default function App() {
         </main>
 
         <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0 sticky bottom-0">
-          {!canEdit && (
-            <button onClick={() => setActiveTab('progress')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-              <span className="text-[10px] font-bold">{customTitles.progressTab}</span>
-            </button>
-          )}
+          <button onClick={() => setActiveTab('progress')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+            <span className="text-[10px] font-bold">{customTitles.progressTab}</span>
+          </button>
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
           </button>
