@@ -126,7 +126,7 @@ export default function App() {
   const [secretPwd, setSecretPwd] = useState<string>('');
   const [authPassword, setAuthPassword] = useState<string>(''); 
   const [authError, setAuthError] = useState<string>(''); 
-  const [activeTab, setActiveTab] = useState<string>('learning'); 
+  const [activeTab, setActiveTab] = useState<string>('progress'); 
   const [toast, setToast] = useState<any>(null);
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
@@ -911,7 +911,7 @@ export default function App() {
                   onKeyDown={e => {
                     if (e.key === 'Enter') {
                       if(secretPwd==='0204') { 
-                        setIsAuthenticated(true); setCurrentUserRole('super_admin'); setCurrentUserName('總部管理員'); 
+                        setIsAuthenticated(true); setCurrentUserRole('super_admin'); setCurrentUserName('總部管理員'); setActiveTab('learning');
                         setShowSecretModal(false); setAuthMode('login'); setSecretPwd(''); 
                       } else { showToast('密碼錯誤！'); setSecretPwd(''); }
                     }
@@ -921,7 +921,7 @@ export default function App() {
                   <button onClick={() => { setShowSecretModal(false); setSecretPwd(''); }} className="flex-1 py-3 bg-gray-100 rounded-xl font-bold text-gray-500">取消</button>
                   <button onClick={() => { 
                     if(secretPwd==='0204') { 
-                      setIsAuthenticated(true); setCurrentUserRole('super_admin'); setCurrentUserName('總部管理員'); 
+                      setIsAuthenticated(true); setCurrentUserRole('super_admin'); setCurrentUserName('總部管理員'); setActiveTab('learning'); 
                       setShowSecretModal(false); setAuthMode('login'); setSecretPwd(''); 
                     } else { showToast('密碼錯誤！'); setSecretPwd(''); } 
                   }} className="flex-1 py-3 bg-slate-900 text-white rounded-xl font-bold">登入</button>
@@ -3072,15 +3072,15 @@ export default function App() {
         </main>
 
         <nav className="bg-white border-t border-gray-200 flex justify-around items-center h-16 pb-safe shadow-[0_-5px_10px_rgba(0,0,0,0.02)] z-30 shrink-0 sticky bottom-0">
-          <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
-          </button>
           {!canEdit && (
             <button onClick={() => setActiveTab('progress')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`w-5 h-5 ${activeTab === 'progress' ? 'text-indigo-600' : 'text-gray-400'}`}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
               <span className="text-[10px] font-bold">{customTitles.progressTab}</span>
             </button>
           )}
+          <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
+          </button>
           <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : customTitles.profileTab}</span>
           </button>
