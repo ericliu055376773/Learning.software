@@ -1358,6 +1358,26 @@ export default function App() {
                   {/* 第一排：母分類（有兩層結構才顯示） */}
                   {hasTwoLevel && (
                     <div style={{display:'flex', alignItems:'center', gap:'4px', paddingBottom:'8px', minWidth:0}}>
+                      {/* 左箭頭：跳到上一個母分類 */}
+                      {(canEdit ? parentCategories : visibleParentCategories).length > 1 && (() => {
+                        const pList = canEdit ? parentCategories : visibleParentCategories;
+                        const idx = pList.findIndex((c:any) => c.id === currentParentId);
+                        const prev = pList[idx - 1];
+                        if (!prev) return null;
+                        return (
+                          <button onClick={() => {
+                            setActiveParentId(prev.id);
+                            const fc = allCats.find((c:any) => c.parentId === prev.id);
+                            setActiveCategoryId(fc ? fc.id : prev.id);
+                            setTimeout(() => {
+                              const tab = document.querySelector(`[data-parent-id="${prev.id}"]`) as HTMLElement;
+                              if (tab) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                            }, 50);
+                          }}
+                            style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                            className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-xs font-bold">‹</button>
+                        );
+                      })()}
                       <div id="parent-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
                         {(canEdit ? parentCategories : visibleParentCategories).map((parent: any) => {
                           const isActive = currentParentId === parent.id;
@@ -1409,6 +1429,25 @@ export default function App() {
                   )}
                   {/* 第二排（或唯一一排）＋未分類 */}
                   <div style={{display:'flex', alignItems:'center', gap:'4px', paddingTop: hasTwoLevel ? '8px' : '0', minWidth:0}}>
+                    {/* 左箭頭：跳到上一個子分類 */}
+                    {(() => {
+                      const allTabCats = [...effectiveCategories.filter((c:any) => c && c.id), ...(hasOrphans ? [{id: ORPHAN_CAT_ID}] : [])];
+                      const idx = allTabCats.findIndex((c:any) => c.id === currentActiveCatId);
+                      const prev = allTabCats[idx - 1];
+                      if (!prev) return null;
+                      return (
+                        <button onClick={() => {
+                          setActiveCategoryId(prev.id);
+                          if (!hasTwoLevel) setActiveParentId(prev.id);
+                          setTimeout(() => {
+                            const tab = document.querySelector(`[data-cat-id="${prev.id}"]`) as HTMLElement;
+                            if (tab) tab.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                          }, 50);
+                        }}
+                          style={{flexShrink:0, WebkitUserSelect:'none', userSelect:'none'}}
+                          className="w-7 h-7 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center shadow-sm hover:bg-gray-50 text-sm font-bold">‹</button>
+                      );
+                    })()}
                     <div id="child-tabs" style={{display:'flex', gap:'8px', overflowX:'auto', WebkitOverflowScrolling:'touch', flexWrap:'nowrap', minWidth:0, flex:1, scrollbarWidth:'none'}}>
                       {effectiveCategories.map((cat: any) => {
                         if (!cat || !cat.id) return null;
@@ -2592,7 +2631,7 @@ export default function App() {
                   </div>
                   <div className="flex gap-2">
                     <input type="text" id="ns" className="flex-1 p-2 bg-white border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500" placeholder="新增門店..." />
-                    <button type="button" onClick={async () => { const i = document.getElementById('ns'); if(i.value) { await addDoc(collection(db, 'stores'), { name: i.value, order: stores.length, createdAt: Date.now() }); i.value = ''; } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
+                    <button type="button" onClick={async () => { const i = document.getElementById('ns') as HTMLInputElement; if(i?.value?.trim()) { await addDoc(collection(db, 'stores'), { name: i.value.trim(), order: stores.length, createdAt: Date.now() }); i.value = ''; showToast('門店已新增！'); } else { showToast('請輸入門店名稱'); } }} className="bg-indigo-600 text-white px-4 rounded-lg text-xs font-bold shadow-sm hover:bg-indigo-700">新增</button>
                   </div>
                 </div>
               )}
