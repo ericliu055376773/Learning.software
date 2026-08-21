@@ -155,7 +155,10 @@ export default function App() {
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
   const [longPressDeleteId, setLongPressDeleteId] = useState<string | null>(null);
-  const longPressTimer = useRef<any>(null); // step for collapse-check trainer modal
+  const longPressTimer = useRef<any>(null);
+  const [progressCategories, setProgressCategories] = useState<any[]>([]);
+  const [showProgressCatManager, setShowProgressCatManager] = useState<boolean>(false);
+  const [editingProgressCats, setEditingProgressCats] = useState<any[]>([]); // step for collapse-check trainer modal
   const [showCatLockModal, setShowCatLockModal] = useState<string | null>(null); // catId
   const [catLockInput, setCatLockInput] = useState<string>('');
   // 簽名功能
@@ -236,7 +239,7 @@ export default function App() {
           const data = d.data();
           setGlobalTheme(data.theme || 'indigo');
           setSystemLogoUrl(data.logoUrl || '');
-          if (data.customTitles) setCustomTitles(prev => ({...prev, ...data.customTitles, progressTab: data.customTitles.progressTab || prev.progressTab}));
+          if (data.customTitles) setCustomTitles(prev => ({...prev, ...data.customTitles, learningTab: data.customTitles.learningTab === '學習進度' ? '學習內容' : (data.customTitles.learningTab || prev.learningTab), progressTab: data.customTitles.progressTab || prev.progressTab}));
           
           if (data.learningCategories && data.learningCategories.length > 0) {
             setCategories(data.learningCategories);
@@ -253,6 +256,7 @@ export default function App() {
           if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
           setHiddenItems(data.hiddenItems || {});
           if (data.allowStoreItems !== undefined) setAllowStoreItems(data.allowStoreItems);
+          if (data.progressCategories) setProgressCategories(data.progressCategories);
         }
         setIsConfigLoaded(true);
       },
@@ -1584,11 +1588,6 @@ export default function App() {
                                  </span>
                                  <span className="w-1 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
                                  <input type="text" value={child.name} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white" placeholder="子分類名稱" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
-                                 <div className="flex items-center gap-0 flex-shrink-0">
-                                   <span className="text-[9px] text-slate-400 font-bold">需</span>
-                                   <input type="number" min="0" max="99" value={child.requiredDays || ''} onChange={e => setEditingCategories(editingCategories.map((c:any) => c.id === child.id ? {...c, requiredDays: parseInt(e.target.value) || 0} : c))} className="w-8 bg-slate-500/50 text-[11px] text-center outline-none text-orange-300 rounded px-0.5 py-0.5 font-bold placeholder:text-slate-500" placeholder="0" style={{WebkitUserSelect:'text', userSelect:'text'}}/>
-                                   <span className="text-[9px] text-slate-400 font-bold">天</span>
-                                 </div>
                                  <button onClick={() => setEditingCategories(editingCategories.filter((c:any) => c.id !== child.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3 h-3"/></button>
                                </div>
                              ))}
@@ -2349,83 +2348,99 @@ export default function App() {
               </div>
           )}
           
-          {/* TAB: 學習進度 */}
+          {/* TAB: 學習進度（獨立分類） */}
           {activeTab === 'progress' && (
             <div className="space-y-4 animate-in fade-in duration-300 my-2">
-              <h2 className="font-black text-lg text-gray-800 flex items-center gap-2 px-1">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-indigo-600"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-                學習進度
-              </h2>
+              <div className="flex items-center justify-between px-1">
+                <h2 className="font-black text-lg text-gray-800 flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-indigo-600"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                  學習進度
+                </h2>
+                {canEdit && (
+                  <button onClick={() => { setEditingProgressCats([...progressCategories]); setShowProgressCatManager(true); }} className="flex items-center bg-white border border-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors shadow-sm">
+                    <Settings c="w-3.5 h-3.5 mr-1" /><span>管理項目</span>
+                  </button>
+                )}
+              </div>
 
+              {/* 後台：編輯進度項目 Modal */}
+              {canEdit && showProgressCatManager && (
+                <div className="bg-slate-800 rounded-xl p-4 shadow-lg text-white animate-in slide-in-from-top-2">
+                  <h3 className="font-bold mb-1 flex items-center text-sm"><FolderPlus c="w-4 h-4 mr-2 text-indigo-400"/>編輯學習進度項目</h3>
+                  <p className="text-[10px] text-gray-400 mb-3">新增分組與項目，設定每個項目的學習天數。</p>
+                  <div className="space-y-3 mb-4 max-h-[60vh] overflow-y-auto pr-1">
+                    {/* 分組列表 */}
+                    {editingProgressCats.filter((c: any) => c.type === 'group').map((group: any) => (
+                      <div key={group.id} className="border border-slate-600 rounded-lg overflow-hidden">
+                        <div className="flex gap-2 items-center bg-slate-600 p-2.5">
+                          <span className="text-[10px] text-indigo-300 font-bold whitespace-nowrap">分組</span>
+                          <input type="text" value={group.name} onChange={e => setEditingProgressCats(editingProgressCats.map((c: any) => c.id === group.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-sm font-bold outline-none text-white focus:text-indigo-300" placeholder="分組名稱" />
+                          <button onClick={() => setEditingProgressCats(editingProgressCats.filter((c: any) => c.id !== group.id && c.groupId !== group.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3.5 h-3.5"/></button>
+                        </div>
+                        <div className="bg-slate-700 p-2 space-y-1.5">
+                          {editingProgressCats.filter((c: any) => c.groupId === group.id).map((item: any) => (
+                            <div key={item.id} className="flex gap-2 items-center bg-slate-600/50 p-2 rounded">
+                              <span className="w-1 h-4 bg-indigo-400 rounded-full flex-shrink-0"></span>
+                              <input type="text" value={item.name} onChange={e => setEditingProgressCats(editingProgressCats.map((c: any) => c.id === item.id ? {...c, name: e.target.value} : c))} className="flex-1 bg-transparent text-xs outline-none text-gray-200 focus:text-white" placeholder="項目名稱" />
+                              <div className="flex items-center gap-0 flex-shrink-0">
+                                <span className="text-[9px] text-slate-400 font-bold">需</span>
+                                <input type="number" min="0" max="99" value={item.requiredDays || ''} onChange={e => setEditingProgressCats(editingProgressCats.map((c: any) => c.id === item.id ? {...c, requiredDays: parseInt(e.target.value) || 0} : c))} className="w-8 bg-slate-500/50 text-[11px] text-center outline-none text-orange-300 rounded px-0.5 py-0.5 font-bold placeholder:text-slate-500" placeholder="0" />
+                                <span className="text-[9px] text-slate-400 font-bold">天</span>
+                              </div>
+                              <button onClick={() => setEditingProgressCats(editingProgressCats.filter((c: any) => c.id !== item.id))} className="p-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/40 flex-shrink-0"><Trash2 c="w-3 h-3"/></button>
+                            </div>
+                          ))}
+                          <button onClick={() => setEditingProgressCats([...editingProgressCats, {id: Date.now().toString(), name: '', type: 'item', groupId: group.id, requiredDays: 0}])} className="w-full p-1.5 border border-dashed border-slate-500 rounded text-slate-400 hover:text-white text-[11px] transition-colors">＋ 新增項目</button>
+                        </div>
+                      </div>
+                    ))}
+                    <button onClick={() => setEditingProgressCats([...editingProgressCats, {id: 'pg_' + Date.now().toString(), name: '', type: 'group'}])} className="w-full p-2 border border-dashed border-slate-500 rounded text-slate-300 font-bold hover:text-white text-xs transition-colors">＋ 新增分組</button>
+                  </div>
+                  <div className="flex gap-2 pt-2 border-t border-slate-700">
+                    <button onClick={() => setShowProgressCatManager(false)} className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded text-xs font-bold">取消</button>
+                    <button onClick={async () => {
+                      const valid = editingProgressCats.filter((c: any) => c.name.trim());
+                      setProgressCategories(valid);
+                      await setDoc(doc(db, 'config', 'global'), { progressCategories: valid }, { merge: true });
+                      setShowProgressCatManager(false);
+                      showToast('學習進度項目已儲存！');
+                    }} className="flex-1 py-2 bg-indigo-500 hover:bg-indigo-400 rounded text-xs font-bold shadow-md">儲存</button>
+                  </div>
+                </div>
+              )}
+
+              {/* 進度卡片列表 */}
               {(() => {
-                const parents = allCats.filter((c: any) => !c.parentId || c.parentId === '');
-                // 員工的學習打卡紀錄：{ [catId]: [ { date: '2026/8/20', timestamp: 1234 }, ... ] }
+                const groups = progressCategories.filter((c: any) => c.type === 'group');
                 const progressLog = currentUserData?.progressLog || {};
 
-                return parents.filter((p: any) => !hiddenItems[p.id]).map((parent: any) => {
-                  const children = allCats.filter((c: any) => c.parentId === parent.id && !hiddenItems[c.id]);
-                  const catsToShow = children.length > 0 ? children : [parent];
+                if (groups.length === 0 && !canEdit) {
+                  return <div className="p-10 text-center text-gray-400 text-sm font-bold bg-white rounded-xl border border-gray-100 shadow-sm">尚無學習進度項目</div>;
+                }
+
+                return groups.map((group: any) => {
+                  const items = progressCategories.filter((c: any) => c.groupId === group.id);
+                  if (items.length === 0) return null;
 
                   return (
-                    <div key={parent.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div key={group.id} className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                       <div className="px-4 py-3 border-b border-gray-100 bg-gray-50/80">
-                        <h3 className="font-black text-sm text-gray-700 text-center">{String(parent.name)}</h3>
+                        <h3 className="font-black text-sm text-gray-700 text-center">{String(group.name)}</h3>
                       </div>
                       <div className="divide-y divide-gray-100">
-                        {catsToShow.map((cat: any) => {
-                          const catLog = progressLog[cat.id] || [];
-                          const requiredDays = cat.requiredDays || 0;
+                        {items.map((item: any) => {
+                          const catLog = progressLog[item.id] || [];
+                          const requiredDays = item.requiredDays || 0;
                           const learnCount = catLog.length;
                           const learnDates = [...new Set(catLog.map((l: any) => l.date))];
 
                           return (
-                            <div key={cat.id} className="px-4 py-4">
-                              {/* 第一行：名稱 + 天數 + 記錄按鈕 */}
+                            <div key={item.id} className="px-4 py-4">
                               <div className="flex items-center gap-2">
-                                <h4 className="font-bold text-[15px] text-gray-800 flex-1">{String(cat.name)}</h4>
-                                {/* 天數顯示：後台可編輯，前台唯讀 */}
+                                <h4 className="font-bold text-[15px] text-gray-800 flex-1">{String(item.name)}</h4>
                                 {requiredDays > 0 && (
-                                  <div className="flex items-center flex-shrink-0">
-                                    {canEdit ? (
-                                      <div className="flex items-center gap-0">
-                                        <span className="text-xs text-gray-400 font-bold leading-none">需</span>
-                                        <input
-                                          type="number" min="0" max="99"
-                                          value={requiredDays || ''}
-                                          onChange={async (e) => {
-                                            const val = parseInt(e.target.value) || 0;
-                                            const newCats = allCats.map((c: any) => c.id === cat.id ? {...c, requiredDays: val} : c);
-                                            setCategories(newCats);
-                                            await setDoc(doc(db, 'config', 'global'), { learningCategories: newCats }, { merge: true });
-                                          }}
-                                          className="w-8 text-center text-xs font-black text-indigo-600 border border-gray-200 rounded py-0.5 mx-0.5 outline-none focus:border-indigo-500 bg-gray-50 leading-none"
-                                        />
-                                        <span className="text-xs text-gray-400 font-bold leading-none">天</span>
-                                      </div>
-                                    ) : (
-                                      <span className="text-xs font-bold text-gray-500 leading-none">需{requiredDays}天</span>
-                                    )}
-                                  </div>
+                                  <span className="text-xs font-bold text-gray-500 flex-shrink-0">需{requiredDays}天</span>
                                 )}
-                                {canEdit && requiredDays === 0 && (
-                                  <div className="flex items-center gap-0 flex-shrink-0">
-                                    <span className="text-xs text-gray-400 font-bold leading-none">需</span>
-                                    <input
-                                      type="number" min="0" max="99" value=""
-                                      onChange={async (e) => {
-                                        const val = parseInt(e.target.value) || 0;
-                                        if (!val) return;
-                                        const newCats = allCats.map((c: any) => c.id === cat.id ? {...c, requiredDays: val} : c);
-                                        setCategories(newCats);
-                                        await setDoc(doc(db, 'config', 'global'), { learningCategories: newCats }, { merge: true });
-                                      }}
-                                      className="w-8 text-center text-xs font-black text-gray-300 border border-gray-200 rounded py-0.5 mx-0.5 outline-none focus:border-indigo-500 bg-gray-50 leading-none"
-                                      placeholder="0"
-                                    />
-                                    <span className="text-xs text-gray-400 font-bold leading-none">天</span>
-                                  </div>
-                                )}
-                                {/* 記錄學習按鈕 */}
                                 {!canEdit && (
                                   <button
                                     onClick={async () => {
@@ -2433,10 +2448,10 @@ export default function App() {
                                       const now = new Date();
                                       const dateStr = `${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
                                       const newLog = {...progressLog};
-                                      if (!newLog[cat.id]) newLog[cat.id] = [];
-                                      newLog[cat.id] = [...newLog[cat.id], { date: dateStr, timestamp: Date.now() }];
+                                      if (!newLog[item.id]) newLog[item.id] = [];
+                                      newLog[item.id] = [...newLog[item.id], { date: dateStr, timestamp: Date.now() }];
                                       await updateDoc(doc(db, 'employees', currentUserData.id), { progressLog: newLog });
-                                      showToast(`已記錄「${cat.name}」學習！`);
+                                      showToast(`已記錄「${item.name}」學習！`);
                                     }}
                                     className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-95 flex-shrink-0 shadow-sm"
                                     style={{backgroundColor: 'var(--theme-main)', color: 'white'}}
@@ -2445,7 +2460,6 @@ export default function App() {
                                   </button>
                                 )}
                               </div>
-                              {/* 第二行：學習次數 + 天數統計 */}
                               {learnCount > 0 && (
                                 <div className="flex items-center gap-3 mt-2.5">
                                   <span className="text-xs font-bold text-indigo-600">已學 {learnDates.length} 天 / {learnCount} 次</span>
@@ -2456,7 +2470,6 @@ export default function App() {
                                   )}
                                 </div>
                               )}
-                              {/* 第三行：日期記錄（長按可刪除） */}
                               {learnDates.length > 0 && (
                                 <div className="flex flex-wrap gap-1.5 mt-2">
                                   {learnDates.map((d: string, i: number) => {
@@ -2466,10 +2479,10 @@ export default function App() {
                                         key={i}
                                         onTouchStart={() => { longPressTimer.current = setTimeout(async () => {
                                           if (!currentUserData) return;
-                                          if (!window.confirm(`確定要刪除「${d}」的 ${countOnDate} 筆學習記錄嗎？`)) return;
+                                          if (!window.confirm(`確定要刪除「${d}」的 ${countOnDate} 筆記錄嗎？`)) return;
                                           const newLog = {...progressLog};
-                                          newLog[cat.id] = catLog.filter((l: any) => l.date !== d);
-                                          if (newLog[cat.id].length === 0) delete newLog[cat.id];
+                                          newLog[item.id] = catLog.filter((l: any) => l.date !== d);
+                                          if (newLog[item.id].length === 0) delete newLog[item.id];
                                           await updateDoc(doc(db, 'employees', currentUserData.id), { progressLog: newLog });
                                           showToast(`已刪除 ${d} 的記錄`);
                                         }, 600); }}
@@ -2477,10 +2490,10 @@ export default function App() {
                                         onTouchMove={() => clearTimeout(longPressTimer.current)}
                                         onMouseDown={() => { longPressTimer.current = setTimeout(async () => {
                                           if (!currentUserData) return;
-                                          if (!window.confirm(`確定要刪除「${d}」的 ${countOnDate} 筆學習記錄嗎？`)) return;
+                                          if (!window.confirm(`確定要刪除「${d}」的 ${countOnDate} 筆記錄嗎？`)) return;
                                           const newLog = {...progressLog};
-                                          newLog[cat.id] = catLog.filter((l: any) => l.date !== d);
-                                          if (newLog[cat.id].length === 0) delete newLog[cat.id];
+                                          newLog[item.id] = catLog.filter((l: any) => l.date !== d);
+                                          if (newLog[item.id].length === 0) delete newLog[item.id];
                                           await updateDoc(doc(db, 'employees', currentUserData.id), { progressLog: newLog });
                                           showToast(`已刪除 ${d} 的記錄`);
                                         }, 600); }}
