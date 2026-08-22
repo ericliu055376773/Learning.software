@@ -2847,7 +2847,7 @@ export default function App() {
                                    {canEdit && (
                                      <div className="flex items-center space-x-1 mt-2">
                                        <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
-                                       <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                       <button onClick={async () => { if (window.confirm(`確定要刪除「${emp.name}」嗎？此操作無法復原，該人員的所有學習紀錄將一併刪除。`)) await deleteDoc(doc(db, 'employees', emp.id)); }} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
                                      </div>
                                    )}
                                  </div>
@@ -3104,7 +3104,7 @@ export default function App() {
                                   {canEdit && (
                                     <div className="flex items-center space-x-1 mt-2">
                                       <button onClick={() => startEditEmployee(emp)} className="text-gray-400 hover:text-indigo-600 p-1.5 hover:bg-gray-100 rounded transition-colors" title="編輯人員"><Edit c="w-4 h-4" /></button>
-                                      <button onClick={async () => await deleteDoc(doc(db, 'employees', emp.id))} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
+                                      <button onClick={async () => { if (window.confirm(`確定要刪除「${emp.name}」嗎？此操作無法復原，該人員的所有學習紀錄將一併刪除。`)) await deleteDoc(doc(db, 'employees', emp.id)); }} className="text-gray-400 hover:text-red-500 p-1.5 hover:bg-red-50 rounded transition-colors" title="刪除人員"><Trash2 c="w-4 h-4" /></button>
                                     </div>
                                   )}
                                 </div>
