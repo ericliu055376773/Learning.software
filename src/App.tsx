@@ -152,6 +152,7 @@ export default function App() {
   const [collapseCheckStep, setCollapseCheckStep] = useState<any>(null);
   const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({});
   const [allowStoreItems, setAllowStoreItems] = useState<boolean>(false);
+  const [autoApproveRoles, setAutoApproveRoles] = useState<string[]>(['店長']);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
   const [longPressDeleteId, setLongPressDeleteId] = useState<string | null>(null);
@@ -256,6 +257,7 @@ export default function App() {
           if (data.lockedCollapseCategories) setLockedCollapseCategories(data.lockedCollapseCategories);
           setHiddenItems(data.hiddenItems || {});
           if (data.allowStoreItems !== undefined) setAllowStoreItems(data.allowStoreItems);
+          if (data.autoApproveRoles) setAutoApproveRoles(data.autoApproveRoles);
           if (data.progressCategories) setProgressCategories(data.progressCategories);
         }
         setIsConfigLoaded(true);
@@ -268,6 +270,8 @@ export default function App() {
 
   const canEdit = currentUserRole === 'super_admin';
   const currentUserData = employees.find(e => e.name === currentUserName);
+  const isStoreManager = autoApproveRoles.includes(currentUserData?.role || '');
+  const storePendingAccounts = isStoreManager ? pendingAccounts.filter(pa => pa.store === currentUserData?.store) : [];
   const totalAdminNotifications = pendingAccounts.length;
 
   useEffect(() => {
@@ -327,6 +331,17 @@ export default function App() {
         showToast('此密碼已被使用，請更換其他密碼！');
         setAuthError('此密碼已有人使用，請更換'); 
         return; 
+      }
+
+      // 符合自動開通職位，無需審核
+      if (autoApproveRoles.includes(role)) {
+        await addDoc(collection(db, 'employees'), {
+          name, role, store, password, birthdate, hireDate, phone, mbti,
+          completedLearning: {}, tasksDetail: [], learningHistory: [], examRecords: {}, avatarUrl: '', createdAt: Date.now()
+        });
+        showToast(`${role}帳號已自動開通！請直接登入。`);
+        setAuthMode('login'); setAuthPassword(''); setAuthError('');
+        return;
       }
 
       await addDoc(collection(db, 'pendingAccounts'), {
@@ -1140,6 +1155,30 @@ export default function App() {
                           <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${lockedCollapseCategories[cat.id] ? 'translate-x-6' : 'translate-x-1'}`} />
                         </button>
                       </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 自動開通職位設定 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><UserIcon c="w-4 h-4 mr-1.5 text-indigo-500" />自動開通職位</h4>
+                <p className="text-xs text-gray-500 mb-3 font-bold leading-relaxed">勾選的職位申辦帳號時自動開通，無需後台審核，同時擁有審核本店人員的權限。</p>
+                <div className="flex flex-wrap gap-2">
+                  {jobRoles.map(role => {
+                    const isChecked = autoApproveRoles.includes(role);
+                    return (
+                      <button
+                        key={role}
+                        onClick={async () => {
+                          const newRoles = isChecked ? autoApproveRoles.filter(r => r !== role) : [...autoApproveRoles, role];
+                          setAutoApproveRoles(newRoles);
+                          await setDoc(doc(db, 'config', 'global'), { autoApproveRoles: newRoles }, { merge: true });
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isChecked ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'}`}
+                      >
+                        {isChecked ? '✓ ' : ''}{role}
+                      </button>
                     );
                   })}
                 </div>
@@ -2576,6 +2615,44 @@ export default function App() {
                 </div>
               )}
 
+              {/* 店長：審核本店待核准人員 */}
+              {isStoreManager && storePendingAccounts.length > 0 && (
+                <div className="bg-white rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="bg-blue-500 p-1.5 rounded-lg text-white"><UserIcon c="w-4 h-4" /></div>
+                      <div>
+                        <h3 className="font-bold text-blue-900 text-sm">本店待審核人員</h3>
+                        <p className="text-[10px] text-blue-600 font-bold">{currentUserData?.store} · {storePendingAccounts.length} 筆待處理</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {storePendingAccounts.map(pa => (
+                      <div key={pa.id} className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-bold text-gray-800">{String(pa.name)}</h4>
+                            <p className="text-[11px] text-gray-500 font-bold">{String(pa.requestedRole)} · {pa.date || ''}</p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={async () => {
+                            await deleteDoc(doc(db, 'pendingAccounts', pa.id));
+                            await addDoc(collection(db, 'employees'), { name: pa.name, role: pa.requestedRole, store: pa.store, password: pa.password || '', birthdate: pa.birthdate || '', hireDate: pa.hireDate || '', phone: pa.phone || '', mbti: pa.mbti || '', completedLearning: {}, tasksDetail: [], learningHistory: [], examRecords: {}, avatarUrl: '', createdAt: Date.now() });
+                            showToast('已核准開通！');
+                          }} className="flex-1 bg-blue-600 text-white py-2 rounded-lg text-xs font-bold shadow-sm active:scale-95 transition-transform">核准開通</button>
+                          <button onClick={async () => {
+                            await deleteDoc(doc(db, 'pendingAccounts', pa.id));
+                            showToast('已拒絕');
+                          }} className="px-4 py-2 bg-gray-50 text-gray-500 rounded-lg text-xs font-bold border border-gray-200 hover:bg-red-50 hover:text-red-500 transition-colors">拒絕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {canEdit && (
                 <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
                   <h2 className="font-bold mb-4 flex items-center text-gray-800"><Store c="w-4 h-4 mr-2 text-indigo-500" />門店類別設定</h2>
@@ -3196,8 +3273,12 @@ export default function App() {
           <button onClick={() => setActiveTab('learning')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'learning' ? 'text-indigo-600' : 'text-gray-400'}`}>
             <BookOpen c={`w-5 h-5 ${activeTab === 'learning' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{customTitles.learningTab}</span>
           </button>
-          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
-            <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} /><span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : customTitles.profileTab}</span>
+          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center gap-1 flex-1 relative ${activeTab === 'profile' || activeTab === 'pending' ? 'text-indigo-600' : 'text-gray-400'}`}>
+            <UserIcon c={`w-5 h-5 ${activeTab === 'profile' || activeTab === 'pending' ? 'fill-indigo-50' : ''}`} />
+            {isStoreManager && storePendingAccounts.length > 0 && (
+              <span className="absolute -top-1 right-1/4 bg-red-500 text-white text-[8px] font-bold w-4 h-4 rounded-full flex items-center justify-center shadow-sm">{storePendingAccounts.length}</span>
+            )}
+            <span className="text-[10px] font-bold">{isProfileTabAdmin ? '人員門店' : customTitles.profileTab}</span>
           </button>
         </nav>
       </div>
