@@ -375,8 +375,8 @@ export default function App() {
                 userStore.lng
               );
               
-              if (dist > 100) {
-                showToast(`登入失敗！您距離門店約 ${Math.round(dist)} 公尺 (不可超過 100m)。`);
+              if (dist > 300) {
+                showToast(`登入失敗！您距離門店約 ${Math.round(dist)} 公尺 (不可超過 300m)。`);
                 setAuthError('不在門店範圍內，無法登入');
               } else {
                 setIsAuthenticated(true); 
@@ -1207,7 +1207,7 @@ export default function App() {
               {/* 各店 GPS 定位設定 */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                 <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />各店 GPS 定位設定</h4>
-                <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，該門店員工登入時須距離此座標 100 公尺內。未設定座標的門店將不受限制。</p>
+                <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，該門店員工登入時須距離此座標 300 公尺內。未設定座標的門店將不受限制。</p>
 
                 <div className="space-y-4">
                   {stores.map(store => (
@@ -1264,7 +1264,7 @@ export default function App() {
                       </div>
                       {(store.lat && store.lng) && (
                         <div className="mt-2 text-[10px] text-green-600 font-bold flex items-center">
-                          <CheckCircle2 c="w-3 h-3 mr-1" /> 已啟用距離防護 (100m內)
+                          <CheckCircle2 c="w-3 h-3 mr-1" /> 已啟用距離防護 (300m內)
                         </div>
                       )}
                     </div>
