@@ -3286,35 +3286,18 @@ export default function App() {
 
                    {/* 回傳總公司按鈕 */}
                    {!canEdit && (
-                     <div className="mt-6 space-y-4">
-                       {showReportSuccess ? (
-                         <div className="bg-white rounded-2xl border border-green-200 shadow-lg overflow-hidden animate-in zoom-in-95 duration-300">
-                           <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-5 text-center">
-                             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M20 6L9 17l-5-5"/></svg>
-                             </div>
-                             <h3 className="text-white font-black text-xl">回傳成功！</h3>
-                             <p className="text-white/80 text-xs font-bold mt-1">資料已成功回傳至總公司</p>
-                           </div>
-                           <div className="p-4 text-center">
-                             <p className="text-sm text-gray-600 font-bold mb-1">{currentUserData?.name} · {currentUserData?.store}</p>
-                             <p className="text-[11px] text-gray-400 font-bold">{new Date().getFullYear()}/{new Date().getMonth()+1}/{new Date().getDate()} {new Date().getHours()}:{String(new Date().getMinutes()).padStart(2,'0')}</p>
-                             <button onClick={() => setShowReportSuccess(false)} className="mt-4 px-6 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors">關閉</button>
-                           </div>
-                         </div>
-                       ) : (
-                         <button
-                           onClick={() => {
-                             if (window.confirm('確定將資料回傳總公司？')) {
-                               setShowReportSuccess(true);
-                             }
-                           }}
-                           className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-base shadow-lg shadow-red-200 transition-all active:scale-95 flex justify-center items-center gap-2"
-                         >
-                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
-                           回傳總公司
-                         </button>
-                       )}
+                     <div className="mt-6">
+                       <button
+                         onClick={() => {
+                           if (window.confirm('確定將資料回傳總公司？')) {
+                             setShowReportSuccess(true);
+                           }
+                         }}
+                         className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-base shadow-lg shadow-red-200 transition-all active:scale-95 flex justify-center items-center gap-2"
+                       >
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+                         回傳總公司
+                       </button>
                      </div>
                    )}
                 </div>
@@ -3628,6 +3611,26 @@ export default function App() {
                   className="flex-1 py-3 bg-orange-500 text-white rounded-xl font-bold text-sm hover:bg-orange-600 transition-colors shadow-sm"
                 >確認新增</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 回傳成功浮出卡片 */}
+      {showReportSuccess && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-6 animate-in fade-in duration-200" onClick={() => setShowReportSuccess(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-xs shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-br from-green-500 to-emerald-500 p-8 text-center">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <h3 className="text-white font-black text-2xl">回傳成功！</h3>
+              <p className="text-white/80 text-sm font-bold mt-2">資料已成功回傳至總公司</p>
+            </div>
+            <div className="p-5 text-center">
+              <p className="text-base text-gray-700 font-bold mb-1">{currentUserData?.name} · {currentUserData?.store}</p>
+              <p className="text-xs text-gray-400 font-bold">{new Date().getFullYear()}/{new Date().getMonth()+1}/{new Date().getDate()} {new Date().getHours()}:{String(new Date().getMinutes()).padStart(2,'0')}</p>
+              <button onClick={() => setShowReportSuccess(false)} className="mt-5 w-full py-3 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors active:scale-95">關閉</button>
             </div>
           </div>
         </div>
