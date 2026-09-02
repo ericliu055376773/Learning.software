@@ -153,6 +153,7 @@ export default function App() {
   const [hiddenItems, setHiddenItems] = useState<{[id: string]: boolean}>({});
   const [allowStoreItems, setAllowStoreItems] = useState<boolean>(false);
   const [autoApproveRoles, setAutoApproveRoles] = useState<string[]>(['店長']);
+  const [gpsAllowedRoles, setGpsAllowedRoles] = useState<string[]>([]);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
   const [showReportSuccess, setShowReportSuccess] = useState<boolean>(false);
@@ -258,6 +259,7 @@ export default function App() {
           setHiddenItems(data.hiddenItems || {});
           if (data.allowStoreItems !== undefined) setAllowStoreItems(data.allowStoreItems);
           if (data.autoApproveRoles) setAutoApproveRoles(data.autoApproveRoles);
+          if (data.gpsAllowedRoles) setGpsAllowedRoles(data.gpsAllowedRoles);
           if (data.progressCategories) setProgressCategories(data.progressCategories);
         }
         setIsConfigLoaded(true);
@@ -1174,6 +1176,30 @@ export default function App() {
                           const newRoles = isChecked ? autoApproveRoles.filter(r => r !== role) : [...autoApproveRoles, role];
                           setAutoApproveRoles(newRoles);
                           await setDoc(doc(db, 'config', 'global'), { autoApproveRoles: newRoles }, { merge: true });
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isChecked ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'}`}
+                      >
+                        {isChecked ? '✓ ' : ''}{role}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 前台 GPS 定位權限 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />前台 GPS 定位權限</h4>
+                <p className="text-xs text-gray-500 mb-3 font-bold leading-relaxed">勾選的職位可在前台設定該門店的 GPS 座標。</p>
+                <div className="flex flex-wrap gap-2">
+                  {jobRoles.map(role => {
+                    const isChecked = gpsAllowedRoles.includes(role);
+                    return (
+                      <button
+                        key={role}
+                        onClick={async () => {
+                          const newRoles = isChecked ? gpsAllowedRoles.filter(r => r !== role) : [...gpsAllowedRoles, role];
+                          setGpsAllowedRoles(newRoles);
+                          await setDoc(doc(db, 'config', 'global'), { gpsAllowedRoles: newRoles }, { merge: true });
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isChecked ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'}`}
                       >
@@ -3283,6 +3309,63 @@ export default function App() {
                         );
                       })}
                    </div>
+
+                   {/* 前台 GPS 定位設定 */}
+                   {!canEdit && currentUserData && gpsAllowedRoles.includes(currentUserData.role) && (() => {
+                     const myStore = stores.find((s: any) => s.name === currentUserData.store);
+                     return (
+                       <div className="mt-6 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+                         <h3 className="font-bold text-sm text-gray-800 flex items-center mb-3"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />門店 GPS 定位</h3>
+                         {myStore?.lat && myStore?.lng ? (
+                           <div className="space-y-3">
+                             <div className="flex items-center gap-2 bg-green-50 p-3 rounded-lg border border-green-200">
+                               <CheckCircle2 c="w-4 h-4 text-green-600" />
+                               <div className="flex-1">
+                                 <p className="text-xs font-bold text-green-700">已設定 GPS 座標</p>
+                                 <p className="text-[10px] text-green-600 font-bold mt-0.5">{myStore.lat}, {myStore.lng}</p>
+                               </div>
+                             </div>
+                             <button
+                               onClick={() => {
+                                 if (!navigator.geolocation) { showToast('您的裝置不支援 GPS 定位'); return; }
+                                 showToast('正在取得 GPS 座標...');
+                                 navigator.geolocation.getCurrentPosition(
+                                   async (pos) => {
+                                     await updateDoc(doc(db, 'stores', myStore.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                     showToast('GPS 座標已更新！');
+                                   },
+                                   () => showToast('無法取得定位，請確認已開啟定位權限'),
+                                   { enableHighAccuracy: true, timeout: 10000 }
+                                 );
+                               }}
+                               className="w-full py-2.5 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl text-xs font-bold transition-all active:scale-95 flex justify-center items-center gap-1.5"
+                             >
+                               <MapPin c="w-3.5 h-3.5" />重新定位
+                             </button>
+                           </div>
+                         ) : (
+                           <button
+                             onClick={() => {
+                               if (!myStore) { showToast('找不到您的門店資料'); return; }
+                               if (!navigator.geolocation) { showToast('您的裝置不支援 GPS 定位'); return; }
+                               showToast('正在取得 GPS 座標...');
+                               navigator.geolocation.getCurrentPosition(
+                                 async (pos) => {
+                                   await updateDoc(doc(db, 'stores', myStore.id), { lat: pos.coords.latitude, lng: pos.coords.longitude });
+                                   showToast('GPS 座標已設定成功！');
+                                 },
+                                 () => showToast('無法取得定位，請確認已開啟定位權限'),
+                                 { enableHighAccuracy: true, timeout: 10000 }
+                               );
+                             }}
+                             className="w-full py-3 bg-indigo-600 text-white rounded-xl text-sm font-bold transition-all active:scale-95 flex justify-center items-center gap-2 shadow-sm"
+                           >
+                             <MapPin c="w-4 h-4" />設定本店 GPS 座標
+                           </button>
+                         )}
+                       </div>
+                     );
+                   })()}
 
                    {/* 回傳總公司按鈕 */}
                    {!canEdit && (
