@@ -154,6 +154,7 @@ export default function App() {
   const [allowStoreItems, setAllowStoreItems] = useState<boolean>(false);
   const [autoApproveRoles, setAutoApproveRoles] = useState<string[]>(['店長']);
   const [gpsAllowedRoles, setGpsAllowedRoles] = useState<string[]>([]);
+  const [gpsEnabled, setGpsEnabled] = useState<boolean>(true);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
   const [showReportSuccess, setShowReportSuccess] = useState<boolean>(false);
@@ -260,6 +261,7 @@ export default function App() {
           if (data.allowStoreItems !== undefined) setAllowStoreItems(data.allowStoreItems);
           if (data.autoApproveRoles) setAutoApproveRoles(data.autoApproveRoles);
           if (data.gpsAllowedRoles) setGpsAllowedRoles(data.gpsAllowedRoles);
+          if (data.gpsEnabled !== undefined) setGpsEnabled(data.gpsEnabled);
           if (data.progressCategories) setProgressCategories(data.progressCategories);
         }
         setIsConfigLoaded(true);
@@ -356,7 +358,7 @@ export default function App() {
       const matchedUser = employees.find(emp => emp.store === store && emp.password === password);
       if (matchedUser) {
         const userStore = stores.find((s: any) => s.name === store);
-        if (userStore && userStore.lat && userStore.lng) {
+        if (gpsEnabled && userStore && userStore.lat && userStore.lng) {
           setIsCheckingGPS(true);
           showToast('正在驗證您的 GPS 定位，請稍候...');
           
@@ -1232,7 +1234,25 @@ export default function App() {
 
               {/* 各店 GPS 定位設定 */}
               <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />各店 GPS 定位設定</h4>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-bold text-gray-800 text-sm flex items-center"><MapPin c="w-4 h-4 mr-1.5 text-indigo-500" />GPS 定位功能</h4>
+                    <p className="text-xs text-gray-500 font-bold leading-relaxed mt-0.5">關閉後，所有門店員工登入時不再驗證 GPS 距離。</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      const newVal = !gpsEnabled;
+                      setGpsEnabled(newVal);
+                      await setDoc(doc(db, 'config', 'global'), { gpsEnabled: newVal }, { merge: true });
+                      showToast(newVal ? 'GPS 定位已開啟' : 'GPS 定位已關閉');
+                    }}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors flex-shrink-0 ml-3 ${gpsEnabled ? 'bg-green-500' : 'bg-gray-300'}`}
+                  >
+                    <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${gpsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+                {gpsEnabled && (
+                  <>
                 <p className="text-xs text-gray-500 mb-4 font-bold leading-relaxed">設定後，該門店員工登入時須距離此座標 300 公尺內。未設定座標的門店將不受限制。</p>
 
                 <div className="space-y-4">
@@ -1309,6 +1329,8 @@ export default function App() {
                     }} className="bg-indigo-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors whitespace-nowrap">＋ 新增門店</button>
                   </div>
                 </div>
+                  </>
+                )}
               </div>
             </div>
 
