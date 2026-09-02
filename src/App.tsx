@@ -155,6 +155,7 @@ export default function App() {
   const [autoApproveRoles, setAutoApproveRoles] = useState<string[]>(['店長']);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
+  const [showReportSuccess, setShowReportSuccess] = useState<boolean>(false);
   const [longPressDeleteId, setLongPressDeleteId] = useState<string | null>(null);
   const longPressTimer = useRef<any>(null);
   const [progressCategories, setProgressCategories] = useState<any[]>([]);
@@ -246,11 +247,10 @@ export default function App() {
             setCategories(data.learningCategories);
             const parents = data.learningCategories.filter((c: any) => !c.parentId);
             const firstParent = parents[0];
-            if (firstParent && !activeParentId) {
-              setActiveParentId(firstParent.id);
+            if (firstParent) {
+              setActiveParentId(prev => prev || firstParent.id);
               const firstChild = data.learningCategories.find((c: any) => c.parentId === firstParent.id);
-              if (firstChild && !activeCategoryId) setActiveCategoryId(firstChild.id);
-              else if (!activeCategoryId) setActiveCategoryId(firstParent.id);
+              setActiveCategoryId(prev => prev || (firstChild ? firstChild.id : firstParent.id));
             }
           }
           if (data.categoryPasswords) setCategoryPasswords(data.categoryPasswords);
@@ -266,7 +266,7 @@ export default function App() {
     );
 
     return () => { unsubStores(); unsubSteps(); unsubEmp(); unsubPending(); unsubConfig(); };
-  }, [activeCategoryId]);
+  }, []);
 
   const canEdit = currentUserRole === 'super_admin';
   const currentUserData = employees.find(e => e.name === currentUserName);
@@ -2143,8 +2143,8 @@ export default function App() {
                                   onMouseUp={() => { clearTimeout(longPressTimer.current); }}
                                   onMouseLeave={() => { clearTimeout(longPressTimer.current); }}
                                 >
-                                  <div className="flex items-center gap-3 p-4" style={{WebkitUserSelect:'none', userSelect:'none'}}>
-                                    {/* 長按後顯示刪除按鈕 */}
+                                  {/* 標題列：可點擊展開內容 */}
+                                  <div onClick={() => toggleStep(step.id)} className="flex items-center gap-3 p-4 cursor-pointer active:bg-gray-50 transition-colors" style={{WebkitUserSelect:'none', userSelect:'none'}}>
                                     {isStoreItem && longPressDeleteId === step.id && (
                                       <button onClick={async (e) => { e.stopPropagation(); if (window.confirm(`確定要刪除「${step.title}」嗎？`)) { await deleteDoc(doc(db, 'learningSteps', step.id)); } setLongPressDeleteId(null); }} className="p-1.5 bg-red-50 border border-red-200 text-red-500 rounded-lg transition-all active:scale-90 flex-shrink-0 -ml-1 animate-in zoom-in-75 duration-200">
                                         <Trash2 c="w-4 h-4" />
@@ -2168,7 +2168,7 @@ export default function App() {
                                           <CheckCircle2 c="w-3 h-3 mr-1"/>已完成
                                         </span>
                                         <button
-                                          onClick={() => { if (currentUserData && historyIndex >= 0) handleDeleteLearningRecord(currentUserData, historyIndex); }}
+                                          onClick={(e) => { e.stopPropagation(); if (currentUserData && historyIndex >= 0) handleDeleteLearningRecord(currentUserData, historyIndex); }}
                                           className="flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 bg-red-50 text-red-500 text-[10px] font-bold transition-all active:scale-95 hover:bg-red-100"
                                         >
                                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -2177,7 +2177,8 @@ export default function App() {
                                       </div>
                                     ) : (
                                       <button
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                          e.stopPropagation();
                                           if (step.requireSignature) {
                                             setShowSignatureModal(step);
                                             setSignatureDataUrl('');
@@ -2193,6 +2194,29 @@ export default function App() {
                                         <CheckCircle2 c="w-4 h-4" />完成
                                       </button>
                                     )}
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={`w-4 h-4 text-gray-300 transition-transform duration-300 flex-shrink-0 ${expandedSteps.has(step.id) ? 'rotate-180' : ''}`}><polyline points="6 9 12 15 18 9"/></svg>
+                                  </div>
+                                  {/* 展開的學習內容 */}
+                                  <div className={`transition-all duration-300 ease-in-out ${expandedSteps.has(step.id) ? 'max-h-[10000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                                    <div className="px-4 pb-4 space-y-4 select-text">
+                                      {getStepBlocks(step).map((block: any, bIndex: number) => (
+                                        <div key={block.id} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                          {block.subtitle && (
+                                            <h4 className="font-bold text-base mb-2 pb-2 border-b border-gray-200" style={{color:'#1e3a5f', fontFamily:'system-ui,-apple-system,sans-serif', whiteSpace:'pre-wrap'}}>{String(block.subtitle)}</h4>
+                                          )}
+                                          <p className="text-[15px] text-gray-700 whitespace-pre-wrap select-text cursor-text text-center" style={{fontFamily:'system-ui,-apple-system,sans-serif', lineHeight:'2.4'}}>{String(block.description)}</p>
+                                          {block.mediaUrl && (
+                                            <div className="mt-3 rounded-xl overflow-hidden border border-gray-100 flex justify-center">
+                                              {(block.fileName && block.fileName.match(/\.(mp4|webm|ogg|mov|m4v)$/i)) || block.mediaUrl.match(/\.(mp4|webm|ogg|mov|m4v)/i) ? (
+                                                <video src={block.mediaUrl} controls className="max-h-64 w-full object-contain" />
+                                              ) : (
+                                                <img src={block.mediaUrl} onClick={() => setFullscreenImage(block.mediaUrl)} className="max-h-64 w-full object-contain cursor-pointer" alt="教材" />
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
                                 </div>
                               );
@@ -3259,6 +3283,40 @@ export default function App() {
                         );
                       })}
                    </div>
+
+                   {/* 回傳總公司按鈕 */}
+                   {!canEdit && (
+                     <div className="mt-6 space-y-4">
+                       {showReportSuccess ? (
+                         <div className="bg-white rounded-2xl border border-green-200 shadow-lg overflow-hidden animate-in zoom-in-95 duration-300">
+                           <div className="bg-gradient-to-r from-green-500 to-emerald-500 p-5 text-center">
+                             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8"><path d="M20 6L9 17l-5-5"/></svg>
+                             </div>
+                             <h3 className="text-white font-black text-xl">回傳成功！</h3>
+                             <p className="text-white/80 text-xs font-bold mt-1">資料已成功回傳至總公司</p>
+                           </div>
+                           <div className="p-4 text-center">
+                             <p className="text-sm text-gray-600 font-bold mb-1">{currentUserData?.name} · {currentUserData?.store}</p>
+                             <p className="text-[11px] text-gray-400 font-bold">{new Date().getFullYear()}/{new Date().getMonth()+1}/{new Date().getDate()} {new Date().getHours()}:{String(new Date().getMinutes()).padStart(2,'0')}</p>
+                             <button onClick={() => setShowReportSuccess(false)} className="mt-4 px-6 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors">關閉</button>
+                           </div>
+                         </div>
+                       ) : (
+                         <button
+                           onClick={() => {
+                             if (window.confirm('確定將資料回傳總公司？')) {
+                               setShowReportSuccess(true);
+                             }
+                           }}
+                           className="w-full py-4 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl text-base shadow-lg shadow-red-200 transition-all active:scale-95 flex justify-center items-center gap-2"
+                         >
+                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>
+                           回傳總公司
+                         </button>
+                       )}
+                     </div>
+                   )}
                 </div>
               )}
             </div>
