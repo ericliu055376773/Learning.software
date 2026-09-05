@@ -155,6 +155,8 @@ export default function App() {
   const [autoApproveRoles, setAutoApproveRoles] = useState<string[]>(['店長']);
   const [gpsAllowedRoles, setGpsAllowedRoles] = useState<string[]>([]);
   const [gpsEnabled, setGpsEnabled] = useState<boolean>(true);
+  const [phoneViewRoles, setPhoneViewRoles] = useState<string[]>([]);
+  const [showStorePhones, setShowStorePhones] = useState<boolean>(false);
   const [showStoreAddModal, setShowStoreAddModal] = useState<boolean>(false);
   const [storeNewItemTitle, setStoreNewItemTitle] = useState<string>('');
   const [showReportSuccess, setShowReportSuccess] = useState<boolean>(false);
@@ -263,6 +265,7 @@ export default function App() {
           if (data.autoApproveRoles) setAutoApproveRoles(data.autoApproveRoles);
           if (data.gpsAllowedRoles) setGpsAllowedRoles(data.gpsAllowedRoles);
           if (data.gpsEnabled !== undefined) setGpsEnabled(data.gpsEnabled);
+          if (data.phoneViewRoles) setPhoneViewRoles(data.phoneViewRoles);
           if (data.progressCategories) setProgressCategories(data.progressCategories);
         }
         setIsConfigLoaded(true);
@@ -1179,6 +1182,33 @@ export default function App() {
                           const newRoles = isChecked ? autoApproveRoles.filter(r => r !== role) : [...autoApproveRoles, role];
                           setAutoApproveRoles(newRoles);
                           await setDoc(doc(db, 'config', 'global'), { autoApproveRoles: newRoles }, { merge: true });
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isChecked ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'}`}
+                      >
+                        {isChecked ? '✓ ' : ''}{role}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 前台查看電話權限 */}
+              <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                <h4 className="font-bold text-gray-800 text-sm mb-1 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 mr-1.5 text-indigo-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  前台查看電話權限
+                </h4>
+                <p className="text-xs text-gray-500 mb-3 font-bold leading-relaxed">勾選的職位可在前台查看同門店人員的電話號碼。</p>
+                <div className="flex flex-wrap gap-2">
+                  {jobRoles.map(role => {
+                    const isChecked = phoneViewRoles.includes(role);
+                    return (
+                      <button
+                        key={role}
+                        onClick={async () => {
+                          const newRoles = isChecked ? phoneViewRoles.filter(r => r !== role) : [...phoneViewRoles, role];
+                          setPhoneViewRoles(newRoles);
+                          await setDoc(doc(db, 'config', 'global'), { phoneViewRoles: newRoles }, { merge: true });
                         }}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${isChecked ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'}`}
                       >
@@ -2913,6 +2943,7 @@ export default function App() {
                                      <div>
                                        <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
                                        <span className="text-xs text-gray-500 font-bold">{String(emp.store)}</span>
+                                       {emp.phone && <span className="text-xs text-indigo-500 font-bold ml-2">📞 {String(emp.phone)}</span>}
                                      </div>
                                    </div>
                                    
@@ -3175,6 +3206,7 @@ export default function App() {
                                     <div>
                                       <h3 className="font-black text-gray-800 text-xl sm:text-2xl tracking-wide mb-1">{String(emp.name)}</h3>
                                       <span className="text-xs text-gray-500 font-bold">{String(emp.store)}</span>
+                                      {emp.phone && <span className="text-xs text-indigo-500 font-bold ml-2">📞 {String(emp.phone)}</span>}
                                     </div>
                                   </div>
                                   
@@ -3342,6 +3374,44 @@ export default function App() {
                         );
                       })}
                    </div>
+
+                   {/* 查看本店人員電話 */}
+                   {!canEdit && currentUserData && phoneViewRoles.includes(currentUserData.role) && (
+                     <div className="mt-6">
+                       <button
+                         onClick={() => setShowStorePhones(!showStorePhones)}
+                         className={`w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-95 flex justify-center items-center gap-2 shadow-sm ${showStorePhones ? 'bg-indigo-100 text-indigo-700 border-2 border-indigo-300' : 'bg-white text-gray-700 border-2 border-gray-200'}`}
+                       >
+                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                         {showStorePhones ? '收起電話簿' : '本店人員電話'}
+                       </button>
+                       {showStorePhones && (
+                         <div className="mt-3 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden divide-y divide-gray-100">
+                           {employees.filter(e => e.store === currentUserData.store).map(emp => (
+                             <div key={emp.id} className="flex items-center justify-between px-4 py-3">
+                               <div className="flex items-center gap-3">
+                                 <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                   <UserIcon c="w-4 h-4 text-indigo-400" />
+                                 </div>
+                                 <div>
+                                   <p className="text-sm font-bold text-gray-800">{String(emp.name)}</p>
+                                   <p className="text-[10px] text-gray-400 font-bold">{String(emp.role)}</p>
+                                 </div>
+                               </div>
+                               {emp.phone ? (
+                                 <a href={`tel:${emp.phone}`} className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded-xl text-xs font-bold active:scale-95 transition-all">
+                                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                   {String(emp.phone)}
+                                 </a>
+                               ) : (
+                                 <span className="text-[10px] text-gray-300 font-bold">未設定</span>
+                               )}
+                             </div>
+                           ))}
+                         </div>
+                       )}
+                     </div>
+                   )}
 
                    {/* 前台 GPS 定位設定 */}
                    {!canEdit && currentUserData && gpsAllowedRoles.includes(currentUserData.role) && (() => {
